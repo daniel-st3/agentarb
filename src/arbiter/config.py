@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     )
 
     # --- LLM ---
-    llm_provider: str = "heuristic"
+    #: "auto" uses Groq when a key is present, else the offline heuristic.
+    llm_provider: str = "auto"
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
 
@@ -26,12 +27,22 @@ class Settings(BaseSettings):
 
     # --- Persistence ---
     db_path: Path = Path("data/arbiter.db")
+    #: LangGraph checkpoints live in their own file. Sharing one SQLite file
+    #: with the audit tables makes the graph's writer and ours contend for the
+    #: same write lock ("database is locked") mid-node.
+    checkpoint_db_path: Path = Path("data/arbiter-checkpoints.db")
 
     # --- Scoring / skip-filter ---
     min_payout_usd: float = 1.0
     max_effort_hours: float = 0.25
     cost_safety_margin: float = 3.0
     daily_budget_usd: float = 5.0
+
+    # --- RiskGuard ---
+    max_loss_per_day_usd: float = 5.0
+    max_cost_per_task_usd: float = 1.0
+    max_tasks_per_day: int = 20
+    require_approval: bool = True
 
     # --- Logging ---
     log_level: str = "INFO"

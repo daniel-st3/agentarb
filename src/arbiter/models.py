@@ -181,3 +181,77 @@ class ScanRow(SQLModel, table=True):
     n_found: int = 0
     n_scored: int = 0
     n_skipped: int = 0
+
+
+class TaskState(StrEnum):
+    """Lifecycle of one claimed bounty."""
+
+    PENDING_APPROVAL = "pending_approval"
+    REJECTED = "rejected"
+    CLAIMED = "claimed"
+    EXECUTING = "executing"
+    SUBMITTED = "submitted"
+    SETTLED = "settled"
+    FAILED = "failed"
+
+
+class TaskRow(SQLModel, table=True):
+    """One attempt at one bounty. Keyed by bounty_key for idempotency."""
+
+    __tablename__ = "tasks"
+
+    bounty_key: str = SQLField(primary_key=True)
+    run_id: str = SQLField(index=True)
+    marketplace: str = SQLField(index=True)
+    bounty_id: str
+    title: str = ""
+    category: str = Category.UNKNOWN.value
+    payout_usd: float | None = None
+    score: float = 0.0
+
+    state: str = SQLField(default=TaskState.PENDING_APPROVAL.value, index=True)
+    approved: bool | None = None          # None = not yet decided
+    approved_by: str | None = None
+    decided_at: datetime | None = None
+
+    handler: str | None = None
+    result: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
+    error: str | None = None
+
+    actual_cost_usd: float = 0.0
+    settled_amount_usd: float = 0.0
+    settlement_ref: str | None = None
+    simulated: bool = True
+
+    created_at: datetime = SQLField(default_factory=utcnow, index=True)
+    updated_at: datetime = SQLField(default_factory=utcnow)
+
+
+class LedgerRow(SQLModel, table=True):
+    """Append-only money log. Week 2 entries are all simulated."""
+
+    __tablename__ = "ledger"
+
+    id: int | None = SQLField(default=None, primary_key=True)
+    bounty_key: str = SQLField(index=True)
+    marketplace: str = ""
+    kind: str = "credit"                  # credit | debit
+    amount_usd: float = 0.0
+    reason: str = ""
+    reference: str | None = None
+    simulated: bool = True
+    created_at: datetime = SQLField(default_factory=utcnow, index=True)
+
+
+class EventRow(SQLModel, table=True):
+    """Append-only orchestrator event log -- every node transition."""
+
+    __tablename__ = "events"
+
+    id: int | None = SQLField(default=None, primary_key=True)
+    run_id: str = SQLField(index=True)
+    bounty_key: str | None = SQLField(default=None, index=True)
+    node: str = ""
+    message: str = ""
+    payload: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
+    created_at: datetime = SQLField(default_factory=utcnow, index=True)

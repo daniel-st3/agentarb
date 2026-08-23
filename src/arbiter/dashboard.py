@@ -1,8 +1,10 @@
-"""Streamlit dashboard: open bounties, scores, and the decision log.
+"""Streamlit dashboard: approval queue, scores, P&L, and the audit log.
 
-Read-mostly over SQLite. The one action is "run a scan", which is alert-only
-in Week 1 -- there is no approve/reject queue yet because there is nothing to
-approve. That arrives in Week 2 with the claim gate.
+Read-mostly over SQLite, plus the one thing that is not read-only: the
+approve/reject queue that resumes a LangGraph run suspended at the claim gate.
+
+Everything money-shaped on this page is **simulated** in Week 2 — there is no
+wallet module and nothing here signs a transaction.
 """
 
 from __future__ import annotations
@@ -17,8 +19,11 @@ from arbiter.config import get_settings
 from arbiter.connectors import MockMarketplaceConnector, OpenTaskConnector
 from arbiter.db import init_db, session_scope
 from arbiter.logging import configure_logging
-from arbiter.models import BountyRow, DecisionRow, ScanRow
+from arbiter.models import BountyRow, DecisionRow, EventRow, LedgerRow, ScanRow, TaskRow
+from arbiter.orchestrator import Orchestrator, pending_tasks
 from arbiter.pipeline import run_scan
+from arbiter.risk import RiskGuard, next_reset
+from arbiter.scoring import top_n_within_budget
 
 st.set_page_config(page_title="Agent Arbiter", page_icon="🧭", layout="wide")
 
@@ -26,33 +31,84 @@ settings = get_settings()
 configure_logging(settings.log_level, settings.log_json)
 init_db()
 
+CONNECTORS = {"opentask": OpenTaskConnector, "mock": MockMarketplaceConnector}
 
-@st.cache_data(ttl=5)
+
+@st.cache_data(ttl=3)
 def load(table: str) -> pd.DataFrame:
-    models = {"bounties": BountyRow, "decisions": DecisionRow, "scans": ScanRow}
+    models = {
+        "bounties": BountyRow, "decisions": DecisionRow, "scans": ScanRow,
+        "tasks": TaskRow, "ledger": LedgerRow, "events": EventRow,
+    }
     with session_scope() as session:
         rows = session.exec(select(models[table])).all()
         return pd.DataFrame([r.model_dump() for r in rows])
 
 
-def do_scan(markets: list[str], limit: int) -> None:
-    available = {"opentask": OpenTaskConnector, "mock": MockMarketplaceConnector}
-    connectors = [available[m]() for m in markets]
+def _connectors(markets: list[str]):
+    return [CONNECTORS[m]() for m in markets]
+
+
+def do_scan(markets: list[str], limit: int, enqueue: int) -> None:
+    """Scan, score, and push the top bounties up to the claim gate."""
+    connectors = _connectors(markets)
 
     async def _run():
+        orchestrator = await Orchestrator.create(
+            {c.name: c for c in connectors}, settings=settings
+        )
         try:
-            return await run_scan(connectors, limit=limit, settings=settings)
+            result = await run_scan(connectors, limit=limit, settings=settings)
+            queued = 0
+            if enqueue:
+                for item in top_n_within_budget(
+                    result.scored, settings.daily_budget_usd, n=enqueue
+                ):
+                    outcome = await orchestrator.start(item.bounty, run_id=result.run_id)
+                    queued += int(hasattr(outcome, "payload"))
+            return result, queued
         finally:
+            await orchestrator.aclose()
             for connector in connectors:
                 await connector.aclose()
 
-    result = asyncio.run(_run())
+    result, queued = asyncio.run(_run())
     st.cache_data.clear()
     for name, error in result.errors.items():
         st.warning(f"{name}: {error}")
     st.success(
         f"Scan {result.run_id}: {len(result.scored)} found · "
-        f"{len(result.actionable)} actionable · {len(result.skipped)} skipped"
+        f"{len(result.actionable)} actionable · {queued} queued for approval"
+    )
+
+
+def decide(bounty_key: str, approved: bool, reason: str | None = None) -> None:
+    """Resume a suspended graph with the human's decision."""
+    market = bounty_key.split(":", 1)[0]
+    connectors = _connectors([market])
+
+    async def _run():
+        orchestrator = await Orchestrator.create(
+            {c.name: c for c in connectors}, settings=settings
+        )
+        try:
+            return await orchestrator.resume(bounty_key, approved, "dashboard", reason)
+        finally:
+            await orchestrator.aclose()
+            for connector in connectors:
+                await connector.aclose()
+
+    final = asyncio.run(_run())
+    st.cache_data.clear()
+    if not approved:
+        st.info(f"Rejected {bounty_key}")
+        return
+    settlement = final.get("settlement") or {}
+    result = final.get("result") or {}
+    st.success(
+        f"Approved {bounty_key} → {final.get('state')} · handler "
+        f"{result.get('handler')}{' (STUB)' if result.get('stubbed') else ''} · "
+        f"settled ${settlement.get('amount_usd', 0)} (simulated)"
     )
 
 
@@ -61,109 +117,169 @@ def do_scan(markets: list[str], limit: int) -> None:
 st.title("🧭 Agent Arbiter")
 st.caption(
     "A router across AI-agent task marketplaces. "
-    "**Week 1: alert-only** — it scores and ranks, it does not claim or pay."
+    "**Week 2: human-gated execution on simulated settlement** — no wallet, no real funds."
 )
+
+guard = RiskGuard(settings)
+totals = guard.totals_today()
 
 with st.sidebar:
     st.header("Scan")
-    markets = st.multiselect("Marketplaces", ["opentask", "mock"], default=["opentask", "mock"])
+    markets = st.multiselect("Marketplaces", list(CONNECTORS), default=["opentask", "mock"])
     limit = st.slider("Bounties per marketplace", 5, 100, 25, step=5)
-    if st.button("Run scan", type="primary", use_container_width=True, disabled=not markets):
+    enqueue = st.slider("Send top N to approval queue", 0, 5, 2)
+    if st.button("Run scan", type="primary", width="stretch", disabled=not markets):
         with st.spinner("Scanning…"):
-            do_scan(markets, limit)
+            do_scan(markets, limit, enqueue)
 
     st.divider()
-    st.caption("**Filters**")
-    st.write(f"min payout · ${settings.min_payout_usd:.2f}")
-    st.write(f"max effort · {settings.max_effort_hours * 60:.0f} min")
-    st.write(f"cost margin · {settings.cost_safety_margin:g}×")
+    st.caption("**Risk limits**")
     st.write(f"daily budget · ${settings.daily_budget_usd:.2f}")
-    st.write(f"estimator · `{settings.llm_provider}`")
+    st.write(f"max loss/day · ${settings.max_loss_per_day_usd:.2f}")
+    st.write(f"max cost/task · ${settings.max_cost_per_task_usd:.2f}")
+    st.write(f"max tasks/day · {settings.max_tasks_per_day}")
+    st.write(f"approval gate · {'ON' if settings.require_approval else 'OFF'}")
+    st.caption(f"resets {next_reset():%Y-%m-%d %H:%M} UTC")
 
-decisions = load("decisions")
-bounties = load("bounties")
-scans = load("scans")
+# --- risk banner ---
+budget_left = settings.daily_budget_usd - totals.spent_usd
+if guard.tripped:
+    st.error(f"⛔ Circuit breaker tripped — claims halted. {guard.tripped_reason}")
+elif -totals.net_usd >= settings.max_loss_per_day_usd:
+    st.error(f"⛔ Net loss ${-totals.net_usd:.2f} at daily cap — claims will be refused.")
+elif budget_left <= 0:
+    st.warning(f"⚠️ Daily spend budget exhausted (${settings.daily_budget_usd:.2f}).")
 
-if decisions.empty:
-    st.info("No scans yet. Run one from the sidebar, or `uv run arbiter scan`.")
-    st.stop()
+c1, c2, c3, c4, c5 = st.columns(5)
+c1.metric("Spent today", f"${totals.spent_usd:.4f}")
+c2.metric("Earned today", f"${totals.earned_usd:.2f}", help="Simulated settlement only")
+c3.metric("Net today", f"${totals.net_usd:.2f}")
+c4.metric("Budget left", f"${max(0.0, budget_left):.4f}")
+c5.metric("Tasks today", totals.tasks)
+st.caption("💡 All amounts are **simulated** — MockMarketplace settlement. No wallet exists yet.")
 
-latest = scans.sort_values("started_at", ascending=False).iloc[0]
-current = decisions[decisions["run_id"] == latest["run_id"]]
-scored = current[current["action"] == "scored"].sort_values("score", ascending=False)
-skipped = current[current["action"] == "skipped"]
-
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Bounties found", int(latest["n_found"]))
-c2.metric("Actionable", int(latest["n_scored"]))
-c3.metric("Skipped", int(latest["n_skipped"]))
-c4.metric("Best net EV", f"${scored['net_ev_usd'].max():.2f}" if not scored.empty else "—")
-st.caption(f"Latest run `{latest['run_id']}` · {latest['started_at']} · {latest['marketplaces']}")
-
-tab_ranked, tab_skipped, tab_open, tab_log = st.tabs(
-    ["Ranked", "Skipped (with reasons)", "Open bounties", "Decision log"]
+queue_rows = pending_tasks()
+tab_queue, tab_ranked, tab_skipped, tab_tasks, tab_log = st.tabs(
+    [
+        f"⏸ Approval queue ({len(queue_rows)})",
+        "Ranked", "Skipped (with reasons)", "Tasks & P&L", "Audit log",
+    ]
 )
 
+with tab_queue:
+    st.subheader("Bounties waiting at the claim gate")
+    st.caption(
+        "Each row is a LangGraph run suspended at an `interrupt()`. Nothing is "
+        "claimed, executed, or settled until you decide."
+    )
+    if not queue_rows:
+        st.info("Queue is empty. Run a scan with 'Send top N to approval queue' > 0.")
+    for row in queue_rows:
+        payout = f"${row.payout_usd:.2f}" if row.payout_usd is not None else "?"
+        with st.container(border=True):
+            left, right = st.columns([4, 1])
+            with left:
+                st.markdown(f"**{row.title}**")
+                st.caption(
+                    f"`{row.bounty_key}` · {row.category} · payout {payout} · "
+                    f"score {row.score:.2f}"
+                )
+            with right:
+                if st.button("Approve", key=f"a-{row.bounty_key}", type="primary",
+                             width="stretch"):
+                    with st.spinner("Executing…"):
+                        decide(row.bounty_key, True)
+                    st.rerun()
+                if st.button("Reject", key=f"r-{row.bounty_key}", width="stretch"):
+                    decide(row.bounty_key, False, "rejected from dashboard")
+                    st.rerun()
+
+decisions = load("decisions")
+scans = load("scans")
+
 with tab_ranked:
-    st.subheader("Ranked by score")
-    if scored.empty:
-        st.info("Nothing cleared the filters in this run.")
+    if decisions.empty:
+        st.info("No scans yet.")
     else:
-        st.dataframe(
-            scored[[
-                "rank", "marketplace", "title", "payout_usd", "score", "net_ev_usd",
-                "p_success", "feasibility", "confidence", "est_effort_hours",
-                "est_api_cost_usd", "estimator", "rationale",
-            ]],
-            hide_index=True,
-            use_container_width=True,
-            column_config={
-                "payout_usd": st.column_config.NumberColumn("payout", format="$%.2f"),
-                "net_ev_usd": st.column_config.NumberColumn("net EV", format="$%.2f"),
-                "score": st.column_config.NumberColumn("score", format="%.2f"),
-                "est_effort_hours": st.column_config.NumberColumn("effort (h)", format="%.3f"),
-                "est_api_cost_usd": st.column_config.NumberColumn("est cost", format="$%.4f"),
-            },
-        )
-        st.bar_chart(scored.set_index("title")["score"].head(10))
+        latest = scans.sort_values("started_at", ascending=False).iloc[0]
+        current = decisions[decisions["run_id"] == latest["run_id"]]
+        scored = current[current["action"] == "scored"].sort_values("score", ascending=False)
+        st.subheader("Ranked by score")
+        st.caption(f"Run `{latest['run_id']}` · {latest['started_at']} · {latest['marketplaces']}")
+        if scored.empty:
+            st.info("Nothing cleared the filters in this run.")
+        else:
+            st.dataframe(
+                scored[[
+                    "rank", "marketplace", "title", "payout_usd", "score", "net_ev_usd",
+                    "p_success", "feasibility", "confidence", "est_effort_hours",
+                    "estimator", "rationale",
+                ]],
+                hide_index=True, width="stretch",
+                column_config={
+                    "payout_usd": st.column_config.NumberColumn("payout", format="$%.2f"),
+                    "net_ev_usd": st.column_config.NumberColumn("net EV", format="$%.2f"),
+                    "score": st.column_config.NumberColumn("score", format="%.2f"),
+                },
+            )
 
 with tab_skipped:
     st.subheader("Why bounties were skipped")
     st.caption("The judgment is the product — the skip reason matters as much as the ranking.")
-    if skipped.empty:
-        st.info("Nothing was skipped.")
+    if decisions.empty:
+        st.info("No scans yet.")
     else:
+        skipped = decisions[decisions["action"] == "skipped"]
         st.dataframe(
             skipped[["marketplace", "title", "payout_usd", "skip_reason"]],
-            hide_index=True,
-            use_container_width=True,
-        )
-        st.markdown("**Skip reasons by frequency**")
-        st.bar_chart(
-            skipped["skip_reason"]
-            .str.split("(", regex=False).str[0].str.split(":", regex=False).str[0]
-            .value_counts()
+            hide_index=True, width="stretch",
         )
 
-with tab_open:
-    st.subheader("Open bounties seen")
-    cols = [c for c in ["marketplace", "title", "category", "payout_usd", "payout_text",
-                        "currency", "deadline", "url", "last_seen_at"] if c in bounties.columns]
-    st.dataframe(
-        bounties.sort_values("last_seen_at", ascending=False)[cols],
-        hide_index=True,
-        use_container_width=True,
-        column_config={"url": st.column_config.LinkColumn("link")},
-    )
+with tab_tasks:
+    tasks = load("tasks")
+    ledger = load("ledger")
+    st.subheader("Task outcomes")
+    if tasks.empty:
+        st.info("No tasks yet.")
+    else:
+        st.dataframe(
+            tasks.sort_values("updated_at", ascending=False)[[
+                "bounty_key", "title", "state", "approved", "approved_by", "handler",
+                "payout_usd", "actual_cost_usd", "settled_amount_usd", "simulated",
+            ]],
+            hide_index=True, width="stretch",
+        )
+        st.bar_chart(tasks["state"].value_counts())
+    st.subheader("Ledger (all simulated)")
+    if ledger.empty:
+        st.info("No ledger entries yet.")
+    else:
+        st.dataframe(
+            ledger.sort_values("created_at", ascending=False)[
+                ["created_at", "bounty_key", "kind", "amount_usd", "reason", "simulated"]
+            ],
+            hide_index=True, width="stretch",
+        )
 
 with tab_log:
-    st.subheader("Decision log (append-only)")
-    st.caption("Every decision across every run. This is the audit trail.")
-    st.dataframe(
-        decisions.sort_values("created_at", ascending=False)[[
-            "created_at", "run_id", "marketplace", "title", "action",
-            "score", "net_ev_usd", "skip_reason", "estimator",
-        ]],
-        hide_index=True,
-        use_container_width=True,
-    )
+    st.subheader("Orchestrator events")
+    st.caption("Every node transition, append-only. This plus the decision log is the audit trail.")
+    events = load("events")
+    if events.empty:
+        st.info("No events yet.")
+    else:
+        st.dataframe(
+            events.sort_values("created_at", ascending=False)[
+                ["created_at", "run_id", "node", "bounty_key", "message"]
+            ],
+            hide_index=True, width="stretch",
+        )
+    st.subheader("Decision log")
+    if not decisions.empty:
+        st.dataframe(
+            decisions.sort_values("created_at", ascending=False)[[
+                "created_at", "run_id", "marketplace", "title", "action",
+                "score", "net_ev_usd", "skip_reason", "estimator",
+            ]],
+            hide_index=True, width="stretch",
+        )

@@ -159,11 +159,45 @@ class GroqEstimator:
     name = "groq"
     _URL = "https://api.groq.com/openai/v1/chat/completions"
 
-    def __init__(self, api_key: str, model: str, timeout: float = 30.0) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        timeout: float = 30.0,
+        client: httpx.AsyncClient | None = None,
+    ) -> None:
         self._api_key = api_key
         self._model = model
         self._timeout = timeout
+        self._client = client  # injectable for tests
         self._fallback = HeuristicEstimator()
+
+    async def _post(self, body: dict[str, Any]) -> str:
+        """POST a chat completion and return the message content."""
+        headers = {"Authorization": f"Bearer {self._api_key}"}
+        if self._client is not None:
+            response = await self._client.post(self._URL, json=body, headers=headers)
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
+
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            response = await client.post(self._URL, json=body, headers=headers)
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
+
+    async def complete(self, system: str, user: str, max_tokens: int = 1200) -> str:
+        """Free-form completion. Used by the execution sub-agents."""
+        return await self._post(
+            {
+                "model": self._model,
+                "temperature": 0.2,
+                "max_tokens": max_tokens,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+            }
+        )
 
     async def estimate(self, bounty: Bounty) -> Estimate:
         prompt = (
@@ -185,14 +219,7 @@ class GroqEstimator:
             ],
         }
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.post(
-                    self._URL,
-                    json=body,
-                    headers={"Authorization": f"Bearer {self._api_key}"},
-                )
-                response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"]
+            content = await self._post(body)
             return _coerce(json.loads(content))
         except Exception as exc:  # noqa: BLE001 -- never let scoring die on the LLM
             log.warning(
@@ -207,10 +234,26 @@ class GroqEstimator:
 
 
 def get_estimator() -> Estimator:
-    """Pick an estimator from config, falling back to the heuristic one."""
+    """Pick an estimator from config.
+
+    The default provider is "auto": use Groq when a key is present, otherwise
+    fall back to the offline heuristic. Dropping a key into `.env` is
+    therefore the only step needed to switch to the real LLM. "groq" and
+    "heuristic" force the choice explicitly.
+    """
     settings = get_settings()
-    if settings.llm_provider.lower() == "groq" and settings.groq_api_key:
-        return GroqEstimator(settings.groq_api_key, settings.groq_model)
-    if settings.llm_provider.lower() == "groq":
-        log.warning("llm.no_api_key", provider="groq", using="heuristic")
+    provider = settings.llm_provider.lower()
+
+    if provider == "heuristic":
+        return HeuristicEstimator()
+
+    if provider in {"auto", "groq"}:
+        if settings.groq_api_key:
+            log.info("llm.estimator", provider="groq", model=settings.groq_model)
+            return GroqEstimator(settings.groq_api_key, settings.groq_model)
+        if provider == "groq":
+            log.warning("llm.no_api_key", provider="groq", using="heuristic")
+        return HeuristicEstimator()
+
+    log.warning("llm.unknown_provider", provider=provider, using="heuristic")
     return HeuristicEstimator()
