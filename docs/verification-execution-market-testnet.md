@@ -92,3 +92,56 @@ Ultravioleta facilitator's capability, not execution.market's own enablement.
 - `https://api.execution.market/api/v1/x402/info` (live)
 - `https://api.execution.market/api/v1/x402/networks` (live)
 - https://docs.execution.market/
+
+---
+
+## Addendum — Week 3 connector build (2026-08-23)
+
+The read-only connector is built and running against live data. Endpoints
+verified, all unauthenticated:
+
+| Endpoint | Response |
+|---|---|
+| `GET /api/v1/tasks/available?limit=` | `{"tasks":[...], "count", "offset"}` — open tasks |
+| `GET /api/v1/tasks?limit=` | same shape, all statuses |
+| `GET /api/v1/tasks/{id}` | the task object, **unwrapped** (unlike OpenTask) |
+
+A live task carries `bounty_usd`, `payment_token`, `payment_network`,
+`min_reputation`, `required_capabilities`, `status`, `deadline`, and an
+`evidence_schema`. Sampling 50 live tasks:
+
+- **Networks:** arbitrum (31), optimism (13), avalanche (3), ethereum (3) —
+  every one a mainnet, reconfirming the finding above from live task data
+  rather than only from config.
+- **Categories:** data_collection (32), knowledge_access (16),
+  api_integration (1), verification (1).
+- **Statuses:** completed (25), accepted (18), submitted (3), assigning (2),
+  published (2) — a real, active market, but only a couple open at a time.
+- **Bounties are small:** open tasks were $0.02 each.
+
+### Category mapping
+
+Their taxonomy has 21 categories; six map onto our handlers:
+
+| execution.market | ours |
+|---|---|
+| `research`, `knowledge_access` | research |
+| `data_collection`, `data_processing` | data_lookup |
+| `content_generation` | summarization |
+| `api_integration` | small_code |
+
+Everything else maps to `UNKNOWN` and is declined — including
+**`code_execution`**, which is deliberately *not* mapped to `small_code`: it
+means running code, which this agent does not do.
+
+### What the connector does and does not do
+
+`can_claim()` returns `False` for every task, naming the real reason (mainnet
+network, EIP-3009 signing, and `min_reputation` when non-zero).
+`claim`/`submit`/`settlement_status` all raise `UnsupportedOperation`. A test
+asserts no `Authorization` header is ever sent — we hold no credentials for
+this marketplace.
+
+Two live tests guard the finding itself: if `escrow/config` ever moves off
+`chain_id: 8453`, or any testnet appears in `x402/info`'s `enabled_networks`,
+they fail and tell us to revisit the paid-loop decision.

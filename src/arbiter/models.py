@@ -276,6 +276,39 @@ class LedgerRow(SQLModel, table=True):
     created_at: datetime = SQLField(default_factory=utcnow, index=True)
 
 
+class OutcomeRow(SQLModel, table=True):
+    """Predicted vs. actual, one row per completed attempt.
+
+    This is the calibration substrate: `predicted_p_success` is what the
+    scorer believed before the work happened, `accepted` is what actually
+    happened. `simulated` marks outcomes that came from MockMarketplace so
+    they are never mistaken for real market evidence.
+    """
+
+    __tablename__ = "outcomes"
+
+    id: int | None = SQLField(default=None, primary_key=True)
+    bounty_key: str = SQLField(index=True, unique=True)
+    marketplace: str = SQLField(index=True)
+    category: str = SQLField(default=Category.UNKNOWN.value, index=True)
+
+    predicted_p_success: float = 0.0
+    predicted_feasibility: float = 0.0
+    predicted_confidence: float = 0.0
+    predicted_effort_hours: float = 0.0
+    predicted_cost_usd: float = 0.0
+
+    accepted: bool = False
+    deliverable_state: str | None = None
+    actual_cost_usd: float = 0.0
+    actual_payout_usd: float = 0.0
+    handler: str | None = None
+    failure_reason: str | None = None
+
+    simulated: bool = True
+    created_at: datetime = SQLField(default_factory=utcnow, index=True)
+
+
 class EventRow(SQLModel, table=True):
     """Append-only orchestrator event log -- every node transition."""
 

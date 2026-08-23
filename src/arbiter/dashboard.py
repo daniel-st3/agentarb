@@ -15,11 +15,24 @@ import pandas as pd
 import streamlit as st
 from sqlmodel import select
 
+from arbiter import calibration
 from arbiter.config import get_settings
-from arbiter.connectors import MockMarketplaceConnector, OpenTaskConnector
+from arbiter.connectors import (
+    ExecutionMarketConnector,
+    MockMarketplaceConnector,
+    OpenTaskConnector,
+)
 from arbiter.db import init_db, session_scope
 from arbiter.logging import configure_logging
-from arbiter.models import BountyRow, DecisionRow, EventRow, LedgerRow, ScanRow, TaskRow
+from arbiter.models import (
+    BountyRow,
+    DecisionRow,
+    EventRow,
+    LedgerRow,
+    OutcomeRow,
+    ScanRow,
+    TaskRow,
+)
 from arbiter.orchestrator import Orchestrator, pending_tasks
 from arbiter.pipeline import run_scan
 from arbiter.risk import RiskGuard, next_reset
@@ -31,7 +44,11 @@ settings = get_settings()
 configure_logging(settings.log_level, settings.log_json)
 init_db()
 
-CONNECTORS = {"opentask": OpenTaskConnector, "mock": MockMarketplaceConnector}
+CONNECTORS = {
+    "opentask": OpenTaskConnector,
+    "execution_market": ExecutionMarketConnector,
+    "mock": MockMarketplaceConnector,
+}
 
 
 @st.cache_data(ttl=3)
@@ -39,6 +56,7 @@ def load(table: str) -> pd.DataFrame:
     models = {
         "bounties": BountyRow, "decisions": DecisionRow, "scans": ScanRow,
         "tasks": TaskRow, "ledger": LedgerRow, "events": EventRow,
+        "outcomes": OutcomeRow,
     }
     with session_scope() as session:
         rows = session.exec(select(models[table])).all()
@@ -125,7 +143,9 @@ totals = guard.totals_today()
 
 with st.sidebar:
     st.header("Scan")
-    markets = st.multiselect("Marketplaces", list(CONNECTORS), default=["opentask", "mock"])
+    markets = st.multiselect(
+        "Marketplaces", list(CONNECTORS), default=list(CONNECTORS)
+    )
     limit = st.slider("Bounties per marketplace", 5, 100, 25, step=5)
     enqueue = st.slider("Send top N to approval queue", 0, 5, 2)
     if st.button("Run scan", type="primary", width="stretch", disabled=not markets):
@@ -159,10 +179,11 @@ c5.metric("Tasks today", totals.tasks)
 st.caption("💡 All amounts are **simulated** — MockMarketplace settlement. No wallet exists yet.")
 
 queue_rows = pending_tasks()
-tab_queue, tab_ranked, tab_skipped, tab_tasks, tab_log = st.tabs(
+tab_queue, tab_ranked, tab_skipped, tab_tasks, tab_cal, tab_markets, tab_log = st.tabs(
     [
         f"⏸ Approval queue ({len(queue_rows)})",
-        "Ranked", "Skipped (with reasons)", "Tasks & P&L", "Audit log",
+        "Ranked", "Skipped (with reasons)", "Tasks & P&L",
+        "Calibration", "Marketplaces", "Audit log",
     ]
 )
 
@@ -244,8 +265,9 @@ with tab_tasks:
     else:
         st.dataframe(
             tasks.sort_values("updated_at", ascending=False)[[
-                "bounty_key", "title", "state", "approved", "approved_by", "handler",
-                "payout_usd", "actual_cost_usd", "settled_amount_usd", "simulated",
+                "bounty_key", "title", "state", "deliverable_state", "approved",
+                "approved_by", "handler", "payout_usd", "actual_cost_usd",
+                "settled_amount_usd", "simulated", "validation_notes",
             ]],
             hide_index=True, width="stretch",
         )
@@ -260,6 +282,130 @@ with tab_tasks:
             ],
             hide_index=True, width="stretch",
         )
+
+with tab_cal:
+    st.subheader("Is the scorer actually right?")
+    only_real = st.toggle(
+        "Exclude simulated (mock) outcomes", value=False,
+        help="Mock settlements always succeed, so they flatter the scorer. "
+             "Toggle on to see evidence from real marketplaces only.",
+    )
+    scope = False if only_real else None
+    summary = calibration.overall(simulated=scope)
+
+    if summary.n == 0:
+        st.info(
+            "No outcomes recorded yet."
+            + (" No real-marketplace outcomes exist — every paid action so far is "
+               "simulated." if only_real else " Approve a bounty to generate one.")
+        )
+    else:
+        k1, k2, k3, k4, k5 = st.columns(5)
+        k1.metric("Outcomes", summary.n)
+        k2.metric(
+            "Acceptance rate",
+            f"{summary.acceptance_rate:.0%}" if summary.acceptance_rate is not None else "—",
+        )
+        k3.metric("Brier score", f"{summary.brier:.3f}", help="Lower is better; 0 is perfect.")
+        k4.metric(
+            "Bias", f"{summary.bias:+.3f}",
+            help="Predicted minus actual. Positive = over-confident.",
+        )
+        k5.metric("Net (sim.)", f"${summary.net_usd:.2f}")
+        st.caption(f"Verdict: **{summary.verdict}**")
+
+        if summary.buckets:
+            st.markdown("**Reliability — predicted vs. actual by confidence band**")
+            frame = pd.DataFrame(
+                [
+                    {
+                        "band": b.label, "n": b.n,
+                        "predicted": round(b.predicted_mean, 3),
+                        "actual": round(b.actual_rate, 3),
+                        "gap (over-confidence)": round(b.gap, 3),
+                    }
+                    for b in summary.buckets
+                ]
+            )
+            st.dataframe(frame, hide_index=True, width="stretch")
+            st.bar_chart(frame.set_index("band")[["predicted", "actual"]])
+
+        st.markdown("**By category**")
+        rows = [
+            {
+                "category": name, "n": c.n,
+                "acceptance": (f"{c.acceptance_rate:.0%}" if c.acceptance_rate is not None
+                               else "—"),
+                "brier": None if c.brier is None else round(c.brier, 3),
+                "bias": None if c.bias is None else round(c.bias, 3),
+                "verdict": c.verdict,
+                "net_usd": round(c.net_usd, 2),
+            }
+            for name, c in calibration.by_category(simulated=scope).items()
+        ]
+        if rows:
+            st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+
+        st.markdown("**By marketplace**")
+        rows = [
+            {
+                "marketplace": name, "n": c.n,
+                "acceptance": (f"{c.acceptance_rate:.0%}" if c.acceptance_rate is not None
+                               else "—"),
+                "brier": None if c.brier is None else round(c.brier, 3),
+                "cost_usd": round(c.total_cost_usd, 4),
+                "payout_usd": round(c.total_payout_usd, 2),
+                "net_usd": round(c.net_usd, 2),
+            }
+            for name, c in calibration.by_marketplace(simulated=scope).items()
+        ]
+        if rows:
+            st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+
+        st.caption(
+            f"Mean cost error {summary.cost_error:+.4f} USD "
+            "(actual minus predicted, per task)."
+            if summary.cost_error is not None else ""
+        )
+
+    outcomes = load("outcomes")
+    if not outcomes.empty:
+        st.markdown("**Raw outcomes**")
+        st.dataframe(
+            outcomes.sort_values("created_at", ascending=False)[[
+                "created_at", "bounty_key", "marketplace", "category",
+                "predicted_p_success", "accepted", "deliverable_state",
+                "actual_cost_usd", "actual_payout_usd", "simulated",
+            ]],
+            hide_index=True, width="stretch",
+        )
+
+with tab_markets:
+    st.subheader("Marketplace capabilities, as declared by each connector")
+    st.caption(
+        "The router's whole point: these markets are incompatible, and the "
+        "connectors say so rather than pretending otherwise."
+    )
+    caps = []
+    for name, cls in CONNECTORS.items():
+        c = cls.capabilities
+        caps.append({
+            "marketplace": name,
+            "open claim": "yes" if c.supports_open_claim else "no",
+            "claim model": c.claim_model.value,
+            "settlement": c.settlement.value,
+            "accept gate": "yes" if c.has_human_accept_gate else "no",
+            "autonomous settle": "yes" if c.supports_autonomous_settle else "no",
+        })
+    st.dataframe(pd.DataFrame(caps), hide_index=True, width="stretch")
+    for name, cls in CONNECTORS.items():
+        with st.expander(f"{name} — why"):
+            st.write(cls.capabilities.notes)
+    st.info(
+        "**Only MockMarketplace can close a paid loop today.** OpenTask settles "
+        "off-platform and is bid-based; execution.market has real escrow but on "
+        "mainnet only. Both are discovery + scoring sources."
+    )
 
 with tab_log:
     st.subheader("Orchestrator events")

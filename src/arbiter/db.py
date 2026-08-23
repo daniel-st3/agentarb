@@ -14,6 +14,7 @@ from arbiter.models import (  # noqa: F401  (table registration)
     DecisionRow,
     EventRow,
     LedgerRow,
+    OutcomeRow,
     ScanRow,
     TaskRow,
 )

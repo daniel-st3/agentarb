@@ -18,6 +18,7 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
+from arbiter.calibration import record_outcome
 from arbiter.config import Settings, get_settings
 from arbiter.connectors.base import MarketplaceConnector, UnsupportedOperation
 from arbiter.db import session_scope
@@ -92,6 +93,33 @@ def _upsert_task(bounty: Bounty, run_id: str, score: Score, **fields) -> None:
             setattr(row, key, value)
         row.updated_at = utcnow()
         session.add(row)
+
+
+def _record(
+    bounty: Bounty,
+    score: Score,
+    connector: MarketplaceConnector,
+    accepted: bool,
+    deliverable_state: str | None,
+    cost_usd: float,
+    payout_usd: float,
+    handler: str | None,
+    failure_reason: str | None = None,
+) -> None:
+    """Feed the calibration layer. Mock outcomes stay flagged simulated."""
+    record_outcome(
+        bounty_key=bounty.key,
+        marketplace=bounty.marketplace,
+        category=bounty.category.value,
+        score=score,
+        accepted=accepted,
+        deliverable_state=deliverable_state,
+        actual_cost_usd=cost_usd,
+        actual_payout_usd=payout_usd,
+        handler=handler,
+        simulated=connector.capabilities.settlement is Settlement.SIMULATED,
+        failure_reason=failure_reason,
+    )
 
 
 class ArbiterGraph:
@@ -273,6 +301,14 @@ class ArbiterGraph:
             deliverable_state=result.deliverable_state.value,
             refusal_kind=result.refusal_kind,
         )
+        if not result.ok:
+            _record(
+                bounty, score, connector, accepted=False,
+                deliverable_state=result.deliverable_state.value,
+                cost_usd=result.cost_usd, payout_usd=0.0, handler=result.handler,
+                failure_reason=result.error,
+            )
+
         return {
             "result": {
                 "ok": result.ok, "handler": result.handler, "output": result.output,
@@ -362,6 +398,23 @@ class ArbiterGraph:
                 settlement_ref=settlement.get("tx"),
                 simulated=bool(settlement.get("simulated", True)),
             )
+            _record(
+                bounty, score, connector, accepted=True,
+                deliverable_state=(state.get("result") or {}).get("deliverable_state"),
+                cost_usd=(state.get("result") or {}).get("cost_usd", 0.0),
+                payout_usd=amount,
+                handler=(state.get("result") or {}).get("handler"),
+            )
+        else:
+            _record(
+                bounty, score, connector, accepted=False,
+                deliverable_state=(state.get("result") or {}).get("deliverable_state"),
+                cost_usd=(state.get("result") or {}).get("cost_usd", 0.0),
+                payout_usd=0.0,
+                handler=(state.get("result") or {}).get("handler"),
+                failure_reason=f"settlement status {settlement.get('status')!r}",
+            )
+
         record_event(
             state["run_id"], "settle", str(settlement.get("status")), bounty.key, **settlement
         )

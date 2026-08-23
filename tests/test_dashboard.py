@@ -41,7 +41,7 @@ async def test_renders_with_data(temp_db, settings):
 
     labels = [m.label for m in app.metric]
     assert {"Spent today", "Earned today", "Net today", "Tasks today"} <= set(labels)
-    assert len(app.tabs) == 5
+    assert len(app.tabs) == 7
     assert app.dataframe, "tables should render"
 
 
@@ -77,3 +77,33 @@ async def test_simulated_money_is_labelled(temp_db, settings):
     captions = " ".join(c.value for c in app.caption)
     assert "simulated" in captions.lower()
     assert "no wallet" in captions.lower()
+
+
+async def test_calibration_tab_renders_with_outcomes(temp_db, settings):
+    """Calibration metrics render once outcomes exist."""
+    from arbiter import calibration
+    from arbiter.db import init_db
+    from arbiter.models import Score
+
+    init_db()
+    for i in range(6):
+        calibration.record_outcome(
+            bounty_key=f"mock:{i}", marketplace="mock", category="research",
+            score=Score(bounty_key=f"mock:{i}", p_success=0.8, est_api_cost_usd=0.01),
+            accepted=i < 3, deliverable_state="validated",
+            actual_cost_usd=0.01, actual_payout_usd=10.0 if i < 3 else 0.0,
+            handler="research", simulated=True,
+        )
+
+    app = AppTest.from_file(APP, default_timeout=60).run()
+    assert not app.exception
+    labels = [m.label for m in app.metric]
+    assert {"Outcomes", "Acceptance rate", "Brier score", "Bias"} <= set(labels)
+
+
+async def test_marketplace_tab_states_capabilities(temp_db, settings):
+    app = AppTest.from_file(APP, default_timeout=60).run()
+    assert not app.exception
+    assert any("Marketplaces" in t.label for t in app.tabs)
+    text = " ".join(i.value for i in app.info)
+    assert "MockMarketplace" in text and "mainnet" in text.lower()

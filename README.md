@@ -5,11 +5,12 @@ marketplace and not another agent — the trader that sits above them, scores
 every open bounty by expected profit vs. effort vs. actual capability, and
 decides which are worth doing.
 
-> **Status: Week 2 — human-gated execution on simulated settlement.** It scans,
-> scores, and stops at a human approval gate. On approval it claims, executes,
-> submits, and settles — but only against MockMarketplace, whose settlement is
-> explicitly simulated. **There is no wallet code in this repo and nothing here
-> moves real or testnet funds.**
+> **Status: Week 3 — multi-marketplace router with calibration.** It scans two
+> real marketplaces plus a mock, scores every bounty, and stops at a human
+> approval gate. On approval it claims, executes, submits, and settles — but
+> only against MockMarketplace, whose settlement is explicitly simulated.
+> **There is no wallet code in this repo and nothing here moves real or testnet
+> funds.**
 
 ## Why it's interesting
 
@@ -21,23 +22,44 @@ Protocol — and representing the differences *honestly* rather than pretending
 a push-market into a pull loop — is the hard part and the centrepiece.
 
 ```
-  Connectors ──normalized Bounty──▶ Scoring Agent ──Score──▶ RiskGuard
-  (per market)                      skip-filter,                │
-   opentask (read-only)             estimate, formula           │ limits ok?
-   mock (local, deterministic)                                  ▼
-                                                         ┌─────────────┐
-                                                         │ CLAIM GATE  │ ← human
-                                                         │ interrupt() │
-                                                         └──────┬──────┘
-                                                                │ approved
-                                     ┌──────────────────────────┤
-                                     ▼                          ▼
-                            claim → execute → submit → settle (simulated)
-                                     │  category router → research /
-                                     │  summarization / small_code / data_lookup
-                                     ▼
-                              SQLite audit trail → Streamlit dashboard
+  ┌──────────────── DISCOVERY (real, read-only) ──────────────┐  ┌── PAID LOOP ──┐
+  │  opentask            execution_market                      │  │  mock         │
+  │  bid · off-platform  pull-claim · MAINNET escrow           │  │  simulated    │
+  │  no escrow           reputation-gated                      │  │  settlement   │
+  └───────────────────────┬───────────────────────────────────┘  └───────┬───────┘
+                          │        normalized Bounty                     │
+                          └──────────────────┬───────────────────────────┘
+                                             ▼
+                                     Scoring Agent
+                            skip-filter → estimate → formula
+                                             │
+                                             ▼
+                                        RiskGuard
+                              caps · margin · circuit breaker
+                                             │
+                                             ▼
+                                    ┌─────────────────┐
+                                    │   CLAIM GATE    │ ◄── human decides
+                                    │   interrupt()   │     (checkpointed)
+                                    └────────┬────────┘
+                                             │ approved
+                                             ▼
+                    safety screen → execute → validate → submit → settle
+                    harmful/       category    grade to    only if    simulated
+                    ambiguous/     router      draft/      SUBMISSION only
+                    out-of-scope               validated   _READY
+                    refused                    /ready
+                                             │
+                                             ▼
+                              SQLite audit trail + outcomes
+                                             │
+                                             ▼
+                          Calibration ──────────────► Streamlit dashboard
+                    predicted p_success vs. actual
 ```
+
+**Only MockMarketplace can close a paid loop today.** That is a finding, not a
+shortcut — see [Marketplaces](#marketplaces).
 
 ## Quickstart
 
@@ -54,9 +76,13 @@ uv run arbiter queue                   # what is waiting, plus today's P&L
 uv run arbiter approve mock:mock-007   # claim → execute → submit → settle
 uv run arbiter reject  mock:mock-001 --reason "too thin"
 
+uv run arbiter markets                 # what each marketplace can actually do
+uv run arbiter calibrate               # predicted vs. actual, by category/market
+uv run arbiter calibrate --real-only   # excludes simulated outcomes (expect: none)
 uv run arbiter estimate-check          # sanity-check estimator output
+
 uv run streamlit run src/arbiter/dashboard.py
-uv run pytest                          # 112 tests; add -m live for network tests
+uv run pytest                          # add -m live for network tests
 ```
 
 No API key is required. The default provider is `auto`: with a Groq key in
@@ -96,20 +122,32 @@ Verified live on 2026-08-23.
 | Marketplace | API | Claim model | Settlement | Gate | Role here |
 |---|---|---|---|---|---|
 | **OpenTask** | `GET /api/tasks`, `GET /api/tasks/{id}` — public, unauthenticated | bid (`executionMode: "pitch"`) | **off-platform, non-custodial** | buyer selects | **Discovery only** |
-| **MockMarketplace** | local | open pull-claim | simulated | none | Demo + tests |
-| execution.market | REST + MCP | accept/claim | x402 escrow, USDC — **Base mainnet only** | approval | Deferred (see below) |
+| **execution.market** | `GET /api/v1/tasks/available`, `/api/v1/tasks/{id}` — public, unauthenticated | open pull-claim | **x402r escrow, Base mainnet only** | verification | **Discovery only** |
+| **MockMarketplace** | local | open pull-claim | simulated | none | **The only paid loop** |
 
-**execution.market has no testnet escrow.** Its `escrow/config` is pinned to
-`chain_id: 8453` (Base mainnet) with mainnet USDC, and `x402/info` shows ten
-mainnets enabled and zero testnets. So it cannot join a testnet-first paid
-loop; a read-only connector for discovery and scoring remains viable at any
-time. Full write-up in `docs/verification-execution-market-testnet.md`.
+Both real marketplaces are **discovery-only, for different reasons** — which is
+precisely the heterogeneity this project exists to handle:
 
-OpenTask cannot close a paid autonomous loop: its terms state it "does not
+**execution.market** has real platform escrow, but no testnet. `escrow/config`
+is pinned to `chain_id: 8453` (Base mainnet) with mainnet USDC and a single
+deployed escrow address; `x402/info` lists ten mainnets enabled and zero
+testnets. Accepting a task also needs EIP-3009 signing and clears a per-task
+`min_reputation` gate. So joining its paid loop would mean real funds on
+mainnet — out of scope until a gated Week 4 task. The connector lists and
+scores live tasks and refuses every write path. Full write-up in
+`docs/verification-execution-market-testnet.md`.
+
+**OpenTask** cannot close a paid autonomous loop for the opposite reason —
+no escrow at all: its terms state it "does not
 custody funds, hold escrow, control private keys, or sign wallet transactions
 for you." It is an excellent *discovery* source and is treated as exactly
-that. The paid loop will run on MockMarketplace (simulated) and
-execution.market (real x402 escrow).
+that.
+
+**MockMarketplace therefore carries the end-to-end control flow.** It is the
+only connector where `supports_open_claim`, `supports_autonomous_settle`, and
+a submittable deliverable line up — so it proves claim → execute → submit →
+settle works, deterministically and with no funds at risk, while the two real
+markets prove the *router* half of the story.
 
 ## The claim gate
 
@@ -136,6 +174,45 @@ queue either.
 | `cost_safety_margin` | Does payout clear est. cost × margin? |
 | `max_tasks_per_day` | Backstop against a runaway loop. |
 
+## Deliverable states
+
+Execution output is graded before it can be called ready. The grading happens
+in exactly one function, so the invariant holds everywhere:
+
+| State | Meaning |
+|---|---|
+| `simulated` | Stub content — no LLM ran. **Never submittable.** |
+| `draft` | Real generated content that failed validation. |
+| `validated` | Passed the category's structural checks. |
+| `submission_ready` | Validated, non-stub, on a market that can accept it. |
+
+A stub can never rise above `simulated`, whatever its content, and the submit
+node refuses to hand anything below `submission_ready` to a non-simulated
+marketplace.
+
+Before any of that, a safety screen refuses four kinds of work outright, so no
+tokens are spent on them: **unsupported** category, **harmful** (malware,
+phishing, access-control bypass, forgery, doxxing, impersonation),
+**out of scope** (physical presence, credentials, executing untrusted code,
+moving funds), and **ambiguous** (placeholder or too-thin descriptions).
+
+## Calibration
+
+Every completed attempt records what the scorer predicted next to what
+happened, so the question "is this thing actually any good at judging?" has a
+number rather than a vibe.
+
+- **Brier score** — mean squared error of `p_success`. Lower is better.
+- **Bias** — predicted minus actual. Positive means over-confident.
+- **Reliability bands** — when it says 0.7, does ~70% succeed?
+- Sliced by category and marketplace, with **simulated outcomes separable**:
+  `arbiter calibrate --real-only` currently reports zero, because every paid
+  action so far is simulated. That number staying honest is the point.
+
+Measured bias feeds back into future estimates via `adjustment_for()`, which
+returns 1.0 until it has at least 5 samples and is clamped to [0.5, 1.5] — a
+calibration layer that reacts to two data points is noise, not learning.
+
 ## Safety posture
 
 - **No wallet, key, or payment code exists in the repo.** Every ledger entry
@@ -157,15 +234,19 @@ src/arbiter/
   connectors/
     base.py       the MarketplaceConnector Protocol
     opentask.py   read-only, live
+    execution_market.py  read-only, live
     mock.py       local, deterministic
   llm.py          estimator + completions: Groq or offline fallback
   scoring.py      skip-filter + formula + ranking
   risk.py         RiskGuard: spend caps + circuit breaker
   executors/      research / summarization / small_code / data_lookup
     router.py     category -> handler; unknown declines honestly
+    safety.py     refuses harmful / out-of-scope / ambiguous work
+    validation.py grades output: simulated -> draft -> validated -> ready
   graph.py        LangGraph state machine with the interrupt() claim gate
   orchestrator.py start / resume / approval queue
+  calibration.py  predicted p_success vs. actual; Brier, bias, adjustment
   pipeline.py     scan -> score -> rank -> record
-  cli.py          scan · run · queue · approve · reject · estimate-check
+  cli.py          scan · run · queue · approve · reject · calibrate · markets
   dashboard.py    Streamlit + approve/reject queue
 ```

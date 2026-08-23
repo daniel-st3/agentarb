@@ -6,8 +6,13 @@ import asyncio
 
 import typer
 
+from arbiter import calibration
 from arbiter.config import get_settings
-from arbiter.connectors import MockMarketplaceConnector, OpenTaskConnector
+from arbiter.connectors import (
+    ExecutionMarketConnector,
+    MockMarketplaceConnector,
+    OpenTaskConnector,
+)
 from arbiter.db import init_db
 from arbiter.llm import GroqEstimator, HeuristicEstimator, get_estimator
 from arbiter.logging import configure_logging
@@ -20,7 +25,11 @@ app = typer.Typer(help="Agent Arbiter -- cross-marketplace bounty router (Week 1
 
 
 def _build_connectors(markets: list[str]):
-    available = {"opentask": OpenTaskConnector, "mock": MockMarketplaceConnector}
+    available = {
+        "opentask": OpenTaskConnector,
+        "execution_market": ExecutionMarketConnector,
+        "mock": MockMarketplaceConnector,
+    }
     unknown = set(markets) - available.keys()
     if unknown:
         raise typer.BadParameter(f"unknown marketplace(s): {', '.join(sorted(unknown))}")
@@ -30,7 +39,8 @@ def _build_connectors(markets: list[str]):
 @app.command()
 def scan(
     market: list[str] = typer.Option(
-        ["opentask", "mock"], "--market", "-m", help="Marketplaces to scan."
+        ["opentask", "execution_market", "mock"], "--market", "-m",
+        help="Marketplaces to scan.",
     ),
     limit: int = typer.Option(50, help="Max bounties to pull per marketplace."),
     top: int = typer.Option(5, help="How many ranked bounties to print."),
@@ -240,7 +250,9 @@ def reject(
 
 @app.command("estimate-check")
 def estimate_check(
-    market: list[str] = typer.Option(["opentask", "mock"], "--market", "-m"),
+    market: list[str] = typer.Option(
+        ["opentask", "execution_market", "mock"], "--market", "-m"
+    ),
     limit: int = typer.Option(4, help="Bounties per marketplace to estimate."),
     compare: bool = typer.Option(
         True, help="Also show the heuristic estimate side by side."
@@ -297,4 +309,83 @@ def estimate_check(
                 f"{base['est_effort_hours'] * 60:.0f}m · cost ${base['est_api_cost_usd']:.3f}"
             )
         typer.echo(f"   rationale: {live.get('rationale', '')[:150]}")
+        typer.echo("")
+
+
+@app.command()
+def calibrate(
+    real_only: bool = typer.Option(
+        False, "--real-only", help="Exclude simulated (mock) outcomes."
+    ),
+    backfill: bool = typer.Option(False, help="Derive outcomes from older finished tasks."),
+) -> None:
+    """Report how well predicted p_success matched what actually happened."""
+    settings = get_settings()
+    configure_logging(settings.log_level, settings.log_json)
+    init_db()
+
+    if backfill:
+        typer.echo(f"backfilled {calibration.backfill_from_tasks()} outcome(s)")
+
+    scope = False if real_only else None
+    summary = calibration.overall(simulated=scope)
+
+    typer.echo("")
+    if summary.n == 0:
+        typer.secho("No outcomes recorded yet.", fg=typer.colors.YELLOW)
+        if real_only:
+            typer.echo("  (no real-marketplace outcomes exist — everything so far is simulated)")
+        return
+
+    label = "real marketplaces only" if real_only else "all outcomes (incl. simulated)"
+    typer.secho(f"Calibration — {label}", bold=True)
+    typer.echo(
+        f"  n {summary.n} · accepted {summary.accepted} "
+        f"({summary.acceptance_rate:.0%}) · brier {summary.brier:.3f} · "
+        f"bias {summary.bias:+.3f} → {summary.verdict}"
+    )
+    typer.echo(
+        f"  cost ${summary.total_cost_usd:.4f} · payout ${summary.total_payout_usd:.2f} "
+        f"· net ${summary.net_usd:.2f}"
+    )
+    typer.echo("")
+    typer.secho("  Reliability by confidence band:", bold=True)
+    for bucket in summary.buckets:
+        typer.echo(
+            f"    {bucket.label}  n={bucket.n:<3} predicted {bucket.predicted_mean:.2f} "
+            f"· actual {bucket.actual_rate:.2f} · gap {bucket.gap:+.2f}"
+        )
+    typer.echo("")
+    typer.secho("  By category:", bold=True)
+    for name, c in calibration.by_category(simulated=scope).items():
+        rate = f"{c.acceptance_rate:.0%}" if c.acceptance_rate is not None else "—"
+        typer.echo(f"    {name:16} n={c.n:<3} acc {rate:<5} brier {c.brier:.3f} · {c.verdict}")
+    typer.echo("")
+    typer.secho("  By marketplace:", bold=True)
+    for name, c in calibration.by_marketplace(simulated=scope).items():
+        typer.echo(f"    {name:16} n={c.n:<3} net ${c.net_usd:.2f}")
+    typer.echo("")
+
+
+@app.command()
+def markets() -> None:
+    """Show what each marketplace connector can actually do."""
+    configure_logging("ERROR", False)
+    typer.echo("")
+    typer.secho("Marketplace capabilities", bold=True)
+    typer.echo("")
+    for name, cls in {
+        "opentask": OpenTaskConnector,
+        "execution_market": ExecutionMarketConnector,
+        "mock": MockMarketplaceConnector,
+    }.items():
+        c = cls.capabilities
+        ready = "PAID LOOP" if c.supports_autonomous_settle else "discovery only"
+        colour = typer.colors.GREEN if c.supports_autonomous_settle else typer.colors.YELLOW
+        typer.secho(f"  {name}  [{ready}]", fg=colour, bold=True)
+        typer.echo(
+            f"     open_claim={c.supports_open_claim} · claim={c.claim_model.value} · "
+            f"settlement={c.settlement.value} · accept_gate={c.has_human_accept_gate}"
+        )
+        typer.echo(f"     {c.notes}")
         typer.echo("")

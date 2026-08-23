@@ -34,3 +34,38 @@ async def test_missing_task_returns_none():
         assert await connector.get("definitely-not-a-real-task-id") is None
     finally:
         await connector.aclose()
+
+
+async def test_execution_market_discovery_is_live():
+    """Read-only discovery against the live execution.market API."""
+    from arbiter.connectors import ExecutionMarketConnector
+
+    connector = ExecutionMarketConnector()
+    try:
+        bounties = await connector.list_open(limit=5)
+        for bounty in bounties:
+            assert bounty.marketplace == "execution_market"
+            assert bounty.bounty_id
+            # Every live task must be refused for claiming.
+            claimable, reason = connector.can_claim(bounty)
+            assert claimable is False and reason
+    finally:
+        await connector.aclose()
+
+
+async def test_execution_market_escrow_is_still_mainnet_only():
+    """Guards the Week 3 decision: if this ever changes, a test should say so."""
+    import httpx
+
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        escrow = (await client.get(
+            "https://api.execution.market/api/v1/escrow/config"
+        )).json()
+        info = (await client.get(
+            "https://api.execution.market/api/v1/x402/info"
+        )).json()
+
+    assert escrow["chain_id"] == 8453, "escrow moved off Base mainnet -- revisit Week 3"
+    enabled = set(info["enabled_networks"])
+    testnets = {n for n in enabled if "sepolia" in n or "testnet" in n or "amoy" in n}
+    assert not testnets, f"testnets are now enabled ({testnets}) -- revisit the paid loop"

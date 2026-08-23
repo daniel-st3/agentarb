@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     opentask_base_url: str = "https://opentask.ai"
     opentask_api_token: str = ""
 
+    # --- execution.market (read-only discovery; no auth needed) ---
+    execution_market_base_url: str = "https://api.execution.market"
+
     # --- Persistence ---
     db_path: Path = Path("data/arbiter.db")
     #: LangGraph checkpoints live in their own file. Sharing one SQLite file
