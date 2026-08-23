@@ -28,12 +28,11 @@ async def test_list_and_get_normalize():
         await connector.aclose()
 
 
-async def test_missing_task_returns_none():
-    connector = OpenTaskConnector()
-    try:
-        assert await connector.get("definitely-not-a-real-task-id") is None
-    finally:
-        await connector.aclose()
+# The 404 -> None contract is covered deterministically in
+# tests/test_connectors.py::test_get_returns_none_on_404. It is deliberately
+# not retested against the live API: some sandboxed egress proxies surface a
+# 404 to httpx as a transport-level ConnectError, which tests the proxy rather
+# than the connector.
 
 
 async def test_execution_market_discovery_is_live():

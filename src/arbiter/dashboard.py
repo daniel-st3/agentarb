@@ -135,7 +135,8 @@ def decide(bounty_key: str, approved: bool, reason: str | None = None) -> None:
 st.title("🧭 Agent Arbiter")
 st.caption(
     "A router across AI-agent task marketplaces. "
-    "**Week 2: human-gated execution on simulated settlement** — no wallet, no real funds."
+    "**Week 3: two real marketplaces (discovery-only) + a simulated paid loop** "
+    "— no wallet, no real funds."
 )
 
 guard = RiskGuard(settings)
@@ -328,7 +329,11 @@ with tab_cal:
                 ]
             )
             st.dataframe(frame, hide_index=True, width="stretch")
-            st.bar_chart(frame.set_index("band")[["predicted", "actual"]])
+            st.bar_chart(
+                frame.set_index("band")[["predicted", "actual"]],
+                stack=False,   # two comparable rates, not parts of a whole
+                y_label="probability",
+            )
 
         st.markdown("**By category**")
         rows = [
