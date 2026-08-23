@@ -15,7 +15,7 @@ from arbiter.executors.handlers import (
     SummarizationHandler,
 )
 from arbiter.logging import get_logger
-from arbiter.models import Bounty, Category
+from arbiter.models import Bounty, Category, DeliverableState
 
 log = get_logger(__name__)
 
@@ -39,12 +39,26 @@ class CategoryRouter:
     def route(self, bounty: Bounty) -> Handler | None:
         return self._by_category.get(bounty.category)
 
-    async def execute(self, bounty: Bounty) -> ExecutionResult:
+    async def execute(
+        self, bounty: Bounty, accepts_submission: bool = False
+    ) -> ExecutionResult:
+        """Dispatch to the category's handler.
+
+        `accepts_submission` says whether the marketplace can actually take a
+        deliverable; it is the gate on ever reaching SUBMISSION_READY.
+        """
         handler = self.route(bounty)
         if handler is None:
             reason = f"no handler for category {bounty.category.value}"
             log.warning("router.no_handler", bounty=bounty.key, category=bounty.category.value)
-            return ExecutionResult(ok=False, handler="none", error=reason)
+            return ExecutionResult(
+                ok=False,
+                handler="none",
+                error=reason,
+                refusal_kind="unsupported",
+                deliverable_state=DeliverableState.SIMULATED,
+                validation_notes=reason,
+            )
 
         log.info("router.dispatch", bounty=bounty.key, handler=handler.name)
-        return await handler.run(bounty)
+        return await handler.run(bounty, accepts_submission=accepts_submission)

@@ -29,10 +29,15 @@ class FakeRouter(CategoryRouter):
     def __init__(self, ok=True, cost=0.01, error=None):
         self._ok, self._cost, self._error = ok, cost, error
 
-    async def execute(self, bounty):
+    async def execute(self, bounty, accepts_submission: bool = False):
+        from arbiter.models import DeliverableState
+
         return ExecutionResult(
             ok=self._ok, handler="fake", output="deliverable",
             cost_usd=self._cost, error=self._error,
+            deliverable_state=(
+                DeliverableState.SUBMISSION_READY if self._ok else DeliverableState.SIMULATED
+            ),
         )
 
 

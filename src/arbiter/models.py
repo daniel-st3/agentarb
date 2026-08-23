@@ -183,6 +183,27 @@ class ScanRow(SQLModel, table=True):
     n_skipped: int = 0
 
 
+class DeliverableState(StrEnum):
+    """How much a produced deliverable can be trusted.
+
+    Strictly ordered. A stub can never rise above SIMULATED, and only a
+    deliverable that is both non-stub and validated may become
+    SUBMISSION_READY -- see `executors.validation.grade`.
+    """
+
+    SIMULATED = "simulated"          # stub content: no LLM ran. Never submittable.
+    DRAFT = "draft"                  # real generated content, not yet validated
+    VALIDATED = "validated"          # passed the handler's structural checks
+    SUBMISSION_READY = "submission_ready"  # validated, non-stub, marketplace accepts it
+
+    @property
+    def rank(self) -> int:
+        return _DELIVERABLE_ORDER.index(self)
+
+
+_DELIVERABLE_ORDER: list[DeliverableState] = []
+
+
 class TaskState(StrEnum):
     """Lifecycle of one claimed bounty."""
 
@@ -193,6 +214,16 @@ class TaskState(StrEnum):
     SUBMITTED = "submitted"
     SETTLED = "settled"
     FAILED = "failed"
+
+
+_DELIVERABLE_ORDER.extend(
+    [
+        DeliverableState.SIMULATED,
+        DeliverableState.DRAFT,
+        DeliverableState.VALIDATED,
+        DeliverableState.SUBMISSION_READY,
+    ]
+)
 
 
 class TaskRow(SQLModel, table=True):
@@ -217,6 +248,8 @@ class TaskRow(SQLModel, table=True):
     handler: str | None = None
     result: dict[str, Any] = SQLField(default_factory=dict, sa_column=Column(JSON))
     error: str | None = None
+    deliverable_state: str | None = SQLField(default=None, index=True)
+    validation_notes: str = ""
 
     actual_cost_usd: float = 0.0
     settled_amount_usd: float = 0.0

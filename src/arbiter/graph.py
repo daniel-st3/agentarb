@@ -23,7 +23,16 @@ from arbiter.connectors.base import MarketplaceConnector, UnsupportedOperation
 from arbiter.db import session_scope
 from arbiter.executors import CategoryRouter
 from arbiter.logging import get_logger
-from arbiter.models import Bounty, EventRow, Score, TaskRow, TaskState, utcnow
+from arbiter.models import (
+    Bounty,
+    DeliverableState,
+    EventRow,
+    Score,
+    Settlement,
+    TaskRow,
+    TaskState,
+    utcnow,
+)
 from arbiter.risk import RiskGuard
 from arbiter.scoring import ScoringAgent
 
@@ -240,7 +249,11 @@ class ArbiterGraph:
         score = Score(**state["score"])
         _upsert_task(bounty, state["run_id"], score, state=TaskState.EXECUTING.value)
 
-        result = await self.router.execute(bounty)
+        connector = self.connectors[bounty.marketplace]
+        # Only a marketplace that can actually take a deliverable may ever
+        # produce a SUBMISSION_READY grade.
+        accepts = connector.capabilities.supports_autonomous_settle
+        result = await self.router.execute(bounty, accepts_submission=accepts)
 
         # Cost is spent whether or not the work succeeded.
         self.guard.record_spend(
@@ -251,15 +264,22 @@ class ArbiterGraph:
             handler=result.handler, actual_cost_usd=result.cost_usd,
             state=TaskState.EXECUTING.value if result.ok else TaskState.FAILED.value,
             error=result.error,
+            deliverable_state=result.deliverable_state.value,
+            validation_notes=result.validation_notes,
         )
         record_event(
             state["run_id"], "execute", f"{result.handler} ok={result.ok}", bounty.key,
             stubbed=result.stubbed, cost_usd=result.cost_usd, error=result.error,
+            deliverable_state=result.deliverable_state.value,
+            refusal_kind=result.refusal_kind,
         )
         return {
             "result": {
                 "ok": result.ok, "handler": result.handler, "output": result.output,
                 "stubbed": result.stubbed, "cost_usd": result.cost_usd, "error": result.error,
+                "deliverable_state": result.deliverable_state.value,
+                "validation_notes": result.validation_notes,
+                "refusal_kind": result.refusal_kind,
             },
             "state": "executed" if result.ok else "failed",
             "error": result.error,
@@ -271,6 +291,20 @@ class ArbiterGraph:
         connector = self.connectors[bounty.marketplace]
         result = state["result"]
 
+        # A real marketplace only ever receives a SUBMISSION_READY deliverable.
+        # A simulated one may take a draft or stub, but the payload says so.
+        if connector.capabilities.settlement is not Settlement.SIMULATED:
+            if result.get("deliverable_state") != DeliverableState.SUBMISSION_READY.value:
+                reason = (
+                    f"refusing to submit a '{result.get('deliverable_state')}' deliverable "
+                    f"to {bounty.marketplace}: {result.get('validation_notes')}"
+                )
+                _upsert_task(
+                    bounty, state["run_id"], score, state=TaskState.FAILED.value, error=reason
+                )
+                record_event(state["run_id"], "submit", reason, bounty.key)
+                return {"state": "failed", "error": reason}
+
         try:
             submission = await connector.submit(
                 bounty.bounty_id,
@@ -278,6 +312,8 @@ class ArbiterGraph:
                     "handler": result["handler"],
                     "output": result["output"],
                     "stubbed": result["stubbed"],
+                    "deliverable_state": result.get("deliverable_state"),
+                    "validation_notes": result.get("validation_notes", ""),
                 },
             )
         except (UnsupportedOperation, ValueError) as exc:

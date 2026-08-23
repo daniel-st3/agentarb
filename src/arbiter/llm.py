@@ -9,7 +9,9 @@ or unfamiliar bounty gets a low p_success, never a hopeful one.
 
 from __future__ import annotations
 
+import asyncio
 import json
+import random
 import re
 from typing import Any, Protocol
 
@@ -48,6 +50,21 @@ Return ONLY a JSON object with these keys:
 Be conservative. Vague or underspecified bounties get low p_success."""
 
 
+class LLMError(RuntimeError):
+    """The model could not be reached, or answered unusably."""
+
+
+def _retry_after(response: httpx.Response) -> float | None:
+    """Honour a Retry-After header when the server sends one."""
+    raw = response.headers.get("retry-after")
+    if not raw:
+        return None
+    try:
+        return max(0.0, float(raw))
+    except ValueError:
+        return None
+
+
 class Estimate(dict):
     """Plain dict of the estimate fields plus `rationale`."""
 
@@ -66,6 +83,21 @@ def _clamp(value: Any, lo: float, hi: float, default: float) -> float:
         return max(lo, min(hi, float(value)))
     except (TypeError, ValueError):
         return default
+
+
+def _plausible(estimate: Estimate) -> bool:
+    """Reject structurally-valid but nonsensical estimates.
+
+    `_coerce` clamps every field into range, so a garbage response comes back
+    looking well-formed. This catches the cases clamping hides.
+    """
+    if not all(0.0 <= estimate[k] <= 1.0 for k in ("feasibility", "p_success", "confidence")):
+        return False
+    if estimate["est_effort_hours"] <= 0:
+        return False
+    if estimate["est_effort_hours"] > 500:
+        return False
+    return True
 
 
 def _coerce(payload: dict[str, Any]) -> Estimate:
@@ -165,25 +197,76 @@ class GroqEstimator:
         model: str,
         timeout: float = 30.0,
         client: httpx.AsyncClient | None = None,
+        max_attempts: int = 3,
+        backoff: float = 0.5,
+        max_backoff: float = 8.0,
     ) -> None:
         self._api_key = api_key
         self._model = model
         self._timeout = timeout
         self._client = client  # injectable for tests
+        self._max_attempts = max_attempts
+        self._backoff = backoff
+        self._max_backoff = max_backoff
         self._fallback = HeuristicEstimator()
 
-    async def _post(self, body: dict[str, Any]) -> str:
-        """POST a chat completion and return the message content."""
+    async def _post_once(self, body: dict[str, Any]) -> str:
         headers = {"Authorization": f"Bearer {self._api_key}"}
         if self._client is not None:
             response = await self._client.post(self._URL, json=body, headers=headers)
             response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"]
+            return self._content(response)
 
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.post(self._URL, json=body, headers=headers)
             response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"]
+            return self._content(response)
+
+    @staticmethod
+    def _content(response: httpx.Response) -> str:
+        """Pull the message content out, tolerating a malformed envelope."""
+        try:
+            return response.json()["choices"][0]["message"]["content"] or ""
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise LLMError(f"unexpected response envelope: {exc}") from exc
+
+    async def _post(self, body: dict[str, Any]) -> str:
+        """POST a chat completion, retrying transient failures.
+
+        Retries 429 and 5xx (honouring Retry-After when present) and network
+        timeouts, with jittered exponential backoff. A 4xx other than 429 is
+        not retried -- a bad request will not fix itself. Raises `LLMError`
+        once retries are exhausted; callers fall back deterministically.
+        """
+        delay = self._backoff
+        last: Exception | None = None
+
+        for attempt in range(1, self._max_attempts + 1):
+            try:
+                return await self._post_once(body)
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                last = exc
+                if status != 429 and status < 500:
+                    raise LLMError(f"non-retryable HTTP {status}") from exc
+                wait = _retry_after(exc.response) or delay
+            except (httpx.TimeoutException, httpx.TransportError) as exc:
+                last = exc
+                wait = delay
+            except LLMError:
+                raise
+
+            if attempt == self._max_attempts:
+                break
+            wait = min(wait, self._max_backoff) * (1 + random.random() * 0.25)
+            log.warning(
+                "llm.retry", attempt=attempt, of=self._max_attempts,
+                sleeping=round(wait, 2), error=str(last),
+            )
+            await asyncio.sleep(wait)
+            delay = min(delay * 2, self._max_backoff)
+
+        raise LLMError(f"exhausted {self._max_attempts} attempts: {last}")
 
     async def complete(self, system: str, user: str, max_tokens: int = 1200) -> str:
         """Free-form completion. Used by the execution sub-agents."""
@@ -220,7 +303,13 @@ class GroqEstimator:
         }
         try:
             content = await self._post(body)
-            return _coerce(json.loads(content))
+            payload = json.loads(content)
+            if not isinstance(payload, dict):
+                raise LLMError(f"expected a JSON object, got {type(payload).__name__}")
+            estimate = _coerce(payload)
+            if not _plausible(estimate):
+                raise LLMError(f"implausible estimate: {dict(estimate)}")
+            return estimate
         except Exception as exc:  # noqa: BLE001 -- never let scoring die on the LLM
             log.warning(
                 "llm.estimate_failed",
@@ -229,7 +318,8 @@ class GroqEstimator:
                 falling_back_to="heuristic",
             )
             estimate = await self._fallback.estimate(bounty)
-            estimate["rationale"] = f"[groq unavailable] {estimate['rationale']}"
+            estimate["rationale"] = f"[fell back to heuristic: {exc}] {estimate['rationale']}"
+            estimate["fallback"] = True
             return estimate
 
 
