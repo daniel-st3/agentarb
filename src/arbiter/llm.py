@@ -17,7 +17,7 @@ from typing import Any, Protocol
 
 import httpx
 
-from arbiter.config import get_settings
+from arbiter.config import Settings, get_settings
 from arbiter.logging import get_logger
 from arbiter.models import Bounty, Category
 
@@ -52,6 +52,58 @@ Be conservative. Vague or underspecified bounties get low p_success."""
 
 class LLMError(RuntimeError):
     """The model could not be reached, or answered unusably."""
+
+
+class ModelNotFoundError(LLMError):
+    """Groq rejected a model identifier specifically (not a generic 404)."""
+
+    def __init__(self, model: str) -> None:
+        self.model = model
+        super().__init__("model not found")
+
+
+class ModelFallbackError(LLMError):
+    """Both configured Groq models failed after a model-specific 404."""
+
+    def __init__(self, model: str) -> None:
+        self.model = model
+        super().__init__("fallback model unavailable")
+
+
+def _error_category(error: Exception) -> str:
+    """Return a safe, non-sensitive error label for logs and fallback rationale."""
+    if isinstance(error, ModelNotFoundError):
+        return "model_not_found"
+    if isinstance(error, ModelFallbackError):
+        return "fallback_model_unavailable"
+    if isinstance(error, httpx.HTTPStatusError):
+        return f"http_{error.response.status_code}"
+    if isinstance(error, httpx.TimeoutException):
+        return "timeout"
+    if isinstance(error, httpx.TransportError):
+        return "transport_error"
+    if isinstance(error, json.JSONDecodeError):
+        return "malformed_json"
+    if isinstance(error, LLMError):
+        return "llm_error"
+    return "unexpected_error"
+
+
+def _is_model_not_found(response: httpx.Response) -> bool:
+    """Recognize Groq's model-specific 404 without logging response contents."""
+    if response.status_code != 404:
+        return False
+    try:
+        payload = response.json()
+    except ValueError:
+        return False
+    error = payload.get("error", {}) if isinstance(payload, dict) else {}
+    if not isinstance(error, dict):
+        return False
+    code = str(error.get("code") or error.get("type") or "").lower()
+    message = str(error.get("message") or "").lower()
+    markers = ("model_not_found", "model not found", "does not exist", "decommissioned")
+    return any(marker in code or marker in message for marker in markers)
 
 
 def _retry_after(response: httpx.Response) -> float | None:
@@ -202,6 +254,7 @@ class GroqEstimator:
         self,
         api_key: str,
         model: str,
+        fallback_model: str = "qwen/qwen3.6-27b",
         timeout: float = 30.0,
         client: httpx.AsyncClient | None = None,
         max_attempts: int = 3,
@@ -210,6 +263,7 @@ class GroqEstimator:
     ) -> None:
         self._api_key = api_key
         self._model = model
+        self._fallback_model = fallback_model
         self._timeout = timeout
         self._client = client  # injectable for tests
         self._max_attempts = max_attempts
@@ -221,11 +275,15 @@ class GroqEstimator:
         headers = {"Authorization": f"Bearer {self._api_key}"}
         if self._client is not None:
             response = await self._client.post(self._URL, json=body, headers=headers)
+            if _is_model_not_found(response):
+                raise ModelNotFoundError(str(body.get("model") or ""))
             response.raise_for_status()
             return self._content(response)
 
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.post(self._URL, json=body, headers=headers)
+            if _is_model_not_found(response):
+                raise ModelNotFoundError(str(body.get("model") or ""))
             response.raise_for_status()
             return self._content(response)
 
@@ -268,16 +326,45 @@ class GroqEstimator:
             wait = min(wait, self._max_backoff) * (1 + random.random() * 0.25)
             log.warning(
                 "llm.retry", attempt=attempt, of=self._max_attempts,
-                sleeping=round(wait, 2), error=str(last),
+                model=str(body.get("model") or ""),
+                sleeping=round(wait, 2), error_category=_error_category(last),
             )
             await asyncio.sleep(wait)
             delay = min(delay * 2, self._max_backoff)
 
-        raise LLMError(f"exhausted {self._max_attempts} attempts: {last}")
+        raise LLMError(
+            f"exhausted {self._max_attempts} attempts ({_error_category(last)})"
+        )
+
+    async def _post_with_model_fallback(
+        self, body: dict[str, Any]
+    ) -> tuple[str, str, bool]:
+        """Call the primary model, then try the fallback once for model 404s."""
+        try:
+            return await self._post(body), self._model, False
+        except ModelNotFoundError:
+            fallback = self._fallback_model
+            log.warning(
+                "llm.model_not_found",
+                model=self._model,
+                error_category="model_not_found",
+            )
+            if not fallback or fallback == self._model:
+                raise
+            fallback_body = {**body, "model": fallback}
+            log.info(
+                "llm.model_fallback",
+                model=fallback,
+                error_category="primary_model_not_found",
+            )
+            try:
+                return await self._post(fallback_body), fallback, True
+            except Exception as exc:  # noqa: BLE001 - caller owns deterministic fallback
+                raise ModelFallbackError(fallback) from exc
 
     async def complete(self, system: str, user: str, max_tokens: int = 1200) -> str:
         """Free-form completion. Used by the execution sub-agents."""
-        return await self._post(
+        content, _, _ = await self._post_with_model_fallback(
             {
                 "model": self._model,
                 "temperature": 0.2,
@@ -288,6 +375,7 @@ class GroqEstimator:
                 ],
             }
         )
+        return content
 
     async def estimate(self, bounty: Bounty) -> Estimate:
         prompt = (
@@ -309,28 +397,35 @@ class GroqEstimator:
             ],
         }
         try:
-            content = await self._post(body)
+            content, model_used, model_fallback_used = await self._post_with_model_fallback(body)
             payload = json.loads(content)
             if not isinstance(payload, dict):
                 raise LLMError(f"expected a JSON object, got {type(payload).__name__}")
             estimate = _coerce(payload)
             if not _plausible(estimate):
                 raise LLMError(f"implausible estimate: {dict(estimate)}")
+            estimate["model_used"] = model_used
+            estimate["model_fallback_used"] = model_fallback_used
+            estimate["fallback"] = False
             return estimate
         except Exception as exc:  # noqa: BLE001 -- never let scoring die on the LLM
             log.warning(
                 "llm.estimate_failed",
-                bounty=bounty.key,
-                error=str(exc),
+                model=self._fallback_model if isinstance(exc, ModelFallbackError) else self._model,
+                error_category=_error_category(exc),
                 falling_back_to="heuristic",
             )
             estimate = await self._fallback.estimate(bounty)
-            estimate["rationale"] = f"[fell back to heuristic: {exc}] {estimate['rationale']}"
+            estimate["rationale"] = (
+                f"[fell back to heuristic: {_error_category(exc)}] {estimate['rationale']}"
+            )
             estimate["fallback"] = True
+            estimate["model_used"] = "heuristic-v1"
+            estimate["model_fallback_used"] = isinstance(exc, ModelFallbackError)
             return estimate
 
 
-def get_estimator() -> Estimator:
+def get_estimator(settings: Settings | None = None) -> Estimator:
     """Pick an estimator from config.
 
     The default provider is "auto": use Groq when a key is present, otherwise
@@ -338,7 +433,7 @@ def get_estimator() -> Estimator:
     therefore the only step needed to switch to the real LLM. "groq" and
     "heuristic" force the choice explicitly.
     """
-    settings = get_settings()
+    settings = settings or get_settings()
     provider = settings.llm_provider.lower()
 
     if provider == "heuristic":
@@ -347,7 +442,11 @@ def get_estimator() -> Estimator:
     if provider in {"auto", "groq"}:
         if settings.groq_api_key:
             log.info("llm.estimator", provider="groq", model=settings.groq_model)
-            return GroqEstimator(settings.groq_api_key, settings.groq_model)
+            return GroqEstimator(
+                settings.groq_api_key,
+                settings.groq_model,
+                fallback_model=settings.groq_fallback_model,
+            )
         if provider == "groq":
             log.warning("llm.no_api_key", provider="groq", using="heuristic")
         return HeuristicEstimator()

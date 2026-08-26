@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     #: "auto" uses Groq when a key is present, else the offline heuristic.
     llm_provider: str = "auto"
     groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"
+    groq_fallback_model: str = "qwen/qwen3.6-27b"
 
     # --- OpenTask ---
     opentask_base_url: str = "https://opentask.ai"

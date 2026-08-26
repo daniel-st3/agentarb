@@ -65,6 +65,12 @@ uv run arbiter export-evaluations --format csv
 - With no Groq key, the deterministic fallback remains fully functional and
   visibly labelled. No key is logged, stored in evaluation data, exported, or
   committed.
+- The recommended Groq model is `openai/gpt-oss-120b`, configured through
+  `ARBITER_GROQ_MODEL`. A model-specific 404 tries
+  `ARBITER_GROQ_FALLBACK_MODEL=qwen/qwen3.6-27b` once; if both fail, the
+  deterministic heuristic remains the final fallback. Generic 404s are not
+  retried as model changes, and logs contain only model IDs plus error
+  categories.
 - CSV export and the Streamlit **Evaluation Review** tab support six 1–5 human
   quality grades plus `reject`, `revise`, `acceptable`, or `excellent`.
 - Dashboard evidence and metrics now distinguish live discovery, offline

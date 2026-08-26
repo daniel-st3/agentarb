@@ -301,7 +301,10 @@ async def _evaluate_one(
     estimator_name = getattr(estimator, "name", "unknown")
     record.fallback_used = estimator_name == "heuristic" or bool(estimate.get("fallback"))
     record.provider = "deterministic_fallback" if record.fallback_used else estimator_name
-    record.model = "heuristic-v1" if record.fallback_used else settings.groq_model
+    record.model = str(
+        estimate.get("model_used")
+        or ("heuristic-v1" if record.fallback_used else settings.groq_model)
+    )
 
     generation_started = time.perf_counter()
     result = await router.execute(bounty, accepts_submission=False)

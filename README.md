@@ -76,7 +76,13 @@ No API key is required. The default provider is `auto`: with a Groq key in
 offline heuristic — so dropping a key in is the only step needed to switch.
 Execution handlers behave the same way, returning a clearly-labelled stub
 deliverable when no key is present. `arbiter estimate-check` prints the LLM
-estimate next to the heuristic baseline for comparison.
+estimate next to the heuristic baseline for comparison. The recommended Groq
+model is `openai/gpt-oss-120b`, configurable as `ARBITER_GROQ_MODEL`. If Groq
+returns a model-specific 404, Arbiter tries
+`ARBITER_GROQ_FALLBACK_MODEL=qwen/qwen3.6-27b` once, then uses the deterministic
+heuristic if both models fail. Generic 404s are not retried as model changes.
+Diagnostics log only model IDs and redacted error categories; API keys and task
+request bodies never appear in logs.
 
 ## Evidence model
 

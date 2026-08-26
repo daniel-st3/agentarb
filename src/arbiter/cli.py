@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from pathlib import Path
 
 import typer
@@ -378,7 +379,9 @@ def estimate_check(
         try:
             for connector in connectors:
                 for bounty in await connector.list_open(limit=limit):
+                    started = time.perf_counter()
                     live = await estimator.estimate(bounty)
+                    live["latency_ms"] = round((time.perf_counter() - started) * 1000, 1)
                     base = await baseline.estimate(bounty) if compare else None
                     rows.append((bounty, live, base))
         finally:
@@ -388,10 +391,15 @@ def estimate_check(
 
     for bounty, live, base in asyncio.run(_run()):
         payout = f"${bounty.payout_usd:.2f}" if bounty.payout_usd is not None else "?"
+        model_used = live.get("model_used") or (
+            "heuristic-v1" if kind == "HEURISTIC" else settings.groq_model
+        )
         typer.secho(f"[{bounty.marketplace}] {bounty.title[:66]}", bold=True)
         typer.echo(f"   category {bounty.category.value} · payout {payout}")
         typer.echo(
-            f"   {kind:9} feas {live['feasibility']:.2f} · p_succ "
+            f"   {kind:9} model {model_used} · "
+            f"fallback {'yes' if live.get('model_fallback_used') else 'no'} · "
+            f"latency {live.get('latency_ms', 0):.1f}ms · feas {live['feasibility']:.2f} · p_succ "
             f"{live['p_success']:.2f} · conf {live['confidence']:.2f} · effort "
             f"{live['est_effort_hours'] * 60:.0f}m · cost ${live['est_api_cost_usd']:.3f}"
         )

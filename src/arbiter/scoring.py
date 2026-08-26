@@ -116,7 +116,7 @@ class ScoringAgent:
         settings: Settings | None = None,
     ) -> None:
         self.settings = settings or get_settings()
-        self.estimator = estimator or get_estimator()
+        self.estimator = estimator or get_estimator(self.settings)
 
     async def score_one(
         self, bounty: Bounty, capabilities: MarketplaceCapabilities | None = None

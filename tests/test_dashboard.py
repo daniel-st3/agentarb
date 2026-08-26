@@ -15,6 +15,8 @@ APP = str(Path(__file__).resolve().parents[1] / "src" / "arbiter" / "dashboard.p
 def temp_db(tmp_path, monkeypatch):
     monkeypatch.setenv("ARBITER_DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setenv("ARBITER_EVALUATION_DB_PATH", str(tmp_path / "evaluations.db"))
+    monkeypatch.setenv("ARBITER_LLM_PROVIDER", "heuristic")
+    monkeypatch.setenv("ARBITER_GROQ_API_KEY", "")
     import streamlit as st
 
     import arbiter.config as config

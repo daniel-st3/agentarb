@@ -1,5 +1,7 @@
 """A failed, slow, rate-limited, or malformed LLM call must never block scanning."""
 
+import json
+
 import httpx
 import pytest
 
@@ -40,6 +42,18 @@ def ok_json(payload: str) -> httpx.Response:
     return httpx.Response(200, json={"choices": [{"message": {"content": payload}}]})
 
 
+def model_not_found() -> httpx.Response:
+    return httpx.Response(
+        404,
+        json={
+            "error": {
+                "code": "model_not_found",
+                "message": "The requested model does not exist for this account",
+            }
+        },
+    )
+
+
 VALID = (
     '{"feasibility":0.8,"p_success":0.6,"confidence":0.7,"est_effort_hours":0.2,'
     '"est_api_cost_usd":0.05,"est_gas_cost_usd":0,"rationale":"fine"}'
@@ -47,6 +61,91 @@ VALID = (
 
 
 class TestFallsBack:
+    async def test_model_404_tries_configured_fallback_once(self):
+        models = []
+
+        def handler(request):
+            models.append(json.loads(request.content)["model"])
+            return model_not_found() if len(models) == 1 else ok_json(VALID)
+
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        estimator = GroqEstimator(
+            "unit-test-key", "openai/gpt-oss-120b",
+            fallback_model="qwen/qwen3.6-27b", client=client, backoff=0.0,
+        )
+        result = await estimator.estimate(make())
+
+        assert models == ["openai/gpt-oss-120b", "qwen/qwen3.6-27b"]
+        assert result["model_used"] == "qwen/qwen3.6-27b"
+        assert result["model_fallback_used"] is True
+        assert result.get("fallback") is False
+        await client.aclose()
+
+    async def test_both_model_404s_use_heuristic_and_record_fallback(self):
+        models = []
+
+        def handler(request):
+            models.append(json.loads(request.content)["model"])
+            return model_not_found()
+
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        estimator = GroqEstimator(
+            "unit-test-key", "openai/gpt-oss-120b",
+            fallback_model="qwen/qwen3.6-27b", client=client, backoff=0.0,
+        )
+        result = await estimator.estimate(make())
+
+        assert models == ["openai/gpt-oss-120b", "qwen/qwen3.6-27b"]
+        assert result["fallback"] is True
+        assert result["model_used"] == "heuristic-v1"
+        assert result["model_fallback_used"] is True
+        assert "unit-test-key" not in result["rationale"]
+        await client.aclose()
+
+    async def test_generic_404_does_not_try_another_model(self):
+        calls = []
+
+        def handler(request):
+            calls.append(json.loads(request.content)["model"])
+            return httpx.Response(404, json={"error": {"message": "route missing"}})
+
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        estimator = GroqEstimator(
+            "unit-test-key", "openai/gpt-oss-120b",
+            fallback_model="qwen/qwen3.6-27b", client=client, backoff=0.0,
+        )
+        result = await estimator.estimate(make())
+
+        assert calls == ["openai/gpt-oss-120b"]
+        assert result["fallback"] is True
+        assert result["model_fallback_used"] is False
+        await client.aclose()
+
+    async def test_failure_logs_redact_api_key_and_request_data(self, monkeypatch):
+        events = []
+
+        class CaptureLog:
+            def warning(self, event, **kwargs):
+                events.append((event, kwargs))
+
+            def info(self, event, **kwargs):
+                events.append((event, kwargs))
+
+        monkeypatch.setattr("arbiter.llm.log", CaptureLog())
+        secret = "unit-test-key-not-for-logs"
+        client = httpx.AsyncClient(transport=httpx.MockTransport(lambda request: model_not_found()))
+        estimator = GroqEstimator(
+            secret, "openai/gpt-oss-120b", fallback_model="qwen/qwen3.6-27b",
+            client=client, backoff=0.0,
+        )
+        await estimator.estimate(make())
+
+        rendered = repr(events)
+        assert secret not in rendered
+        assert all(set(kwargs) <= {"model", "error_category", "falling_back_to"}
+                   or event == "llm.retry" for event, kwargs in events)
+        await client.aclose()
+
     async def test_on_server_error(self):
         result = await estimator(responder(httpx.Response(500))).estimate(make())
         assert result["fallback"] is True
@@ -143,6 +242,22 @@ class TestScanningNeverBlocks:
 
 
 class TestProviderSelection:
+    def test_default_groq_models_are_current_and_configurable(self, monkeypatch):
+        monkeypatch.delenv("ARBITER_GROQ_MODEL", raising=False)
+        monkeypatch.delenv("ARBITER_GROQ_FALLBACK_MODEL", raising=False)
+        import arbiter.config as config
+        config._settings = None
+        settings = config.get_settings()
+        assert settings.groq_model == "openai/gpt-oss-120b"
+        assert settings.groq_fallback_model == "qwen/qwen3.6-27b"
+        monkeypatch.setenv("ARBITER_GROQ_MODEL", "custom/primary")
+        monkeypatch.setenv("ARBITER_GROQ_FALLBACK_MODEL", "custom/fallback")
+        config._settings = None
+        settings = config.get_settings()
+        assert settings.groq_model == "custom/primary"
+        assert settings.groq_fallback_model == "custom/fallback"
+        config._settings = None
+
     def test_auto_uses_heuristic_without_a_key(self, monkeypatch):
         monkeypatch.setenv("ARBITER_LLM_PROVIDER", "auto")
         monkeypatch.setenv("ARBITER_GROQ_API_KEY", "")

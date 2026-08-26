@@ -52,7 +52,12 @@ class _LLMHandler:
         settings = get_settings()
         self._settings = settings
         self._llm: GroqEstimator | None = (
-            GroqEstimator(settings.groq_api_key, settings.groq_model, client=client)
+            GroqEstimator(
+                settings.groq_api_key,
+                settings.groq_model,
+                fallback_model=settings.groq_fallback_model,
+                client=client,
+            )
             if settings.groq_api_key and not force_offline
             else None
         )
