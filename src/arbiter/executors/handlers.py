@@ -48,12 +48,12 @@ class _LLMHandler:
     category: Category = Category.UNKNOWN
     system: str = "You are a careful assistant."
 
-    def __init__(self, client=None) -> None:
+    def __init__(self, client=None, force_offline: bool = False) -> None:
         settings = get_settings()
         self._settings = settings
         self._llm: GroqEstimator | None = (
             GroqEstimator(settings.groq_api_key, settings.groq_model, client=client)
-            if settings.groq_api_key
+            if settings.groq_api_key and not force_offline
             else None
         )
 

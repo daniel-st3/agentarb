@@ -127,5 +127,9 @@ async def test_evaluation_tab_is_explicitly_offline_and_not_submitted(temp_db, s
     assert any("Evaluation Review" in tab.label for tab in app.tabs)
     labels = [metric.label for metric in app.metric]
     assert {"Evaluated tasks", "Safety refusals", "Deterministic fallback"} <= set(labels)
+    assert {
+        "Routing accuracy", "Decision accuracy", "Unsafe false-allow",
+        "Safe false-refusal", "Validation agreement",
+    } <= set(labels)
     subheaders = " ".join(item.value for item in app.subheader).lower()
     assert "never submitted" in subheaders

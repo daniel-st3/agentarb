@@ -13,11 +13,37 @@
 
 ## Continuation update — 2026-08-26
 
-The read-only evaluation and portfolio-polish phase is complete. The product
+The Golden Task Corpus and offline-evaluation phase is complete. The product
 statement is now:
 
 > **Agent Arbiter is a capability-aware, cross-marketplace opportunity
-> intelligence and evaluation layer for the agent economy.**
+> intelligence, safety-routing, and offline-evaluation layer for the emerging
+> agent economy.**
+
+### Golden safety benchmark
+
+```bash
+uv run arbiter golden-eval --corpus v1
+```
+
+- `data/golden_tasks/v1.jsonl` contains 40 versioned, synthetic tasks across
+  all supported categories plus ambiguous, unsupported, high-effort,
+  low-value, harmful, payment, credential, wallet, marketplace-write,
+  external-action, and code-execution risk types.
+- The runner is hermetic: it constructs no connector, makes no network call,
+  selects no external model even if a Groq key is present, executes no generated
+  code, and writes to no database or ledger.
+- Category routing classifies tags/title through the same deterministic
+  normalizer used by OpenTask before checking handler dispatch; it does not
+  simply echo the corpus label.
+- Every expected label includes category, allow/skip/refuse, reason where
+  applicable, maximum deliverable state, validation result, and conditions.
+- A critical unsafe allow or any `submission_ready` state is a hard non-zero
+  exit. Tests poison network and connector write/payment paths to enforce this.
+- Baseline `v1`: 100% routing and decision accuracy, 100% validation agreement,
+  100% precision/recall for allow/skip/refuse, and 0% unsafe false-allows and
+  safe false-refusals. These are synthetic offline regression results—not
+  marketplace outcomes.
 
 ### New workflow
 
@@ -62,12 +88,14 @@ Public facts re-verified on 2026-08-26: sampled OpenTask listings remained
 tasks; `/escrow/config` remained Base mainnet (`chain_id: 8453`); and
 `/x402/info` exposed enabled mainnets with zero enabled testnets.
 
-### Screenshot note
+### Fresh screenshots
 
-The new dashboard was verified with Streamlit AppTest and a live HTTP health
-check. Fresh pixel screenshots were not automated because the approved
-in-app browser-control runtime was unavailable in this session; the committed
-screenshots in `docs/screenshots/` therefore remain the pre-evaluation set.
+The dashboard was verified with Streamlit AppTest, a live HTTP session, and the
+approved in-app browser. Fresh captures are committed as
+`docs/screenshots/2026-08-26-evidence-overview.png` and
+`docs/screenshots/2026-08-26-golden-evaluation-review.png`. They visibly
+separate live discovery, offline/never-submitted evaluation, simulated
+lifecycle/P&L, and zero real marketplace outcomes.
 
 ---
 
@@ -93,10 +121,10 @@ push-market into a pull loop.
 
 | Check | Result |
 |---|---|
-| Test suite | 269 passed |
-| Live (network) tests | 3, run separately with `-m live` |
+| Test suite | 277 passed; 3 live tests deselected |
+| Live (network) tests | 3 passed separately with `-m live` |
 | Lint (`ruff`) | clean |
-| Working tree | clean, in sync with `origin` |
+| Working tree | clean; branch is 2 commits ahead because this host has no HTTPS GitHub credentials |
 | Wallet / signing / payment code | **none** (audited by grep) |
 
 ---

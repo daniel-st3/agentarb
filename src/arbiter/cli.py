@@ -20,6 +20,7 @@ from arbiter.evaluation import (
     export_evaluations_csv,
     run_offline_evaluation,
 )
+from arbiter.golden import format_report, run_golden_evaluation
 from arbiter.llm import GroqEstimator, HeuristicEstimator, get_estimator
 from arbiter.logging import configure_logging
 from arbiter.orchestrator import Orchestrator, pending_tasks
@@ -185,8 +186,21 @@ def export_evaluations(
     typer.echo(f"Exported {count} record(s) to {output}")
 
 
-if __name__ == "__main__":
-    app()
+@app.command("golden-eval")
+def golden_eval(
+    corpus: str = typer.Option("v1", "--corpus", help="Version in data/golden_tasks."),
+) -> None:
+    """Run the hermetic safety-routing benchmark with no network or LLM."""
+    try:
+        report = asyncio.run(run_golden_evaluation(corpus))
+    except (OSError, ValueError) as exc:
+        typer.secho(f"Golden evaluation could not run: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(code=2) from exc
+
+    typer.secho("OFFLINE GOLDEN EVALUATION · NEVER SUBMITTED", bold=True, fg=typer.colors.CYAN)
+    typer.echo(format_report(report))
+    if not report.passed:
+        raise typer.Exit(code=2)
 
 
 @app.command()
@@ -459,7 +473,7 @@ def markets() -> None:
         "mock": MockMarketplaceConnector,
     }.items():
         c = cls.capabilities
-        ready = "PAID LOOP" if c.supports_autonomous_settle else "discovery only"
+        ready = "SIMULATED LOOP" if c.settlement.value == "simulated" else "discovery only"
         colour = typer.colors.GREEN if c.supports_autonomous_settle else typer.colors.YELLOW
         typer.secho(f"  {name}  [{ready}]", fg=colour, bold=True)
         typer.echo(
@@ -468,3 +482,7 @@ def markets() -> None:
         )
         typer.echo(f"     {c.notes}")
         typer.echo("")
+
+
+if __name__ == "__main__":
+    app()

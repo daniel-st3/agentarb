@@ -15,4 +15,7 @@ dist/
 build/
 *.egg-info/
 .DS_Store
-data/
+data/*
+!data/golden_tasks/
+data/golden_tasks/*
+!data/golden_tasks/*.jsonl

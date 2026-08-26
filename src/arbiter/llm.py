@@ -134,7 +134,14 @@ class HeuristicEstimator:
         "long-term", "ongoing", "full-time",
     )
 
-    _SCALE_RE = re.compile(r"\b(\d{2,})\b")
+    # Treat a number as workload scale only when it modifies a work-item noun.
+    # Bare years, prices, dates, and identifiers are data—not evidence of volume.
+    _SCALE_RE = re.compile(
+        r"\b(\d{2,})\s+(?:(?:public|annual|lengthy|individual)\s+){0,3}(?:"
+        r"reports?|records?|filings?|pages?|items?|rows?|documents?|entries?|"
+        r"tables?|companies|urls?|sites?|files?|tasks?|articles?"
+        r")\b"
+    )
 
     async def estimate(self, bounty: Bounty) -> Estimate:
         feasibility, p_success, effort = self._BASE.get(
@@ -150,7 +157,7 @@ class HeuristicEstimator:
             effort *= 4
             notes.append(f"red flags: {', '.join(flags[:3])}")
 
-        # Big numbers in the text usually mean "40 filings", i.e. real volume.
+        # Contextual quantities such as "40 filings" indicate real volume.
         scale = max((int(n) for n in self._SCALE_RE.findall(text)), default=0)
         if scale >= 100:
             effort *= 3.0

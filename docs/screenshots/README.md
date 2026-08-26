@@ -17,3 +17,15 @@ against real OpenTask and execution.market data plus MockMarketplace.
 The calibration screenshot uses seeded outcomes so the reliability bands are
 legible; every one is flagged `simulated`. `arbiter calibrate --real-only`
 reports zero real outcomes.
+
+Fresh read-only captures from 2026-08-26:
+
+| File | Shows |
+|---|---|
+| `2026-08-26-evidence-overview.png` | Four-way evidence model and explicitly simulated $0 P&L |
+| `2026-08-26-golden-evaluation-review.png` | Offline/never-submitted review tab, v1 benchmark metrics, and live-discovery evaluation count |
+
+The v1 corpus is synthetic and fully offline. The 10 evaluation rows shown came
+from earlier public OpenTask discovery and remain `not_submitted`; the displayed
+projected API cost is an estimate, not spend. Real marketplace outcomes remain
+zero.

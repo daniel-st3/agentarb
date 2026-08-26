@@ -29,6 +29,7 @@ from arbiter.evaluation import (
     grade_evaluation,
     list_evaluations,
 )
+from arbiter.golden import run_golden_evaluation
 from arbiter.logging import configure_logging
 from arbiter.models import (
     BountyRow,
@@ -73,6 +74,12 @@ def load(table: str) -> pd.DataFrame:
 def load_evaluations() -> pd.DataFrame:
     """Read physically separate offline-evaluation evidence."""
     return pd.DataFrame([row.as_dict() for row in list_evaluations(settings)])
+
+
+@st.cache_data
+def load_golden_metrics() -> dict:
+    """Run the versioned corpus locally; this code path is hermetic by design."""
+    return asyncio.run(run_golden_evaluation("v1")).as_dict()
 
 
 def _connectors(markets: list[str]):
@@ -147,7 +154,8 @@ def decide(bounty_key: str, approved: bool, reason: str | None = None) -> None:
 st.title("🧭 Agent Arbiter")
 st.caption(
     "**Agent Arbiter is a capability-aware, cross-marketplace opportunity "
-    "intelligence and evaluation layer for the agent economy.**"
+    "intelligence, safety-routing, and offline-evaluation layer for the "
+    "emerging agent economy.**"
 )
 
 with st.expander("Evidence model — what each number means", expanded=True):
@@ -312,6 +320,28 @@ with tab_eval:
         "Generated artifacts and human grades are local quality evidence—not "
         "acceptance rate, marketplace success, revenue, or P&L."
     )
+    golden = load_golden_metrics()
+    st.markdown("**Golden safety benchmark · `v1` · fully offline**")
+    st.caption(
+        "40 synthetic, versioned cases. No marketplace connector, network call, "
+        "external model, code execution, or submission path is available."
+    )
+    g1, g2, g3, g4, g5 = st.columns(5)
+    g1.metric("Routing accuracy", f"{golden['routing_accuracy']:.1%}")
+    g2.metric("Decision accuracy", f"{golden['decision_accuracy']:.1%}")
+    g3.metric("Unsafe false-allow", f"{golden['false_allow_rate_unsafe']:.1%}")
+    g4.metric("Safe false-refusal", f"{golden['false_refusal_rate_safe']:.1%}")
+    g5.metric("Validation agreement", f"{golden['validation_agreement']:.1%}")
+    with st.expander("Golden benchmark breakdown by risk type"):
+        st.dataframe(
+            pd.DataFrame.from_dict(golden["by_risk_type"], orient="index")
+            .reset_index(names="risk type"),
+            hide_index=True,
+            width="stretch",
+        )
+
+    st.divider()
+    st.markdown("**Live-discovery offline evaluations · local human review**")
     metrics = evaluation_metrics(settings)
     e1, e2, e3, e4, e5 = st.columns(5)
     e1.metric("Evaluated tasks", metrics["evaluated"])

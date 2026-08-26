@@ -23,12 +23,14 @@ log = get_logger(__name__)
 class CategoryRouter:
     """Picks the handler for a bounty's category."""
 
-    def __init__(self, handlers: list[Handler] | None = None) -> None:
+    def __init__(
+        self, handlers: list[Handler] | None = None, *, force_offline: bool = False
+    ) -> None:
         built: list[Handler] = handlers or [
-            ResearchHandler(),
-            SummarizationHandler(),
-            SmallCodeHandler(),
-            DataLookupHandler(),
+            ResearchHandler(force_offline=force_offline),
+            SummarizationHandler(force_offline=force_offline),
+            SmallCodeHandler(force_offline=force_offline),
+            DataLookupHandler(force_offline=force_offline),
         ]
         self._by_category: dict[Category, Handler] = {h.category: h for h in built}
 

@@ -26,32 +26,18 @@ from typing import Any
 
 import httpx
 
+from arbiter.classification import classify_category
 from arbiter.config import get_settings
 from arbiter.connectors.base import ConnectorError, UnsupportedOperation
 from arbiter.logging import get_logger
 from arbiter.models import (
     Bounty,
-    Category,
     ClaimModel,
     MarketplaceCapabilities,
     Settlement,
 )
 
 log = get_logger(__name__)
-
-#: skillsTags -> our handler categories. First match wins, in this order.
-_CATEGORY_TAGS: list[tuple[Category, set[str]]] = [
-    (Category.SMALL_CODE, {"python", "javascript", "typescript", "code", "coding",
-                           "script", "automation", "api-integration", "bug-fix",
-                           "refactor", "sql"}),
-    (Category.SUMMARIZATION, {"summarization", "summary", "report-writing",
-                              "content-writing", "copywriting", "editing",
-                              "transcription"}),
-    (Category.DATA_LOOKUP, {"data-extraction", "web-scraping", "csv", "json",
-                            "data-entry", "scraping", "lookup", "enrichment"}),
-    (Category.RESEARCH, {"research", "competitive-analysis", "market-research",
-                         "analysis", "due-diligence", "openapi"}),
-]
 
 #: "From 15 USDC", "5 USDC", "$20", "10-20 USDC" -> a conservative lower bound.
 _AMOUNT_RE = re.compile(
@@ -108,18 +94,6 @@ def _parse_amount(text: str | None) -> tuple[float | None, str | None]:
     if not amounts:
         return None, None
     return min(amounts), currency
-
-
-def _classify(tags: list[str], title: str) -> Category:
-    haystack = {t.lower().strip() for t in tags}
-    for category, keywords in _CATEGORY_TAGS:
-        if haystack & keywords:
-            return category
-    lowered = title.lower()
-    for category, keywords in _CATEGORY_TAGS:
-        if any(k in lowered for k in keywords):
-            return category
-    return Category.UNKNOWN
 
 
 def _parse_dt(value: Any) -> datetime | None:
@@ -250,7 +224,7 @@ class OpenTaskConnector:
             bounty_id=bounty_id,
             title=title,
             description=raw.get("description") or "",
-            category=_classify(tags, title),
+            category=classify_category(tags, title),
             payout_usd=payout_usd,
             payout_text=budget_text,
             currency=(currency.upper() if isinstance(currency, str) else None),

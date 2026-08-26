@@ -46,6 +46,13 @@ _OUT_OF_SCOPE_PATTERNS: list[tuple[str, str]] = [
      "requires real-time human interaction"),
     (r"\b(log\s*in\s+to|sign\s+in\s+to|use\s+my\s+account|my\s+credentials|api\s+key\s+provided)\b",
      "requires credentials we will not accept"),
+    (r"\b(use|provide|paste|send|share|load|read)\b.{0,30}\b(api\s*key|access\s*token|"
+     r"bearer\s*token|password|private\s*key|seed\s*phrase|mnemonic|wallet\s*secret)\b",
+     "requires credentials or secrets we will not accept"),
+    (r"\b(connect|link)\b.{0,20}\b(wallet|metamask|walletconnect)\b",
+     "requires wallet connection"),
+    (r"\bsign\b.{0,25}\b(message|transaction|authorization|eip[- ]?(191|3009)|payload)\b",
+     "requires signing a message or transaction"),
     (r"\b(run|execute)\b.*\b(script|binary|executable|attached\s+code|untrusted)\b",
      "requires executing untrusted code"),
     (r"\b(deploy\s+to\s+production|push\s+to\s+main|merge\s+the\s+pr)\b",
@@ -54,6 +61,12 @@ _OUT_OF_SCOPE_PATTERNS: list[tuple[str, str]] = [
      r"dollars?)\b", "requires moving real funds"),
     (r"\b(make\s+a\s+payment|withdraw\s+(funds|money)|buy\s+.{0,20}\bon[- ]chain\b)\b",
      "requires moving real funds"),
+    (r"\b(initiate|execute|complete|release|refund|deposit|capture)\b.{0,35}"
+     r"\b(x402|escrow|payment|on[- ]chain\s+transaction)\b",
+     "requires payment or escrow interaction"),
+    (r"\b(bid|claim|accept|submit|cancel|settle)\b.{0,35}"
+     r"\b(task|bounty|work|marketplace|submission)\b",
+     "requires a marketplace write action"),
 ]
 
 #: A task with none of these is probably too vague to attempt.

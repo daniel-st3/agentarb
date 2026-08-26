@@ -1,10 +1,10 @@
 # Agent Arbiter
 
 **Agent Arbiter is a capability-aware, cross-marketplace opportunity
-intelligence and evaluation layer for the agent economy.** It normalizes
-incompatible task markets, rejects work the system should not attempt, ranks
-the rest, and produces offline quality evidence without pretending discovery
-is execution.
+intelligence, safety-routing, and offline-evaluation layer for the emerging
+agent economy.** It normalizes incompatible task markets, rejects work the
+system should not attempt, ranks the rest, and produces offline quality
+evidence without pretending discovery is execution.
 
 > **Status: read-only live discovery + offline evaluation + simulated
 > lifecycle.** OpenTask and execution.market are public discovery sources only.
@@ -27,6 +27,8 @@ flowchart LR
     E[execution.market GET-only] --> N
     M[MockMarketplace] --> N
     N --> S[Capability + safety + scoring]
+    C[Versioned golden corpus] --> B[Hermetic routing + safety benchmark]
+    B --> Q[Offline benchmark metrics]
     S --> V[Offline generation + validation]
     V --> R[Separate evaluation DB + human review]
     S --> G[Checkpointed approval gate]
@@ -34,8 +36,9 @@ flowchart LR
     G -.->|live connectors refuse| X[No bid / claim / submit / settlement]
 ```
 
-**Only MockMarketplace can close a paid loop today.** That is a finding, not a
-shortcut — see [Marketplaces](#marketplaces).
+**Only MockMarketplace can close a lifecycle loop today, and that loop is
+explicitly simulated.** That is a finding, not a shortcut — see
+[Marketplaces](#marketplaces).
 
 ## Quickstart
 
@@ -49,6 +52,9 @@ uv run arbiter scan -m mock            # deterministic, offline
 # Read-only quality evidence. Every record is offline_evaluation/not_submitted.
 uv run arbiter evaluate --marketplace opentask --limit 10
 uv run arbiter export-evaluations --format csv
+
+# Hermetic safety benchmark. No key, connector, or network is available.
+uv run arbiter golden-eval --corpus v1
 
 # The Week 2 loop: run up to the gate, then decide.
 uv run arbiter run -m mock --top 2     # stops at the claim gate
@@ -96,6 +102,30 @@ Without a Groq key, evaluation uses the existing deterministic fallback and
 labels the artifact accordingly. With a locally supplied key, it uses the
 current provider abstraction without logging or persisting the secret.
 
+## Golden task corpus
+
+`data/golden_tasks/v1.jsonl` is a versioned suite of 40 synthetic tasks covering
+safe research, summarization, data lookup, small-code generation, ambiguous and
+unsupported requests, high-effort and low-value work, plus harmful, payment,
+credential, wallet, marketplace-write, external-action, and code-execution
+requests. Every row declares its expected category, allow/skip/refuse decision,
+reason, maximum deliverable state, validation expectation, and required
+conditions.
+
+```bash
+uv run arbiter golden-eval --corpus v1
+```
+
+The command is hermetic even if `ARBITER_GROQ_API_KEY` exists: it constructs no
+marketplace connector, selects no network-backed provider, executes no code,
+and persists nothing. Its routing metric classifies normalized tags/title text
+through the same deterministic classifier used by OpenTask, then checks handler
+dispatch. It reports routing accuracy, decision precision/recall,
+unsafe false-allow and safe false-refusal rates, validation agreement, and
+category/risk breakdowns. Any critical unsafe case that is allowed—or any case
+that reaches `submission_ready`—makes the command exit non-zero. These are
+offline regression metrics, not marketplace acceptance or success evidence.
+
 ## Scoring
 
 A hard skip-filter runs first, in pure Python, so no tokens are spent on
@@ -127,7 +157,7 @@ Re-verified live with public GET requests on 2026-08-26.
 |---|---|---|---|---|---|
 | **OpenTask** | `GET /api/tasks`, `GET /api/tasks/{id}` — public, unauthenticated | bid (`executionMode: "pitch"`) | **off-platform, non-custodial** | buyer selects | **Discovery only** |
 | **execution.market** | `GET /api/v1/tasks/available`, `/api/v1/tasks/{id}` — public, unauthenticated | open pull-claim | **x402r escrow, mainnet only; no enabled testnet** | verification | **Discovery only** |
-| **MockMarketplace** | local | open pull-claim | simulated | none | **The only paid loop** |
+| **MockMarketplace** | local | open pull-claim | simulated | none | **Only lifecycle loop; simulated** |
 
 Both real marketplaces are **discovery-only, for different reasons** — which is
 precisely the heterogeneity this project exists to handle:
