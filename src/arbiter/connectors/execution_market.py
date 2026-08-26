@@ -14,7 +14,7 @@ Why discovery-only, and not a temporary limitation:
 
 - **The escrow is Base mainnet only.** `GET /api/v1/escrow/config` returns
   `chain_id: 8453` with mainnet USDC and a single deployed escrow address;
-  `GET /api/v1/x402/info` lists ten mainnets enabled and zero testnets. Live
+  `GET /api/v1/x402/info` lists mainnets enabled and zero testnets. Live
   tasks settle on arbitrum, optimism, avalanche and ethereum -- all mainnet.
   Participating in the paid loop would mean real funds, which is out of scope
   until the Week 4 gated task.

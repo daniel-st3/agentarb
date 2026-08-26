@@ -1,5 +1,11 @@
 # execution.market testnet support — resolved 2026-08-23
 
+> **Re-verified 2026-08-26:** public GET requests still returned
+> `escrow/config.chain_id: 8453`, default network `base`, multiple enabled
+> mainnets, and zero enabled testnets. The discovery-only decision remains
+> unchanged. The exact enabled-mainnet list is treated as live data rather than
+> a hard-coded count.
+
 **Question:** does execution.market's escrow support Base Sepolia, or is it
 mainnet-only? This decides whether execution.market can join the testnet-first
 paid loop.

@@ -11,6 +11,66 @@
 
 ---
 
+## Continuation update — 2026-08-26
+
+The read-only evaluation and portfolio-polish phase is complete. The product
+statement is now:
+
+> **Agent Arbiter is a capability-aware, cross-marketplace opportunity
+> intelligence and evaluation layer for the agent economy.**
+
+### New workflow
+
+```bash
+uv run arbiter evaluate --marketplace opentask --limit 10
+uv run arbiter export-evaluations --format csv
+```
+
+- Evaluation receives a capability-reducing connector façade exposing only
+  public discovery (`list_open`, `get`) and cleanup.
+- Bid, claim, accept, submit, settlement, signing, wallet, escrow, and payment
+  method access fails closed in evaluation mode.
+- Safety screening runs before estimation or generation, so refused work
+  consumes no model call.
+- Records live in the physically separate `data/evaluations.db`, never in
+  lifecycle tasks, outcomes, calibration, the audit ledger, or P&L.
+- Every row is visibly labelled `offline_evaluation` / `not_submitted` and
+  begins with human review status `pending`.
+- With no Groq key, the deterministic fallback remains fully functional and
+  visibly labelled. No key is logged, stored in evaluation data, exported, or
+  committed.
+- CSV export and the Streamlit **Evaluation Review** tab support six 1–5 human
+  quality grades plus `reject`, `revise`, `acceptable`, or `excellent`.
+- Dashboard evidence and metrics now distinguish live discovery, offline
+  evaluation, simulated lifecycle, and real marketplace outcomes.
+
+### Evidence categories — do not merge these
+
+| Category | Meaning |
+|---|---|
+| Live discovery | Public marketplace task data fetched read-only |
+| Offline evaluation | Local generation and human grading; never submitted |
+| Simulated lifecycle | MockMarketplace scan → approval → execution → settlement |
+| Real marketplace outcome | Must remain zero without separate explicit authorization |
+
+Tests specifically prove evaluation cannot invoke marketplace write/payment
+methods and does not alter lifecycle tasks, outcomes, or the ledger. The
+separate evaluation database contains only the `offline_evaluations` table.
+
+Public facts re-verified on 2026-08-26: sampled OpenTask listings remained
+`executionMode="pitch"`; execution.market returned no currently available
+tasks; `/escrow/config` remained Base mainnet (`chain_id: 8453`); and
+`/x402/info` exposed enabled mainnets with zero enabled testnets.
+
+### Screenshot note
+
+The new dashboard was verified with Streamlit AppTest and a live HTTP health
+check. Fresh pixel screenshots were not automated because the approved
+in-app browser-control runtime was unavailable in this session; the committed
+screenshots in `docs/screenshots/` therefore remain the pre-evaluation set.
+
+---
+
 ## 1. Project status
 
 **Weeks 1–3 are complete.** The system scans two real marketplaces plus a
@@ -33,7 +93,7 @@ push-market into a pull loop.
 
 | Check | Result |
 |---|---|
-| Test suite | 262 passed |
+| Test suite | 269 passed |
 | Live (network) tests | 3, run separately with `-m live` |
 | Lint (`ruff`) | clean |
 | Working tree | clean, in sync with `origin` |
@@ -170,7 +230,7 @@ live API:
 - `GET /api/v1/escrow/config` returns `chain_id: 8453` (Base **mainnet**) with
   mainnet USDC `0x8335…2913` and a single deployed escrow address. There is no
   network parameter and no testnet deployment.
-- `GET /api/v1/x402/info` shows **ten mainnets enabled, zero testnets**. The
+- `GET /api/v1/x402/info` shows **multiple mainnets enabled, zero testnets**. The
   testnets in `all_known_networks` are known to the bundled SDK, not enabled
   on this deployment.
 
@@ -193,40 +253,26 @@ our `small_code` handler. It means running code, which this agent does not do.
 
 ## 5. Exact next recommended task
 
-**Add the Groq API key and validate real LLM output.** This is the single
-blocking dependency — everything downstream is gated on it.
+**Supply a local Groq key, rerun offline evaluation, and human-grade the
+artifacts without submission.** The workflow now exists and is isolated; the
+key is the only missing input for non-stub generation.
 
 ```bash
-# 1. Put a Groq key in .env (the only edit needed; provider is already "auto")
-#    ARBITER_GROQ_API_KEY=gsk_...
-
-# 2. Compare real estimates against the deterministic baseline
-uv run arbiter estimate-check
-
-# 3. Confirm handlers now produce validated (not stubbed) deliverables
-uv run arbiter run -m mock --top 2
-uv run arbiter queue
-uv run arbiter approve mock:mock-007
-#    Expect deliverable_state to become `validated` or `submission_ready`,
-#    never `simulated`.
+# Put ARBITER_GROQ_API_KEY only in gitignored .env, then:
+uv run arbiter estimate-check --market opentask --limit 4
+uv run arbiter evaluate --marketplace opentask --limit 10
+uv run streamlit run src/arbiter/dashboard.py
+uv run arbiter export-evaluations --format csv
 ```
 
-Until this is done, no deliverable is real and calibration has no signal.
+Review artifacts in the **Evaluation Review** tab. The result is human offline
+quality evidence, not acceptance rate or marketplace success. Do not move it
+into `outcomes` or calibration.
 
-### Then, in order
-1. **Real calibration evidence.** Have a human grade generated deliverables
-   against live OpenTask tasks **without submitting**, to get a genuine
-   acceptance signal instead of mock outcomes that always succeed.
-2. **Decide the Week 4 shape.** execution.market's open bounties are $0.02 —
-   below our floor and far below plausible gas + API cost. The original plan's
-   fallback (a single x402 pay-per-call settlement rather than a full bounty)
-   now looks like the more realistic target.
-3. **Only then**, and only with explicit approval, the wallet module. Packages
-   verified current at handoff: **`x402` 2.20.0** (note the new client API
-   shape: `x402Client` + registered mechanisms) and **`cdp-sdk` 1.47.0**.
-   Neither is a dependency yet. Beware near-name squatters on PyPI
-   (`x402-python-client`, `tx402`, `acedatacloud-x402`) — the correct package
-   is the bare `x402`.
+After enough reviewed samples, improve category classification and validators
+from the observed error patterns. Financial, wallet, payment, escrow, signing,
+and marketplace write paths remain out of scope without a separate explicit
+authorization.
 
 ---
 
@@ -291,6 +337,10 @@ uv run arbiter scan --limit 12
 uv run arbiter markets
 uv run arbiter calibrate --real-only
 
+# local-only quality evidence; public discovery, never submitted
+uv run arbiter evaluate --marketplace opentask --limit 10
+uv run arbiter export-evaluations --format csv
+
 # the human-gated loop (mock only)
 uv run arbiter run -m mock --top 2
 uv run arbiter queue
@@ -325,6 +375,8 @@ Everything below is gitignored and exists only on the machine that built this.
 | `.env` | Local config copied from `.env.example` | Recreate with `cp .env.example .env` |
 | `data/arbiter.db` | SQLite audit trail: bounties, decisions, tasks, ledger, events, outcomes | No — recreated on first run |
 | `data/arbiter-checkpoints.db` | LangGraph checkpoints (suspended claim gates) | No — recreated on first run |
+| `data/evaluations.db` | Separate offline-evaluation artifacts and human quality reviews | No — recreated by `arbiter evaluate` |
+| `data/evaluations.csv` | Local export of offline evaluations | No — recreated by `arbiter export-evaluations` |
 | `.venv/` | Virtualenv | No — `uv sync --extra dev` |
 | `.pytest_cache/`, `.ruff_cache/`, `__pycache__/` | Tool caches | No |
 
@@ -347,6 +399,7 @@ only one that changes behavior meaningfully:
 | `ARBITER_GROQ_API_KEY` | *(empty)* | **The one that matters.** Empty → deterministic heuristic estimator + stub deliverables. Set → real LLM. Provider is `auto`, so no other change is needed. |
 | `ARBITER_LLM_PROVIDER` | `auto` | `auto` \| `groq` \| `heuristic` |
 | `ARBITER_REQUIRE_APPROVAL` | `true` | Human claim gate. **Leave on.** |
+| `ARBITER_EVALUATION_DB_PATH` | `data/evaluations.db` | Physically separate offline quality-evidence store |
 | `ARBITER_DAILY_BUDGET_USD` | `5.0` | Gross daily spend cap |
 | `ARBITER_MAX_LOSS_PER_DAY_USD` | `5.0` | Circuit-breaker threshold |
 | `ARBITER_ENABLE_WALLET` | `false` | Placeholder only — **no wallet code exists** |
@@ -382,6 +435,7 @@ src/arbiter/
   graph.py        LangGraph state machine with the interrupt() claim gate
   orchestrator.py start / resume / approval queue
   calibration.py  predicted p_success vs. actual; Brier, bias, adjustment
+  evaluation.py   isolated GET-only evaluation, export, and human review
   pipeline.py     scan -> score -> rank -> record
   cli.py          scan · run · queue · approve · reject · calibrate · markets
   dashboard.py    Streamlit + approve/reject queue

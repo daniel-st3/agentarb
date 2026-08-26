@@ -1,4 +1,4 @@
-"""Streamlit dashboard: approval queue, scores, P&L, and the audit log.
+"""Streamlit dashboard: opportunity intelligence and offline quality evidence.
 
 Read-mostly over SQLite, plus the one thing that is not read-only: the
 approve/reject queue that resumes a LangGraph run suspended at the claim gate.
@@ -23,6 +23,12 @@ from arbiter.connectors import (
     OpenTaskConnector,
 )
 from arbiter.db import init_db, session_scope
+from arbiter.evaluation import (
+    REVIEW_RECOMMENDATIONS,
+    evaluation_metrics,
+    grade_evaluation,
+    list_evaluations,
+)
 from arbiter.logging import configure_logging
 from arbiter.models import (
     BountyRow,
@@ -61,6 +67,12 @@ def load(table: str) -> pd.DataFrame:
     with session_scope() as session:
         rows = session.exec(select(models[table])).all()
         return pd.DataFrame([r.model_dump() for r in rows])
+
+
+@st.cache_data(ttl=3)
+def load_evaluations() -> pd.DataFrame:
+    """Read physically separate offline-evaluation evidence."""
+    return pd.DataFrame([row.as_dict() for row in list_evaluations(settings)])
 
 
 def _connectors(markets: list[str]):
@@ -134,10 +146,35 @@ def decide(bounty_key: str, approved: bool, reason: str | None = None) -> None:
 
 st.title("🧭 Agent Arbiter")
 st.caption(
-    "A router across AI-agent task marketplaces. "
-    "**Week 3: two real marketplaces (discovery-only) + a simulated paid loop** "
-    "— no wallet, no real funds."
+    "**Agent Arbiter is a capability-aware, cross-marketplace opportunity "
+    "intelligence and evaluation layer for the agent economy.**"
 )
+
+with st.expander("Evidence model — what each number means", expanded=True):
+    st.dataframe(
+        pd.DataFrame(
+            [
+                {
+                    "category": "Live discovery",
+                    "meaning": "Public marketplace task data fetched read-only",
+                },
+                {
+                    "category": "Offline evaluation",
+                    "meaning": "Local generation and human grading; never submitted",
+                },
+                {
+                    "category": "Simulated lifecycle",
+                    "meaning": "MockMarketplace scan → approval → execution → settlement",
+                },
+                {
+                    "category": "Real marketplace outcome",
+                    "meaning": "Zero — no real participation has been authorized",
+                },
+            ]
+        ),
+        hide_index=True,
+        width="stretch",
+    )
 
 guard = RiskGuard(settings)
 totals = guard.totals_today()
@@ -177,13 +214,25 @@ c2.metric("Earned today", f"${totals.earned_usd:.2f}", help="Simulated settlemen
 c3.metric("Net today", f"${totals.net_usd:.2f}")
 c4.metric("Budget left", f"${max(0.0, budget_left):.4f}")
 c5.metric("Tasks today", totals.tasks)
-st.caption("💡 All amounts are **simulated** — MockMarketplace settlement. No wallet exists yet.")
+st.caption(
+    "💡 All P&L amounts are **simulated** MockMarketplace settlement. Offline "
+    "evaluation cost is a projection, not spend. No wallet exists."
+)
 
 queue_rows = pending_tasks()
-tab_queue, tab_ranked, tab_skipped, tab_tasks, tab_cal, tab_markets, tab_log = st.tabs(
+(
+    tab_queue,
+    tab_ranked,
+    tab_skipped,
+    tab_eval,
+    tab_tasks,
+    tab_cal,
+    tab_markets,
+    tab_log,
+) = st.tabs(
     [
         f"⏸ Approval queue ({len(queue_rows)})",
-        "Ranked", "Skipped (with reasons)", "Tasks & P&L",
+        "Ranked", "Skipped (with reasons)", "Evaluation Review", "Tasks & P&L",
         "Calibration", "Marketplaces", "Audit log",
     ]
 )
@@ -256,6 +305,110 @@ with tab_skipped:
             skipped[["marketplace", "title", "payout_usd", "skip_reason"]],
             hide_index=True, width="stretch",
         )
+
+with tab_eval:
+    st.subheader("Offline evaluation · never submitted")
+    st.caption(
+        "Generated artifacts and human grades are local quality evidence—not "
+        "acceptance rate, marketplace success, revenue, or P&L."
+    )
+    metrics = evaluation_metrics(settings)
+    e1, e2, e3, e4, e5 = st.columns(5)
+    e1.metric("Evaluated tasks", metrics["evaluated"])
+    e2.metric("Safety refusals", metrics["safety_refusals"])
+    e3.metric("Deliverables generated", metrics["deliverables_generated"])
+    e4.metric("Validated deliverables", metrics["validated"])
+    e5.metric("Human-reviewed", metrics["human_reviewed"])
+    e6, e7, e8, e9, e10 = st.columns(5)
+    e6.metric(
+        "Avg. human quality",
+        f"{metrics['average_human_quality']:.2f}/5"
+        if metrics["human_reviewed"] else "—",
+    )
+    e7.metric(
+        "Projected API cost",
+        f"${metrics['estimated_api_cost_usd']:.4f}",
+        help="Estimator projection only; this is not money spent.",
+    )
+    e8.metric("Avg. latency", f"{metrics['average_latency_ms']:.1f} ms")
+    e9.metric("Model used", metrics["model_used"])
+    e10.metric("Deterministic fallback", metrics["fallback_used"])
+
+    evaluations = load_evaluations()
+    if evaluations.empty:
+        st.info(
+            "No offline evaluations yet. Run `arbiter evaluate --marketplace "
+            "opentask --limit 10`."
+        )
+    else:
+        st.dataframe(
+            evaluations[[
+                "id", "evaluation_type", "submission_status", "marketplace",
+                "task_identifier", "title", "category", "safety_allowed",
+                "safety_kind", "deliverable_state", "validation_passed",
+                "provider", "fallback_used", "estimated_api_cost_usd",
+                "total_latency_ms", "human_review_status", "human_quality_score",
+                "recommendation",
+            ]],
+            hide_index=True,
+            width="stretch",
+        )
+
+        options = evaluations["id"].astype(int).tolist()
+        selected_id = st.selectbox(
+            "Select an evaluation to inspect or grade",
+            options,
+            format_func=lambda value: (
+                f"#{value} · "
+                f"{evaluations.loc[evaluations['id'] == value, 'title'].iloc[0][:72]}"
+            ),
+        )
+        selected = evaluations[evaluations["id"] == selected_id].iloc[0]
+        with st.container(border=True):
+            st.markdown(f"**{selected['title']}**")
+            st.caption(
+                f"`offline_evaluation` · `not_submitted` · {selected['marketplace']} · "
+                f"{selected['category']} · provider {selected['provider']}"
+            )
+            with st.expander("Discovered task text"):
+                st.write(selected["task_description"] or "No task description supplied.")
+            st.write(f"Capability decision: {selected['capability_reason']}")
+            st.write(f"Safety: {selected['safety_reason']}")
+            if selected["validation_notes"]:
+                st.write(f"Validation: {selected['validation_notes']}")
+            with st.expander("Grounding/source metadata"):
+                st.json(selected["grounding_metadata"])
+            with st.expander("Generated deliverable"):
+                st.code(selected["deliverable"] or "No deliverable generated.", language="markdown")
+
+        with st.form("evaluation-review-form"):
+            st.markdown("**Human offline quality review (1 = poor, 5 = excellent)**")
+            g1, g2, g3 = st.columns(3)
+            task_fit = g1.slider("Task fit / feasibility", 1, 5, 3)
+            correctness = g2.slider("Correctness", 1, 5, 3)
+            grounding = g3.slider("Grounding / source quality", 1, 5, 3)
+            g4, g5, g6 = st.columns(3)
+            completeness = g4.slider("Completeness", 1, 5, 3)
+            safety = g5.slider("Safety", 1, 5, 3)
+            quality = g6.slider("Writing / code quality", 1, 5, 3)
+            recommendation = st.selectbox("Overall recommendation", REVIEW_RECOMMENDATIONS)
+            review_notes = st.text_area("Reviewer notes")
+            if st.form_submit_button("Save human review", type="primary"):
+                grade_evaluation(
+                    int(selected_id),
+                    task_fit=task_fit,
+                    correctness=correctness,
+                    grounding=grounding,
+                    completeness=completeness,
+                    safety=safety,
+                    quality=quality,
+                    recommendation=recommendation,
+                    notes=review_notes,
+                    settings=settings,
+                )
+                st.cache_data.clear()
+                st.success("Saved as human offline quality review—not marketplace success.")
+                st.rerun()
 
 with tab_tasks:
     tasks = load("tasks")

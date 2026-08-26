@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     #: with the audit tables makes the graph's writer and ours contend for the
     #: same write lock ("database is locked") mid-node.
     checkpoint_db_path: Path = Path("data/arbiter-checkpoints.db")
+    #: Offline evaluation evidence is physically separate from lifecycle,
+    #: outcome, calibration, and P&L data.
+    evaluation_db_path: Path = Path("data/evaluations.db")
 
     # --- Scoring / skip-filter ---
     min_payout_usd: float = 1.0
@@ -59,6 +62,11 @@ class Settings(BaseSettings):
     def db_url(self) -> str:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{self.db_path}"
+
+    @property
+    def evaluation_db_url(self) -> str:
+        self.evaluation_db_path.parent.mkdir(parents=True, exist_ok=True)
+        return f"sqlite:///{self.evaluation_db_path}"
 
 
 _settings: Settings | None = None

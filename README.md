@@ -1,16 +1,16 @@
 # Agent Arbiter
 
-A **router/arbitrage layer across AI-agent task marketplaces.** Not another
-marketplace and not another agent — the trader that sits above them, scores
-every open bounty by expected profit vs. effort vs. actual capability, and
-decides which are worth doing.
+**Agent Arbiter is a capability-aware, cross-marketplace opportunity
+intelligence and evaluation layer for the agent economy.** It normalizes
+incompatible task markets, rejects work the system should not attempt, ranks
+the rest, and produces offline quality evidence without pretending discovery
+is execution.
 
-> **Status: Week 3 — multi-marketplace router with calibration.** It scans two
-> real marketplaces plus a mock, scores every bounty, and stops at a human
-> approval gate. On approval it claims, executes, submits, and settles — but
-> only against MockMarketplace, whose settlement is explicitly simulated.
-> **There is no wallet code in this repo and nothing here moves real or testnet
-> funds.**
+> **Status: read-only live discovery + offline evaluation + simulated
+> lifecycle.** OpenTask and execution.market are public discovery sources only.
+> Human quality review is local and never submitted. The claim/submit/settle
+> lifecycle exists only for MockMarketplace and all P&L is simulated. **There
+> is no wallet code and nothing moves real or testnet funds.**
 
 ## Why it's interesting
 
@@ -21,41 +21,17 @@ not fit all of them. Normalizing that heterogeneity behind one connector
 Protocol — and representing the differences *honestly* rather than pretending
 a push-market into a pull loop — is the hard part and the centrepiece.
 
-```
-  ┌──────────────── DISCOVERY (real, read-only) ──────────────┐  ┌── PAID LOOP ──┐
-  │  opentask            execution_market                      │  │  mock         │
-  │  bid · off-platform  pull-claim · MAINNET escrow           │  │  simulated    │
-  │  no escrow           reputation-gated                      │  │  settlement   │
-  └───────────────────────┬───────────────────────────────────┘  └───────┬───────┘
-                          │        normalized Bounty                     │
-                          └──────────────────┬───────────────────────────┘
-                                             ▼
-                                     Scoring Agent
-                            skip-filter → estimate → formula
-                                             │
-                                             ▼
-                                        RiskGuard
-                              caps · margin · circuit breaker
-                                             │
-                                             ▼
-                                    ┌─────────────────┐
-                                    │   CLAIM GATE    │ ◄── human decides
-                                    │   interrupt()   │     (checkpointed)
-                                    └────────┬────────┘
-                                             │ approved
-                                             ▼
-                    safety screen → execute → validate → submit → settle
-                    harmful/       category    grade to    only if    simulated
-                    ambiguous/     router      draft/      SUBMISSION only
-                    out-of-scope               validated   _READY
-                    refused                    /ready
-                                             │
-                                             ▼
-                              SQLite audit trail + outcomes
-                                             │
-                                             ▼
-                          Calibration ──────────────► Streamlit dashboard
-                    predicted p_success vs. actual
+```mermaid
+flowchart LR
+    O[OpenTask GET-only] --> N[Normalized Bounty]
+    E[execution.market GET-only] --> N
+    M[MockMarketplace] --> N
+    N --> S[Capability + safety + scoring]
+    S --> V[Offline generation + validation]
+    V --> R[Separate evaluation DB + human review]
+    S --> G[Checkpointed approval gate]
+    G -->|mock only| L[Simulated lifecycle + P&L]
+    G -.->|live connectors refuse| X[No bid / claim / submit / settlement]
 ```
 
 **Only MockMarketplace can close a paid loop today.** That is a finding, not a
@@ -64,11 +40,15 @@ shortcut — see [Marketplaces](#marketplaces).
 ## Quickstart
 
 ```bash
-uv venv && uv pip install -e ".[dev]"
+uv sync --extra dev
 cp .env.example .env          # works as-is; no keys needed for Week 1
 
 uv run arbiter scan                    # alert-only: scan, score, rank
 uv run arbiter scan -m mock            # deterministic, offline
+
+# Read-only quality evidence. Every record is offline_evaluation/not_submitted.
+uv run arbiter evaluate --marketplace opentask --limit 10
+uv run arbiter export-evaluations --format csv
 
 # The Week 2 loop: run up to the gate, then decide.
 uv run arbiter run -m mock --top 2     # stops at the claim gate
@@ -91,6 +71,30 @@ offline heuristic — so dropping a key in is the only step needed to switch.
 Execution handlers behave the same way, returning a clearly-labelled stub
 deliverable when no key is present. `arbiter estimate-check` prints the LLM
 estimate next to the heuristic baseline for comparison.
+
+## Evidence model
+
+These four categories are deliberately separate throughout the CLI,
+databases, dashboard, and documentation:
+
+| Category | Meaning |
+|---|---|
+| **Live discovery** | Public marketplace task data fetched read-only |
+| **Offline evaluation** | Local generation and human grading; never submitted |
+| **Simulated lifecycle** | MockMarketplace scan → approval → execution → settlement |
+| **Real marketplace outcome** | Must remain zero unless a human explicitly approves real participation |
+
+Offline evaluations live in `data/evaluations.db`, physically separate from
+the lifecycle database. The evaluation connector façade exposes only
+`list_open`, `get`, and cleanup. Known bid, claim, submit, settlement, signing,
+wallet, escrow, and payment methods fail closed. Human grades measure task fit,
+correctness, grounding, completeness, safety, and writing/code quality on a
+1–5 scale, with a recommendation of `reject`, `revise`, `acceptable`, or
+`excellent`. They are **not** acceptance rate or marketplace success.
+
+Without a Groq key, evaluation uses the existing deterministic fallback and
+labels the artifact accordingly. With a locally supplied key, it uses the
+current provider abstraction without logging or persisting the secret.
 
 ## Scoring
 
@@ -117,21 +121,21 @@ Every field of every decision, including skip reasons, is written to the
 
 ## Marketplaces
 
-Verified live on 2026-08-23.
+Re-verified live with public GET requests on 2026-08-26.
 
 | Marketplace | API | Claim model | Settlement | Gate | Role here |
 |---|---|---|---|---|---|
 | **OpenTask** | `GET /api/tasks`, `GET /api/tasks/{id}` — public, unauthenticated | bid (`executionMode: "pitch"`) | **off-platform, non-custodial** | buyer selects | **Discovery only** |
-| **execution.market** | `GET /api/v1/tasks/available`, `/api/v1/tasks/{id}` — public, unauthenticated | open pull-claim | **x402r escrow, Base mainnet only** | verification | **Discovery only** |
+| **execution.market** | `GET /api/v1/tasks/available`, `/api/v1/tasks/{id}` — public, unauthenticated | open pull-claim | **x402r escrow, mainnet only; no enabled testnet** | verification | **Discovery only** |
 | **MockMarketplace** | local | open pull-claim | simulated | none | **The only paid loop** |
 
 Both real marketplaces are **discovery-only, for different reasons** — which is
 precisely the heterogeneity this project exists to handle:
 
-**execution.market** has real platform escrow, but no testnet. `escrow/config`
-is pinned to `chain_id: 8453` (Base mainnet) with mainnet USDC and a single
-deployed escrow address; `x402/info` lists ten mainnets enabled and zero
-testnets. Accepting a task also needs EIP-3009 signing and clears a per-task
+**execution.market** has real platform escrow, but no enabled testnet.
+`escrow/config` currently returns `chain_id: 8453` (Base mainnet) with mainnet
+USDC, while `x402/info` lists enabled mainnets and zero testnets. Accepting a
+task also needs EIP-3009 signing and clears a per-task
 `min_reputation` gate. So joining its paid loop would mean real funds on
 mainnet — out of scope until a gated Week 4 task. The connector lists and
 scores live tasks and refuses every write path. Full write-up in
@@ -148,6 +152,19 @@ only connector where `supports_open_claim`, `supports_autonomous_settle`, and
 a submittable deliverable line up — so it proves claim → execute → submit →
 settle works, deterministically and with no funds at risk, while the two real
 markets prove the *router* half of the story.
+
+## What I learned from live integrations
+
+- **OpenTask is pitch/bid-based.** Public discovery is unauthenticated, but
+  getting work requires a pitch and a buyer review/selection gate. Settlement
+  is off-platform and non-custodial, so the connector refuses every write.
+- **execution.market has an open-claim model but not a safe test path.** Its
+  escrow deployment is Base mainnet-only, acceptance requires EIP-3009 signing
+  and sufficient reputation, and observed open payouts have been below the
+  project's minimum. The connector therefore remains GET-only.
+- **Honest capability boundaries are part of the product.** Normalizing a task
+  does not imply the system can or should execute it. Unsafe, ambiguous,
+  unsupported, low-value, and capability-mismatched work is explicitly refused.
 
 ## The claim gate
 
@@ -222,6 +239,8 @@ calibration layer that reacts to two data points is noise, not learning.
   separate, feature-flagged, human-gated path.
 - Every decision is an append-only row plus a structured log line.
 - Claim/submit/settle are keyed by `(marketplace, bounty_id)` for idempotency.
+- Offline evaluations are always `offline_evaluation` / `not_submitted`, live
+  in a separate database, and never create tasks, outcomes, ledger rows, or P&L.
 
 ## Layout
 
@@ -246,6 +265,7 @@ src/arbiter/
   graph.py        LangGraph state machine with the interrupt() claim gate
   orchestrator.py start / resume / approval queue
   calibration.py  predicted p_success vs. actual; Brier, bias, adjustment
+  evaluation.py   GET-only offline generation, validation, export, human review
   pipeline.py     scan -> score -> rank -> record
   cli.py          scan · run · queue · approve · reject · calibrate · markets
   dashboard.py    Streamlit + approve/reject queue

@@ -14,17 +14,21 @@ APP = str(Path(__file__).resolve().parents[1] / "src" / "arbiter" / "dashboard.p
 @pytest.fixture
 def temp_db(tmp_path, monkeypatch):
     monkeypatch.setenv("ARBITER_DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setenv("ARBITER_EVALUATION_DB_PATH", str(tmp_path / "evaluations.db"))
     import streamlit as st
 
     import arbiter.config as config
     import arbiter.db as db
+    import arbiter.evaluation as evaluation
     config._settings = None
     db._engine = None
+    evaluation.reset_evaluation_engine()
     # @st.cache_data persists across AppTest runs in one process.
     st.cache_data.clear()
     yield
     config._settings = None
     db._engine = None
+    evaluation.reset_evaluation_engine()
 
 
 def test_renders_empty_state(temp_db):
@@ -41,7 +45,7 @@ async def test_renders_with_data(temp_db, settings):
 
     labels = [m.label for m in app.metric]
     assert {"Spent today", "Earned today", "Net today", "Tasks today"} <= set(labels)
-    assert len(app.tabs) == 7
+    assert len(app.tabs) == 8
     assert app.dataframe, "tables should render"
 
 
@@ -107,3 +111,21 @@ async def test_marketplace_tab_states_capabilities(temp_db, settings):
     assert any("Marketplaces" in t.label for t in app.tabs)
     text = " ".join(i.value for i in app.info)
     assert "MockMarketplace" in text and "mainnet" in text.lower()
+
+
+async def test_evaluation_tab_is_explicitly_offline_and_not_submitted(temp_db, settings):
+    from arbiter.config import get_settings
+    from arbiter.evaluation import DiscoveryOnlyConnector, run_offline_evaluation
+
+    await run_offline_evaluation(
+        [DiscoveryOnlyConnector(MockMarketplaceConnector())],
+        limit=1,
+        settings=get_settings(),
+    )
+    app = AppTest.from_file(APP, default_timeout=60).run()
+    assert not app.exception
+    assert any("Evaluation Review" in tab.label for tab in app.tabs)
+    labels = [metric.label for metric in app.metric]
+    assert {"Evaluated tasks", "Safety refusals", "Deterministic fallback"} <= set(labels)
+    subheaders = " ".join(item.value for item in app.subheader).lower()
+    assert "never submitted" in subheaders

@@ -1,8 +1,9 @@
-"""`arbiter` CLI. Week 1 exposes one verb: scan (alert-only)."""
+"""Agent Arbiter command-line interface."""
 
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 import typer
 
@@ -14,6 +15,11 @@ from arbiter.connectors import (
     OpenTaskConnector,
 )
 from arbiter.db import init_db
+from arbiter.evaluation import (
+    DiscoveryOnlyConnector,
+    export_evaluations_csv,
+    run_offline_evaluation,
+)
 from arbiter.llm import GroqEstimator, HeuristicEstimator, get_estimator
 from arbiter.logging import configure_logging
 from arbiter.orchestrator import Orchestrator, pending_tasks
@@ -21,7 +27,12 @@ from arbiter.pipeline import run_scan
 from arbiter.risk import RiskGuard
 from arbiter.scoring import top_n_within_budget
 
-app = typer.Typer(help="Agent Arbiter -- cross-marketplace bounty router (Week 1: alert-only).")
+app = typer.Typer(
+    help=(
+        "Agent Arbiter -- capability-aware cross-marketplace opportunity "
+        "intelligence and offline evaluation."
+    )
+)
 
 
 def _build_connectors(markets: list[str]):
@@ -104,6 +115,74 @@ def initdb() -> None:
     configure_logging(settings.log_level, settings.log_json)
     init_db()
     typer.echo(f"initialized {settings.db_path}")
+
+
+@app.command()
+def evaluate(
+    marketplace: list[str] = typer.Option(
+        ["opentask"], "--marketplace", "-m",
+        help="Public marketplaces to discover and evaluate locally.",
+    ),
+    limit: int = typer.Option(10, min=1, max=100, help="Tasks per marketplace."),
+) -> None:
+    """Generate local quality evidence from read-only marketplace discovery.
+
+    This command cannot bid, claim, accept, submit, settle, sign, or pay. It
+    stores records in the separate evaluation database and labels every row
+    OFFLINE_EVALUATION / NOT_SUBMITTED.
+    """
+    settings = get_settings()
+    configure_logging(settings.log_level, settings.log_json)
+    raw_connectors = _build_connectors(marketplace)
+    connectors = [DiscoveryOnlyConnector(connector) for connector in raw_connectors]
+
+    async def _run():
+        try:
+            return await run_offline_evaluation(
+                connectors, limit=limit, settings=settings, persist=True
+            )
+        finally:
+            for connector in connectors:
+                await connector.aclose()
+
+    result = asyncio.run(_run())
+    typer.echo("")
+    typer.secho("OFFLINE EVALUATION · NOT SUBMITTED", bold=True, fg=typer.colors.CYAN)
+    typer.echo(f"Run {result.run_id} · {len(result.records)} task(s)")
+    typer.echo(f"Stored separately in {settings.evaluation_db_path}")
+    typer.echo("")
+    for record in result.records:
+        status = (
+            f"refused ({record.safety_kind})"
+            if not record.safety_allowed
+            else record.deliverable_state or "no deliverable"
+        )
+        typer.echo(f"  [{record.marketplace}] {record.title[:68]}")
+        typer.echo(
+            f"     {record.category} · {status} · provider {record.provider} · "
+            f"{record.total_latency_ms:.1f}ms · est. API cost "
+            f"${record.estimated_api_cost_usd:.4f}"
+        )
+        if record.skip_or_refusal_reason:
+            typer.echo(f"     reason: {record.skip_or_refusal_reason}")
+    typer.echo("")
+    typer.echo("Human review status: pending. No marketplace action was taken.")
+
+
+@app.command("export-evaluations")
+def export_evaluations(
+    format_: str = typer.Option("csv", "--format", help="Export format (csv)."),
+    output: Path = typer.Option(
+        Path("data/evaluations.csv"), "--output", "-o", help="Local export path."
+    ),
+) -> None:
+    """Export offline quality reviews; never exports marketplace outcomes."""
+    if format_.lower() != "csv":
+        raise typer.BadParameter("only csv is currently supported")
+    settings = get_settings()
+    count = export_evaluations_csv(output, settings)
+    typer.secho("OFFLINE EVALUATION · NOT SUBMITTED", bold=True, fg=typer.colors.CYAN)
+    typer.echo(f"Exported {count} record(s) to {output}")
 
 
 if __name__ == "__main__":
