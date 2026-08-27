@@ -69,16 +69,22 @@ class Settings(BaseSettings):
 
     @property
     def db_url(self) -> str:
+        if self.hosted_mode:
+            raise RuntimeError("Lifecycle database is unavailable in hosted sandbox mode")
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{self.db_path}"
 
     @property
     def evaluation_db_url(self) -> str:
+        if self.hosted_mode:
+            raise RuntimeError("Evaluation database is unavailable in hosted sandbox mode")
         self.evaluation_db_path.parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{self.evaluation_db_path}"
 
     @property
     def control_plane_db_url(self) -> str:
+        if self.hosted_mode:
+            raise RuntimeError("Control-plane database is unavailable in hosted sandbox mode")
         self.control_plane_db_path.parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{self.control_plane_db_path}"
 

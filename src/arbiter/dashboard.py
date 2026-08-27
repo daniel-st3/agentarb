@@ -1,6 +1,6 @@
 """Editorial Streamlit UI. Public GET discovery; local governance; no external actions."""
 
-# ruff: noqa: E501 -- long constant HTML fragments remain legible as complete components.
+# ruff: noqa: E501, E402 -- hosted routing precedes local-only persistence imports.
 
 from __future__ import annotations
 
@@ -12,10 +12,19 @@ from typing import Any
 
 import pandas as pd
 import streamlit as st
+
+from arbiter.config import get_settings
+
+# Stop before importing or initializing the local persistence/worker surfaces.
+if get_settings().hosted_mode:
+    from arbiter.sandbox_ui import render_hosted
+
+    render_hosted()
+    st.stop()
+
 from sqlmodel import select
 
 from arbiter import calibration
-from arbiter.config import get_settings
 from arbiter.connectors import (
     ExecutionMarketConnector,
     MockMarketplaceConnector,

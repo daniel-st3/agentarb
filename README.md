@@ -125,14 +125,18 @@ ARBITER_HOSTED_MODE = true
 ARBITER_LLM_PROVIDER = "heuristic"
 ```
 
-Hosted mode is intentionally read-mostly:
+Hosted mode is an interactive, memory-only **Policy Sandbox**:
 
-- public OpenTask and execution.market discovery remains GET-only and degrades
-  to stored/empty UI states when a source is unavailable;
-- profile/policy saves, package approval, offline grading, and controlled
-  lifecycle actions are disabled;
-- SQLite databases and worker-artifact files use ephemeral instance storage and
-  must not be treated as durable evidence;
+- visitors select a worker template and tune a temporary capability/cost/risk
+  policy in Streamlit session state;
+- public OpenTask and execution.market discovery remains fixed-route GET-only;
+  source failures fall back to explicitly cached-in-session or controlled demo
+  evidence, never data presented as live;
+- deterministic evaluation produces allow/skip/refuse decisions and read-only
+  governed package previews with `package_preview_only=true`;
+- SQLite, artifacts, profile/policy history, package approval, offline grading,
+  lifecycle actions, provider calls, and worker invocation are structurally
+  unavailable; browser reload/session end resets the visitor configuration;
 - the localhost FastAPI package service and second-worker demo remain local-only
   and must not be exposed through Community Cloud;
 - no Groq key is recommended for the public portfolio deployment. Deterministic
@@ -142,6 +146,11 @@ Manual deployment, when separately approved, is: open Streamlit Community
 Cloud, choose **Create app**, select the repository/branch/entrypoint above,
 choose Python 3.12 in Advanced settings, paste the two hosted settings, and
 deploy. No account creation or deployment was performed during this work.
+
+The hosted app deliberately uses native CSS scroll-linked reveals and restrained
+transitions rather than GSAP. Streamlit reruns replace parent DOM sections, while
+injected scripts execute in isolated components; CSS is reliable, deployment-free,
+keyboard-safe, and honors `prefers-reduced-motion`.
 
 ## Governed work-package contract
 

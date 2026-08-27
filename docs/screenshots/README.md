@@ -55,3 +55,13 @@ Premium portfolio UI captures from 2026-08-27:
 
 These captures use the app's local system-font stack and CSS-only motion. No
 external visual asset, web-font, or JavaScript animation dependency is required.
+
+Hosted Policy Sandbox captures from 2026-08-27:
+
+| File | Shows |
+|---|---|
+| `2026-08-27-sandbox-landing.jpg` | Editorial hosted landing, session-only proof statement, CTA, and authority path |
+| `2026-08-27-sandbox-configured-policy.jpg` | Temporary capability envelope and work policy console |
+| `2026-08-27-sandbox-opportunity-results.jpg` | Current public source status and controlled evidence kept distinct in the decision terminal |
+| `2026-08-27-sandbox-package-preview.jpg` | Allowed controlled record and the start of the non-persistent governed preview boundary |
+| `2026-08-27-sandbox-safety-boundary.jpg` | Preview-only receipt, deterministic plan, validation criteria, and “What this proves” statement |

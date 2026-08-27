@@ -13,6 +13,27 @@
 
 ## Portfolio UI and Community Cloud readiness — 2026-08-27
 
+### Hosted Policy Sandbox
+
+`ARBITER_HOSTED_MODE=true` now branches before every local persistence import or
+initializer. The hosted app imports only the pure governance engine, fixed-route
+public GET connectors, deterministic estimator, and session UI. All visitor
+configuration, public-response cache, decisions, and package previews live in
+`st.session_state`; a new browser session starts from the Research Analyst
+template.
+
+The sandbox supports four worker templates, temporary profile/policy tuning,
+current public discovery, controlled demo evidence, exact reason codes, and a
+non-persistent `Governed Work Package Preview`. A preview is permanently
+`not_submitted`, `marketplace_action_authorized=false`, and
+`package_preview_only=true`; there is no approval, download, REST, or worker
+control. Database URL access and the local REST app fail closed in hosted mode.
+
+Motion uses native CSS view timelines, hover/focus transitions, responsive
+layouts, and reduced-motion fallbacks. GSAP was evaluated but omitted because
+Streamlit's rerun-managed parent DOM cannot be safely and reliably controlled by
+an injected component script.
+
 The Streamlit app now uses an eight-screen product navigation: Overview,
 Opportunity Feed, Agent Profile, Work Policy, Package Approval, Approved
 Packages, Worker Artifacts, and Evidence & Simulation. The light editorial

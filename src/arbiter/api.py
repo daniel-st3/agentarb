@@ -30,13 +30,13 @@ def is_loopback_host(host: str) -> bool:
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     cfg = settings or get_settings()
+    if cfg.hosted_mode:
+        raise RuntimeError("Local worker API is unavailable in hosted sandbox mode")
     init_control_plane_db(cfg)
     app = FastAPI(
         title="Agent Arbiter Governed Work Package API",
         version="1.0.0",
-        description=(
-            "Local GET-only access to approved, immutable, not-submitted work packages."
-        ),
+        description=("Local GET-only access to approved, immutable, not-submitted work packages."),
     )
 
     @app.get("/v1/health")
@@ -92,4 +92,3 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 
 app = create_app()
-

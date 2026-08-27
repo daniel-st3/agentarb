@@ -155,20 +155,13 @@ def test_hosted_mode_disables_operator_mutations(temp_db, monkeypatch):
 
     config._settings = None
     app = AppTest.from_file(APP, default_timeout=60).run()
-    expected = {
-        "Agent Profile": {"Save as new profile version"},
-        "Work Policy": {"Save as new work policy version"},
-        "Package Approval": {"Approve for local worker", "Reject candidate"},
-    }
-    for page, mutation_labels in expected.items():
-        app = go(app, page)
-        assert not app.exception
-        matching = [button for button in app.button if button.label in mutation_labels]
-        for button in matching:
-            assert button.disabled
-        # Empty approval queues legitimately expose no buttons.
-        if page != "Package Approval":
-            assert {button.label for button in matching} == mutation_labels
+    assert app.radio[0].options == ["Overview", "Policy Sandbox"]
+    app = go(app, "Policy Sandbox")
+    assert not app.exception
+    labels = {button.label for button in app.button}
+    assert "Approve for local worker" not in labels
+    assert "Reject candidate" not in labels
+    assert "Evaluate public opportunities" in labels
 
 
 def test_css_has_responsive_and_reduced_motion_contract():

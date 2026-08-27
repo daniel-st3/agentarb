@@ -1,0 +1,23 @@
+.aa-sandbox-hero { min-height: min(72svh, 720px); display: flex; flex-direction: column; justify-content: center; }
+.aa-sandbox-hero h1 { font-size: clamp(4rem, 8vw, 8.5rem); max-width: 10ch; line-height: .85; }
+.aa-sticky-boundary { position: sticky; top: .6rem; z-index: 9; box-shadow: 0 8px 28px rgba(25,28,32,.06); }
+.aa-form-kicker { color: var(--aa-blue); font: 650 .68rem/1.2 var(--aa-mono); letter-spacing: .13em; margin: .5rem 0 1rem; }
+.aa-preview-stamp { float: right; border: 1px solid var(--aa-blue); color: var(--aa-blue); padding: 1.1rem .8rem;
+  font: 650 .66rem/1 var(--aa-mono); letter-spacing: .12em; transform: rotate(1.5deg); }
+.aa-scroll-reveal { animation: aa-view-reveal linear both; animation-timeline: view(); animation-range: entry 0 entry 28%; }
+@keyframes aa-view-reveal { from { opacity: .15; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+[data-testid="stButton"] button[kind="primary"] { position: relative; overflow: hidden; transition: transform .25s var(--aa-ease), box-shadow .25s var(--aa-ease); }
+[data-testid="stButton"] button[kind="primary"] p,
+[data-testid="stFormSubmitButton"] button[kind="primary"] p { color: #f8fafc !important; }
+[data-testid="stButton"] button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(23,59,101,.16); }
+[data-testid="stForm"] { border-color: var(--aa-line-strong); background: var(--aa-paper); padding: clamp(1rem, 2.5vw, 2rem); }
+[data-testid="stSegmentedControl"] { position: sticky; top: 4.25rem; z-index: 8; background: color-mix(in srgb, var(--aa-canvas) 94%, transparent); padding: .45rem 0; }
+@media (max-width: 600px) {
+  .aa-sandbox-hero { min-height: auto; padding-block: 3rem; }
+  .aa-sandbox-hero h1 { font-size: clamp(3.4rem, 17vw, 5rem); }
+  .aa-sticky-boundary, [data-testid="stSegmentedControl"] { position: static; }
+  .aa-preview-stamp { float: none; display: inline-block; margin-bottom: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aa-scroll-reveal { animation: none !important; }
+}
