@@ -341,9 +341,12 @@ def _ensure_defaults(session: Session) -> None:
 def active_profile(settings: Settings | None = None) -> AgentProfile:
     with control_plane_session(settings) as session:
         _ensure_defaults(session)
-        row = session.query(AgentProfileRecord).filter_by(active=True).order_by(
-            AgentProfileRecord.version.desc()
-        ).first()
+        row = (
+            session.query(AgentProfileRecord)
+            .filter_by(active=True)
+            .order_by(AgentProfileRecord.version.desc())
+            .first()
+        )
         assert row is not None
         return AgentProfile.model_validate(row.payload)
 
@@ -351,11 +354,52 @@ def active_profile(settings: Settings | None = None) -> AgentProfile:
 def active_policy(settings: Settings | None = None) -> WorkPolicy:
     with control_plane_session(settings) as session:
         _ensure_defaults(session)
-        row = session.query(WorkPolicyRecord).filter_by(active=True).order_by(
-            WorkPolicyRecord.version.desc()
-        ).first()
+        row = (
+            session.query(WorkPolicyRecord)
+            .filter_by(active=True)
+            .order_by(WorkPolicyRecord.version.desc())
+            .first()
+        )
         assert row is not None
         return WorkPolicy.model_validate(row.payload)
+
+
+def active_profile_metadata(settings: Settings | None = None) -> dict[str, Any]:
+    """Return non-secret version metadata for the active immutable profile."""
+    with control_plane_session(settings) as session:
+        _ensure_defaults(session)
+        row = (
+            session.query(AgentProfileRecord)
+            .filter_by(active=True)
+            .order_by(AgentProfileRecord.version.desc())
+            .first()
+        )
+        assert row is not None
+        return {
+            "id": row.profile_id,
+            "version": row.version,
+            "active": row.active,
+            "created_at": row.created_at.isoformat(),
+        }
+
+
+def active_policy_metadata(settings: Settings | None = None) -> dict[str, Any]:
+    """Return non-secret version metadata for the active immutable policy."""
+    with control_plane_session(settings) as session:
+        _ensure_defaults(session)
+        row = (
+            session.query(WorkPolicyRecord)
+            .filter_by(active=True)
+            .order_by(WorkPolicyRecord.version.desc())
+            .first()
+        )
+        assert row is not None
+        return {
+            "id": row.policy_id,
+            "version": row.version,
+            "active": row.active,
+            "created_at": row.created_at.isoformat(),
+        }
 
 
 def save_profile(profile: AgentProfile, settings: Settings | None = None) -> AgentProfile:
@@ -398,9 +442,11 @@ def _profile_version(
     profile_id: str, version: int, settings: Settings | None = None
 ) -> AgentProfile:
     with control_plane_session(settings) as session:
-        row = session.query(AgentProfileRecord).filter_by(
-            profile_id=profile_id, version=version
-        ).first()
+        row = (
+            session.query(AgentProfileRecord)
+            .filter_by(profile_id=profile_id, version=version)
+            .first()
+        )
         if row is None:
             raise KeyError((profile_id, version))
         return AgentProfile.model_validate(row.payload)
@@ -624,9 +670,9 @@ async def refresh_opportunities(
         day_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         approved_projected_cost = sum(
             float(row.payload.get("estimated_task_execution_cost_usd") or 0.0)
-            for row in session.query(GovernedWorkPackageRecord).filter(
-                GovernedWorkPackageRecord.created_at >= day_start
-            ).all()
+            for row in session.query(GovernedWorkPackageRecord)
+            .filter(GovernedWorkPackageRecord.created_at >= day_start)
+            .all()
         )
         for connector in connectors:
             listed = await connector.list_open(limit=limit)
@@ -705,9 +751,11 @@ async def refresh_opportunities(
 
 def list_opportunities(settings: Settings | None = None) -> list[dict[str, Any]]:
     with control_plane_session(settings) as session:
-        decisions = session.query(OpportunityDecisionRecord).order_by(
-            OpportunityDecisionRecord.created_at.desc()
-        ).all()
+        decisions = (
+            session.query(OpportunityDecisionRecord)
+            .order_by(OpportunityDecisionRecord.created_at.desc())
+            .all()
+        )
         seen: set[str] = set()
         result: list[dict[str, Any]] = []
         for decision in decisions:
@@ -722,9 +770,12 @@ def list_opportunities(settings: Settings | None = None) -> list[dict[str, Any]]
 
 def get_opportunity(opportunity_id: str, settings: Settings | None = None) -> dict[str, Any] | None:
     with control_plane_session(settings) as session:
-        decision = session.query(OpportunityDecisionRecord).filter_by(
-            opportunity_id=opportunity_id
-        ).order_by(OpportunityDecisionRecord.created_at.desc()).first()
+        decision = (
+            session.query(OpportunityDecisionRecord)
+            .filter_by(opportunity_id=opportunity_id)
+            .order_by(OpportunityDecisionRecord.created_at.desc())
+            .first()
+        )
         if not decision:
             return None
         snapshot = session.get(OpportunitySnapshotRecord, decision.snapshot_id)
@@ -766,14 +817,20 @@ def _templates(category: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]
         {"id": "no_external_action", "type": "safety_invariant"},
     ]
     if category == Category.RESEARCH.value:
-        return common + [{"step": 2, "operation": "produce_research_plan"},
-                         {"step": 3, "operation": "validate_local_plan"}], validators
+        return common + [
+            {"step": 2, "operation": "produce_research_plan"},
+            {"step": 3, "operation": "validate_local_plan"},
+        ], validators
     if category == Category.SUMMARIZATION.value:
-        return common + [{"step": 2, "operation": "produce_local_summary_outline"},
-                         {"step": 3, "operation": "validate_local_plan"}], validators
+        return common + [
+            {"step": 2, "operation": "produce_local_summary_outline"},
+            {"step": 3, "operation": "validate_local_plan"},
+        ], validators
     if category == Category.DATA_LOOKUP.value:
-        return common + [{"step": 2, "operation": "produce_extraction_schema"},
-                         {"step": 3, "operation": "validate_local_plan"}], validators
+        return common + [
+            {"step": 2, "operation": "produce_extraction_schema"},
+            {"step": 3, "operation": "validate_local_plan"},
+        ], validators
     return common + [
         {
             "step": 2,
@@ -795,9 +852,7 @@ def create_candidate(
     if isinstance(category, dict):
         category = category.get("value", "unknown")
     plan, criteria = _templates(str(category))
-    profile = _profile_version(
-        opportunity["profile"]["id"], opportunity["profile"]["version"], cfg
-    )
+    profile = _profile_version(opportunity["profile"]["id"], opportunity["profile"]["version"], cfg)
     draft = {
         "agent_profile": {
             **opportunity["profile"],
@@ -818,9 +873,7 @@ def create_candidate(
         },
         "actual_llm_inference_cost_usd": opportunity["actual_llm_inference_cost_usd"],
         "actual_llm_cost_status": opportunity["actual_llm_cost_status"],
-        "estimated_task_execution_cost_usd": opportunity[
-            "estimated_task_execution_cost_usd"
-        ],
+        "estimated_task_execution_cost_usd": opportunity["estimated_task_execution_cost_usd"],
         "estimated_other_cost_usd": opportunity["estimated_other_cost_usd"],
         "expected_margin_usd": opportunity["expected_margin_usd"],
         "task_plan": plan,
@@ -832,13 +885,16 @@ def create_candidate(
         },
     }
     with control_plane_session(cfg) as session:
-        decision = session.query(OpportunityDecisionRecord).filter_by(
-            opportunity_id=opportunity_id
-        ).order_by(OpportunityDecisionRecord.created_at.desc()).first()
+        decision = (
+            session.query(OpportunityDecisionRecord)
+            .filter_by(opportunity_id=opportunity_id)
+            .order_by(OpportunityDecisionRecord.created_at.desc())
+            .first()
+        )
         assert decision is not None
-        existing = session.query(WorkPackageCandidateRecord).filter_by(
-            decision_id=decision.id
-        ).first()
+        existing = (
+            session.query(WorkPackageCandidateRecord).filter_by(decision_id=decision.id).first()
+        )
         if existing:
             return existing
         candidate = WorkPackageCandidateRecord(
@@ -851,9 +907,7 @@ def create_candidate(
         return candidate
 
 
-def reject_candidate(
-    candidate_id: str, reason: str, settings: Settings | None = None
-) -> None:
+def reject_candidate(candidate_id: str, reason: str, settings: Settings | None = None) -> None:
     with control_plane_session(settings) as session:
         candidate = session.get(WorkPackageCandidateRecord, candidate_id)
         if not candidate or candidate.status != CandidateStatus.PENDING.value:
@@ -910,9 +964,11 @@ def approve_candidate(
 
 def list_candidates(settings: Settings | None = None) -> list[dict[str, Any]]:
     with control_plane_session(settings) as session:
-        rows = session.query(WorkPackageCandidateRecord).order_by(
-            WorkPackageCandidateRecord.created_at.desc()
-        ).all()
+        rows = (
+            session.query(WorkPackageCandidateRecord)
+            .order_by(WorkPackageCandidateRecord.created_at.desc())
+            .all()
+        )
         return [
             {
                 "candidate_id": row.candidate_id,
@@ -928,15 +984,15 @@ def list_candidates(settings: Settings | None = None) -> list[dict[str, Any]]:
 
 def list_packages(settings: Settings | None = None) -> list[GovernedWorkPackage]:
     with control_plane_session(settings) as session:
-        rows = session.query(GovernedWorkPackageRecord).order_by(
-            GovernedWorkPackageRecord.created_at.desc()
-        ).all()
+        rows = (
+            session.query(GovernedWorkPackageRecord)
+            .order_by(GovernedWorkPackageRecord.created_at.desc())
+            .all()
+        )
         return [GovernedWorkPackage.model_validate(row.payload) for row in rows]
 
 
-def get_package(
-    package_id: str, settings: Settings | None = None
-) -> GovernedWorkPackage | None:
+def get_package(package_id: str, settings: Settings | None = None) -> GovernedWorkPackage | None:
     with control_plane_session(settings) as session:
         row = session.get(GovernedWorkPackageRecord, package_id)
         return GovernedWorkPackage.model_validate(row.payload) if row else None

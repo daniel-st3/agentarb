@@ -2,12 +2,46 @@
 
 **Repository:** https://github.com/daniel-st3/agentarb
 **Branch:** `claude/verify-bounty-api-facts-f6ccdu`
-**Last code commit:** `304fdee42e724e6b7f647aac9d8bd53732e11bd8` — *Dashboard fixes and demo screenshots*
-**Handoff commit (docs only):** `607d1a511f01b12640a472ce2be7d5d5b00530c1` — *Add HANDOFF.md and screenshot index*
-**Date:** 2026-08-23
+**Current milestone:** premium Streamlit UI and Community Cloud readiness (local commit; see completion report for exact SHA)
+**Previous handoff baseline:** `607d1a511f01b12640a472ce2be7d5d5b00530c1`
+**Updated:** 2026-08-27
 
 > This branch is the only branch in the repository. There is no `main` and no
 > open pull request, so there is nothing to merge into yet.
+
+---
+
+## Portfolio UI and Community Cloud readiness — 2026-08-27
+
+The Streamlit app now uses an eight-screen product navigation: Overview,
+Opportunity Feed, Agent Profile, Work Policy, Package Approval, Approved
+Packages, Worker Artifacts, and Evidence & Simulation. The light editorial
+system uses local CSS only, system font stacks, restrained semantic status
+colors, responsive layouts, and `prefers-reduced-motion`; no external font,
+JavaScript animation, or visual asset dependency was added.
+
+Governed packages render as contract-style records, worker artifacts as
+verification receipts, and simulated/offline/live evidence remains visually
+separate. Legacy lifecycle controls are available only inside Controlled
+Simulation and fail closed for non-mock bounty keys.
+
+Community Cloud preparation adds `.streamlit/config.toml` and uses the existing
+`uv.lock` plus `pyproject.toml`. Deploy with branch
+`claude/verify-bounty-api-facts-f6ccdu`, entrypoint
+`src/arbiter/dashboard.py`, Python 3.12, and these root-level settings:
+
+```toml
+ARBITER_HOSTED_MODE = true
+ARBITER_LLM_PROVIDER = "heuristic"
+```
+
+Hosted mode disables operator mutations, uses deterministic estimates, treats
+SQLite/artifact storage as ephemeral, and never exposes the localhost package
+API or worker demo. No deployment or account/login action has been performed.
+
+Fresh portfolio captures are indexed in `docs/screenshots/README.md` and use the
+`2026-08-27-premium-*.jpg` naming convention. Desktop and 390 px narrow layouts
+were verified through the local in-app browser.
 
 ---
 

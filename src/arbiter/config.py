@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     control_plane_db_path: Path = Path("data/control-plane.db")
     #: Append-only local worker evidence; never a marketplace outcome.
     worker_artifact_dir: Path = Path("data/worker-artifacts/v1")
+    #: Community Cloud is a public visualization surface, not an operator console.
+    #: It uses deterministic estimates and disables local approval/configuration writes.
+    hosted_mode: bool = False
 
     # --- Scoring / skip-filter ---
     min_payout_usd: float = 1.0

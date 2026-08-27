@@ -1,7 +1,7 @@
 [project]
 name = "agent-arbiter"
 version = "0.1.0"
-description = "A cross-marketplace router that scores AI-agent bounties by expected profit vs. effort vs. capability."
+description = "A capability-aware control plane for governed agent-labor opportunity routing."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

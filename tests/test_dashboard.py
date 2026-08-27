@@ -1,4 +1,4 @@
-"""The dashboard must render from SQLite without raising -- both empty and populated."""
+"""Streamlit navigation, evidence boundaries, and hosted-mode safety."""
 
 from pathlib import Path
 
@@ -19,17 +19,18 @@ def temp_db(tmp_path, monkeypatch):
     monkeypatch.setenv("ARBITER_WORKER_ARTIFACT_DIR", str(tmp_path / "worker-artifacts"))
     monkeypatch.setenv("ARBITER_LLM_PROVIDER", "heuristic")
     monkeypatch.setenv("ARBITER_GROQ_API_KEY", "")
+    monkeypatch.setenv("ARBITER_HOSTED_MODE", "false")
     import streamlit as st
 
     import arbiter.config as config
     import arbiter.control_plane as control_plane
     import arbiter.db as db
     import arbiter.evaluation as evaluation
+
     config._settings = None
     db._engine = None
     evaluation.reset_evaluation_engine()
     control_plane.reset_control_plane_engines()
-    # @st.cache_data persists across AppTest runs in one process.
     st.cache_data.clear()
     yield
     config._settings = None
@@ -38,31 +39,47 @@ def temp_db(tmp_path, monkeypatch):
     control_plane.reset_control_plane_engines()
 
 
-def test_renders_empty_state(temp_db):
+def go(app: AppTest, page: str) -> AppTest:
+    return app.radio[0].set_value(page).run()
+
+
+def rendered_text(app: AppTest) -> str:
+    values = [item.value for item in app.markdown]
+    values += [item.value for item in app.caption]
+    values += [item.value for item in app.info]
+    return " ".join(str(value) for value in values)
+
+
+def test_overview_has_product_navigation_and_safety_boundary(temp_db):
     app = AppTest.from_file(APP, default_timeout=60).run()
     assert not app.exception
-    assert any("No scans yet" in i.value for i in app.info)
+    assert app.radio[0].value == "Overview"
+    assert app.radio[0].options == [
+        "Overview",
+        "Opportunity Feed",
+        "Agent Profile",
+        "Work Policy",
+        "Package Approval",
+        "Approved Packages",
+        "Worker Artifacts",
+        "Evidence & Simulation",
+    ]
+    text = rendered_text(app)
+    assert "Governed work routing for the agent economy" in text
+    assert "Real marketplace outcomes" in text
+    assert "No marketplace actions or payments are enabled" in text
 
 
-async def test_renders_with_data(temp_db, settings):
+async def test_all_primary_screens_render_with_data(temp_db, settings):
     await run_scan([MockMarketplaceConnector()], settings=settings)
-
     app = AppTest.from_file(APP, default_timeout=60).run()
-    assert not app.exception
-
-    labels = [m.label for m in app.metric]
-    assert {"Spent today", "Earned today", "Net today", "Tasks today"} <= set(labels)
-    assert len(app.tabs) == 13
-    assert any(tab.label == "Agent Profile" for tab in app.tabs)
-    assert any(tab.label == "Work Policy" for tab in app.tabs)
-    assert any(tab.label == "Opportunity Feed" for tab in app.tabs)
-    assert any(tab.label == "Governed Packages" for tab in app.tabs)
-    assert any(tab.label == "Worker Artifacts" for tab in app.tabs)
-    assert app.dataframe, "tables should render"
+    for page in app.radio[0].options:
+        app = go(app, page)
+        assert not app.exception, page
+    assert "simulated" in rendered_text(app).lower()
 
 
-async def test_renders_the_approval_queue(temp_db, settings):
-    """A bounty suspended at the gate must show up with Approve/Reject."""
+async def test_controlled_approval_queue_is_mock_only(temp_db, settings):
     from langgraph.checkpoint.memory import MemorySaver
 
     from arbiter.orchestrator import Orchestrator
@@ -76,27 +93,23 @@ async def test_renders_the_approval_queue(temp_db, settings):
     )
     pending = await orchestrator.start(await mock.get("mock-007"))
     assert pending.payload["kind"] == "claim_approval"
-
-    app = AppTest.from_file(APP, default_timeout=60).run()
+    app = go(AppTest.from_file(APP, default_timeout=60).run(), "Evidence & Simulation")
+    labels = [button.label for button in app.button]
     assert not app.exception
-
-    assert any("Approval queue (1)" in t.label for t in app.tabs)
-    labels = [b.label for b in app.button]
-    assert "Approve" in labels and "Reject" in labels
+    assert "Approve simulation" in labels and "Reject simulation" in labels
+    assert "Approve" not in labels
 
 
-async def test_simulated_money_is_labelled(temp_db, settings):
-    """Nothing on the page may read as real earnings."""
+async def test_simulated_money_is_visibly_separate(temp_db, settings):
     await run_scan([MockMarketplaceConnector()], settings=settings)
-    app = AppTest.from_file(APP, default_timeout=60).run()
-    assert not app.exception
-    captions = " ".join(c.value for c in app.caption)
-    assert "simulated" in captions.lower()
-    assert "no wallet" in captions.lower()
+    app = go(AppTest.from_file(APP, default_timeout=60).run(), "Evidence & Simulation")
+    text = rendered_text(app).lower()
+    assert "simulated p&amp;l" in text
+    assert "real marketplace outcomes: 0" in text
+    assert "no wallet exists" in text
 
 
-async def test_calibration_tab_renders_with_outcomes(temp_db, settings):
-    """Calibration metrics render once outcomes exist."""
+async def test_calibration_and_marketplace_constraints_render(temp_db, settings):
     from arbiter import calibration
     from arbiter.db import init_db
     from arbiter.models import Score
@@ -104,44 +117,62 @@ async def test_calibration_tab_renders_with_outcomes(temp_db, settings):
     init_db()
     for i in range(6):
         calibration.record_outcome(
-            bounty_key=f"mock:{i}", marketplace="mock", category="research",
+            bounty_key=f"mock:{i}",
+            marketplace="mock",
+            category="research",
             score=Score(bounty_key=f"mock:{i}", p_success=0.8, est_api_cost_usd=0.01),
-            accepted=i < 3, deliverable_state="validated",
-            actual_cost_usd=0.01, actual_payout_usd=10.0 if i < 3 else 0.0,
-            handler="research", simulated=True,
+            accepted=i < 3,
+            deliverable_state="validated",
+            actual_cost_usd=0.01,
+            actual_payout_usd=10.0 if i < 3 else 0.0,
+            handler="research",
+            simulated=True,
         )
-
-    app = AppTest.from_file(APP, default_timeout=60).run()
+    app = go(AppTest.from_file(APP, default_timeout=60).run(), "Evidence & Simulation")
+    text = rendered_text(app)
     assert not app.exception
-    labels = [m.label for m in app.metric]
-    assert {"Outcomes", "Acceptance rate", "Brier score", "Bias"} <= set(labels)
+    assert "Brier score" in text and "Marketplace capability differences" in text
+    assert app.dataframe
 
 
-async def test_marketplace_tab_states_capabilities(temp_db, settings):
-    app = AppTest.from_file(APP, default_timeout=60).run()
-    assert not app.exception
-    assert any("Marketplaces" in t.label for t in app.tabs)
-    text = " ".join(i.value for i in app.info)
-    assert "MockMarketplace" in text and "mainnet" in text.lower()
-
-
-async def test_evaluation_tab_is_explicitly_offline_and_not_submitted(temp_db, settings):
+async def test_offline_evaluation_is_not_submitted(temp_db, settings):
     from arbiter.config import get_settings
     from arbiter.evaluation import DiscoveryOnlyConnector, run_offline_evaluation
 
     await run_offline_evaluation(
-        [DiscoveryOnlyConnector(MockMarketplaceConnector())],
-        limit=1,
-        settings=get_settings(),
+        [DiscoveryOnlyConnector(MockMarketplaceConnector())], limit=1, settings=get_settings()
     )
+    app = go(AppTest.from_file(APP, default_timeout=60).run(), "Evidence & Simulation")
+    text = rendered_text(app).lower()
+    assert "offline_evaluation / not_submitted" in text
+    assert "human score, not acceptance" in text
+    assert "unsafe false-allow" in text
+
+
+def test_hosted_mode_disables_operator_mutations(temp_db, monkeypatch):
+    monkeypatch.setenv("ARBITER_HOSTED_MODE", "true")
+    import arbiter.config as config
+
+    config._settings = None
     app = AppTest.from_file(APP, default_timeout=60).run()
-    assert not app.exception
-    assert any("Evaluation Review" in tab.label for tab in app.tabs)
-    labels = [metric.label for metric in app.metric]
-    assert {"Evaluated tasks", "Safety refusals", "Deterministic fallback"} <= set(labels)
-    assert {
-        "Routing accuracy", "Decision accuracy", "Unsafe false-allow",
-        "Safe false-refusal", "Validation agreement",
-    } <= set(labels)
-    subheaders = " ".join(item.value for item in app.subheader).lower()
-    assert "never submitted" in subheaders
+    expected = {
+        "Agent Profile": {"Save as new profile version"},
+        "Work Policy": {"Save as new work policy version"},
+        "Package Approval": {"Approve for local worker", "Reject candidate"},
+    }
+    for page, mutation_labels in expected.items():
+        app = go(app, page)
+        assert not app.exception
+        matching = [button for button in app.button if button.label in mutation_labels]
+        for button in matching:
+            assert button.disabled
+        # Empty approval queues legitimately expose no buttons.
+        if page != "Package Approval":
+            assert {button.label for button in matching} == mutation_labels
+
+
+def test_css_has_responsive_and_reduced_motion_contract():
+    css = Path(APP).with_name("dashboard.css").read_text(encoding="utf-8")
+    assert "prefers-reduced-motion" in css
+    assert "max-width: 600px" in css
+    assert "--aa-canvas" in css and "--aa-blue" in css

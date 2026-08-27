@@ -22,7 +22,7 @@ a push-market into a pull loop — is the hard part and the centrepiece.
 ```mermaid
 flowchart LR
     O[OpenTask GET-only] --> N[Normalized Bounty]
-    E[execution.market GET-only] --> N
+    EM[execution.market GET-only] --> N
     M[MockMarketplace] --> N
     P[Versioned Agent Profile] --> D[Policy decision]
     W[Versioned Work Policy] --> D
@@ -36,7 +36,7 @@ flowchart LR
     R --> Z[Append-only WorkerExecutionArtifact]
     Z --> Q[not_submitted / zero external actions]
     GC[Versioned golden corpus] --> B[Hermetic routing + safety benchmark]
-    B --> E[Offline benchmark evidence]
+    B --> OE[Offline benchmark evidence]
     N --> L[Mock-only simulated lifecycle + simulated P&L]
 ```
 
@@ -98,6 +98,50 @@ returns a model-specific 404, Arbiter tries
 heuristic if both models fail. Generic 404s are not retried as model changes.
 Diagnostics log only model IDs and redacted error categories; API keys and task
 request bodies never appear in logs.
+
+## Streamlit Community Cloud readiness
+
+The portfolio UI is prepared for Streamlit Community Cloud, but this repository
+does not deploy it automatically. Community Cloud runs from the repository root;
+use these exact settings:
+
+| Setting | Value |
+|---|---|
+| Repository | `daniel-st3/agentarb` |
+| Branch | `claude/verify-bounty-api-facts-f6ccdu` |
+| Entrypoint | `src/arbiter/dashboard.py` |
+| Python | `3.12` |
+| Dependency declaration | `uv.lock` + `pyproject.toml` |
+
+Community Cloud recognizes `uv.lock`; no competing `requirements.txt` is
+included. The light theme and server-safe visual tokens live in
+`.streamlit/config.toml`.
+
+No API or marketplace secret is required. In the Community Cloud **Secrets**
+panel, set only the hosted safety configuration:
+
+```toml
+ARBITER_HOSTED_MODE = true
+ARBITER_LLM_PROVIDER = "heuristic"
+```
+
+Hosted mode is intentionally read-mostly:
+
+- public OpenTask and execution.market discovery remains GET-only and degrades
+  to stored/empty UI states when a source is unavailable;
+- profile/policy saves, package approval, offline grading, and controlled
+  lifecycle actions are disabled;
+- SQLite databases and worker-artifact files use ephemeral instance storage and
+  must not be treated as durable evidence;
+- the localhost FastAPI package service and second-worker demo remain local-only
+  and must not be exposed through Community Cloud;
+- no Groq key is recommended for the public portfolio deployment. Deterministic
+  estimation keeps hosted discovery free of provider cost.
+
+Manual deployment, when separately approved, is: open Streamlit Community
+Cloud, choose **Create app**, select the repository/branch/entrypoint above,
+choose Python 3.12 in Advanced settings, paste the two hosted settings, and
+deploy. No account creation or deployment was performed during this work.
 
 ## Governed work-package contract
 
@@ -317,8 +361,8 @@ calibration layer that reacts to two data points is noise, not learning.
 - **No wallet, key, or payment code exists in the repo.** Every ledger entry
   is flagged `simulated=True`; the dashboard labels all amounts as simulated.
 - Secrets live only in a gitignored `.env`; `.env.example` carries no values.
-- Testnet-first (Base Sepolia) when wallet code does land; mainnet is a
-  separate, feature-flagged, human-gated path.
+- Wallet, payment, signing, x402/CDP, testnet, and mainnet infrastructure remain
+  outside this product slice. No such path is exposed by the dashboard.
 - Every decision is an append-only row plus a structured log line.
 - Claim/submit/settle are keyed by `(marketplace, bounty_id)` for idempotency.
 - Offline evaluations are always `offline_evaluation` / `not_submitted`, live
@@ -350,5 +394,6 @@ src/arbiter/
   evaluation.py   GET-only offline generation, validation, export, human review
   pipeline.py     scan -> score -> rank -> record
   cli.py          scan · run · queue · approve · reject · calibrate · markets
-  dashboard.py    Streamlit + approve/reject queue
+  dashboard.py    eight-screen Streamlit product experience
+  dashboard.css   editorial light design system and responsive motion
 ```
