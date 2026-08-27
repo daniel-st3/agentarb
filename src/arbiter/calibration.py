@@ -59,7 +59,9 @@ def record_outcome(
         row.predicted_feasibility = score.feasibility
         row.predicted_confidence = score.confidence
         row.predicted_effort_hours = score.est_effort_hours
-        row.predicted_cost_usd = score.est_api_cost_usd + score.est_gas_cost_usd
+        row.predicted_cost_usd = (
+            score.estimated_task_execution_cost_usd + score.estimated_other_cost_usd
+        )
         row.accepted = accepted
         row.deliverable_state = deliverable_state
         row.actual_cost_usd = actual_cost_usd

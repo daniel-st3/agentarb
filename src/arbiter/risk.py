@@ -124,7 +124,9 @@ class RiskGuard:
     ) -> RiskDecision:
         """Decide whether this bounty may be claimed. Called before every claim."""
         settings = self.settings
-        est_cost = score.est_api_cost_usd + score.est_gas_cost_usd
+        est_cost = (
+            score.estimated_task_execution_cost_usd + score.estimated_other_cost_usd
+        )
 
         if self._tripped:
             return RiskDecision(

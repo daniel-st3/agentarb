@@ -5,8 +5,8 @@ on a bounty we already know we cannot or should not do. Everything that
 survives gets an estimate, and the score is plain arithmetic over it:
 
     EV     = payout_usd * p_success
-    net_EV = EV - (est_api_cost + est_gas_cost)
-    score  = net_EV * feasibility * confidence / effort_hours
+    expected_margin = EV - projected task execution cost - projected other cost
+    score = expected_margin * feasibility * confidence / effort_hours
 
 Week 1 is alert-only: this module ranks and logs. It never claims.
 """
@@ -82,13 +82,19 @@ def compute_score(bounty: Bounty, estimate: dict, estimator_name: str) -> Score:
     p_success = float(estimate["p_success"])
     feasibility = float(estimate["feasibility"])
     confidence = float(estimate["confidence"])
-    api_cost = float(estimate["est_api_cost_usd"])
-    gas_cost = float(estimate["est_gas_cost_usd"])
+    task_cost = float(
+        estimate.get(
+            "estimated_task_execution_cost_usd", estimate.get("est_api_cost_usd", 0.0)
+        )
+    )
+    other_cost = float(
+        estimate.get("estimated_other_cost_usd", estimate.get("est_gas_cost_usd", 0.0))
+    )
     effort = max(float(estimate["est_effort_hours"]), MIN_EFFORT_HOURS)
 
     ev = payout * p_success
-    net_ev = ev - (api_cost + gas_cost)
-    score = net_ev * feasibility * confidence / effort
+    expected_margin = ev - task_cost - other_cost
+    score = expected_margin * feasibility * confidence / effort
 
     return Score(
         bounty_key=bounty.key,
@@ -97,10 +103,12 @@ def compute_score(bounty: Bounty, estimate: dict, estimator_name: str) -> Score:
         p_success=p_success,
         confidence=confidence,
         est_effort_hours=effort,
-        est_api_cost_usd=api_cost,
-        est_gas_cost_usd=gas_cost,
+        actual_llm_inference_cost_usd=estimate.get("actual_llm_inference_cost_usd", 0.0),
+        actual_llm_cost_status=str(estimate.get("actual_llm_cost_status", "no_llm_call")),
+        estimated_task_execution_cost_usd=task_cost,
+        estimated_other_cost_usd=other_cost,
         ev_usd=round(ev, 4),
-        net_ev_usd=round(net_ev, 4),
+        expected_margin_usd=round(expected_margin, 4),
         score=round(score, 4),
         estimator=estimator_name,
         rationale=str(estimate.get("rationale", "")),
@@ -143,12 +151,16 @@ class ScoringAgent:
                 f"{self.settings.max_effort_hours:.2f}h"
             )
         elif (bounty.payout_usd or 0.0) < (
-            score.est_api_cost_usd + score.est_gas_cost_usd
+            score.estimated_task_execution_cost_usd + score.estimated_other_cost_usd
         ) * self.settings.cost_safety_margin:
             score.skipped = True
+            projected_cost = (
+                score.estimated_task_execution_cost_usd
+                + score.estimated_other_cost_usd
+            )
             score.skip_reason = (
                 f"payout ${bounty.payout_usd:.2f} under est. cost "
-                f"${score.est_api_cost_usd + score.est_gas_cost_usd:.4f} x margin "
+                f"${projected_cost:.4f} x margin "
                 f"{self.settings.cost_safety_margin:g}"
             )
 
@@ -159,7 +171,7 @@ class ScoringAgent:
                 "score.scored",
                 bounty=bounty.key,
                 score=score.score,
-                net_ev=score.net_ev_usd,
+                expected_margin_usd=score.expected_margin_usd,
                 effort_h=score.est_effort_hours,
             )
         return score
@@ -197,7 +209,10 @@ def top_n_within_budget(
     for item in rank(scored):
         if item.score.skipped or len(picked) >= n:
             continue
-        cost = item.score.est_api_cost_usd + item.score.est_gas_cost_usd
+        cost = (
+            item.score.estimated_task_execution_cost_usd
+            + item.score.estimated_other_cost_usd
+        )
         if spent + cost > budget_usd:
             continue
         picked.append(item)

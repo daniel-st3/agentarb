@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlmodel import JSON, Column, SQLModel
 from sqlmodel import Field as SQLField
 
@@ -99,16 +99,55 @@ class Score(BaseModel):
     p_success: float = 0.0
     confidence: float = 0.0
     est_effort_hours: float = 0.0
-    est_api_cost_usd: float = 0.0
-    est_gas_cost_usd: float = 0.0
+    actual_llm_inference_cost_usd: float | None = 0.0
+    actual_llm_cost_status: str = "no_llm_call"
+    estimated_task_execution_cost_usd: float = 0.0
+    estimated_other_cost_usd: float = 0.0
 
     # derived
     ev_usd: float = 0.0
-    net_ev_usd: float = 0.0
+    expected_margin_usd: float = 0.0
     score: float = 0.0
 
     estimator: str = "heuristic"
     rationale: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_deprecated_cost_names(cls, value: Any) -> Any:
+        """Read older callers without emitting their ambiguous field names."""
+        if isinstance(value, dict):
+            value = dict(value)
+            value.setdefault(
+                "estimated_task_execution_cost_usd", value.get("est_api_cost_usd", 0.0)
+            )
+            value.setdefault(
+                "estimated_other_cost_usd", value.get("est_gas_cost_usd", 0.0)
+            )
+            value.setdefault("expected_margin_usd", value.get("net_ev_usd", 0.0))
+        return value
+
+    # Runtime compatibility only. These aliases are not Pydantic fields and are
+    # therefore absent from public JSON/model output.
+    @property
+    def est_api_cost_usd(self) -> float:
+        return self.estimated_task_execution_cost_usd
+
+    @est_api_cost_usd.setter
+    def est_api_cost_usd(self, value: float) -> None:
+        self.estimated_task_execution_cost_usd = value
+
+    @property
+    def est_gas_cost_usd(self) -> float:
+        return self.estimated_other_cost_usd
+
+    @est_gas_cost_usd.setter
+    def est_gas_cost_usd(self, value: float) -> None:
+        self.estimated_other_cost_usd = value
+
+    @property
+    def net_ev_usd(self) -> float:
+        return self.expected_margin_usd
 
 
 # --------------------------------------------------------------------------
@@ -158,10 +197,12 @@ class DecisionRow(SQLModel, table=True):
     p_success: float = 0.0
     confidence: float = 0.0
     est_effort_hours: float = 0.0
-    est_api_cost_usd: float = 0.0
-    est_gas_cost_usd: float = 0.0
+    actual_llm_inference_cost_usd: float | None = None
+    actual_llm_cost_status: str = "no_llm_call"
+    estimated_task_execution_cost_usd: float = 0.0
+    estimated_other_cost_usd: float = 0.0
     ev_usd: float = 0.0
-    net_ev_usd: float = 0.0
+    expected_margin_usd: float = 0.0
     score: float = 0.0
     rank: int | None = None
 

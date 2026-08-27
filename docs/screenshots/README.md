@@ -27,5 +27,17 @@ Fresh read-only captures from 2026-08-26:
 
 The v1 corpus is synthetic and fully offline. The 10 evaluation rows shown came
 from earlier public OpenTask discovery and remain `not_submitted`; the displayed
-projected API cost is an estimate, not spend. Real marketplace outcomes remain
-zero.
+`estimated_task_execution_cost_usd` is a projection, not spend. Real marketplace
+outcomes remain zero.
+
+Fresh governed-control-plane captures from 2026-08-27:
+
+| File | Shows |
+|---|---|
+| `2026-08-27-control-plane-opportunities.jpg` | Live OpenTask discovery, genuine zero-result execution.market status, controlled mock fixtures, exact allow/skip/refuse rationale, and separately labelled projected costs |
+| `2026-08-27-governed-package.jpg` | Immutable approved package hash, localhost GET URL, projected expected margin, and persistent `not_submitted` / marketplace-action-disabled state |
+| `2026-08-27-worker-artifact.jpg` | Append-only local worker evidence with `external_actions_taken=false`, `marketplace_submission_status=not_submitted`, and zero actual LLM inference cost |
+
+The mock package and worker artifact are visibly controlled local evidence. They
+are not live marketplace outcomes and do not update lifecycle settlement,
+calibration, or P&L.

@@ -11,6 +11,42 @@
 
 ---
 
+## Governed control-plane update — 2026-08-27
+
+The primary product is now a capability-aware control plane for the agent labor
+market. One active versioned Agent Profile and Work Policy govern GET-only live
+and controlled discovery. An allow decision can create a pending local
+candidate; local approval materializes an immutable, hash-verified
+`GovernedWorkPackage`. It never authorizes marketplace participation.
+
+The localhost FastAPI service exposes GET endpoints only and returns approved
+packages. The separate `arbiter_worker` application retrieves packages only
+from loopback, imports no connector/database/lifecycle surface, performs a
+bounded deterministic dry-run, and writes append-only artifacts beneath
+`data/worker-artifacts/v1/`. Worker terminal states are
+`validated_local_artifact` or `refused`; `submission_ready` is impossible.
+
+Control-plane data lives in `data/control-plane.db`, separate from lifecycle,
+ledger, outcomes, calibration, P&L, and offline evaluation. Cost fields are
+explicit: observed `actual_llm_inference_cost_usd`, projected
+`estimated_task_execution_cost_usd`, projected `estimated_other_cost_usd`, and
+projected `expected_margin_usd`. `simulated_pnl_usd` remains MockMarketplace
+lifecycle-only and never enters a package or worker artifact.
+
+```bash
+uv run arbiter refresh-opportunities --marketplace mock --marketplace opentask \
+  --marketplace execution_market --limit 10
+uv run arbiter serve --host 127.0.0.1 --port 8765
+uv run python examples/local_worker_agent.py --api http://127.0.0.1:8765 \
+  --package-id wp_... --output-dir data/worker-artifacts/v1
+```
+
+All real connectors remain discovery-only. No account, wallet, signing,
+payment, x402/CDP, testnet/mainnet, bid, claim, accept, submit, cancel, or
+settlement capability was added.
+
+---
+
 ## Continuation update — 2026-08-26
 
 The Golden Task Corpus and offline-evaluation phase is complete. The product

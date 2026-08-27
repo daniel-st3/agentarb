@@ -9,11 +9,19 @@ from pathlib import Path
 import typer
 
 from arbiter import calibration
+from arbiter.api import is_loopback_host
 from arbiter.config import get_settings
 from arbiter.connectors import (
     ExecutionMarketConnector,
     MockMarketplaceConnector,
     OpenTaskConnector,
+)
+from arbiter.control_plane import (
+    approve_candidate,
+    create_candidate,
+    init_control_plane_db,
+    list_packages,
+    refresh_opportunities,
 )
 from arbiter.db import init_db
 from arbiter.evaluation import (
@@ -31,8 +39,7 @@ from arbiter.scoring import top_n_within_budget
 
 app = typer.Typer(
     help=(
-        "Agent Arbiter -- capability-aware cross-marketplace opportunity "
-        "intelligence and offline evaluation."
+        "Agent Arbiter -- capability-aware control plane for the agent labor market."
     )
 )
 
@@ -94,7 +101,8 @@ def scan(
         payout = f"${b.payout_usd:.2f}" if b.payout_usd is not None else "?"
         typer.echo(
             f"  {i}. [{b.marketplace}] {b.title[:68]}\n"
-            f"     score {s.score:>9.2f} · payout {payout} · net EV ${s.net_ev_usd:.2f} "
+            f"     score {s.score:>9.2f} · payout {payout} · projected expected "
+            f"margin ${s.expected_margin_usd:.2f} "
             f"· effort {s.est_effort_hours * 60:.0f}m · p_success {s.p_success:.2f}"
         )
 
@@ -116,7 +124,89 @@ def initdb() -> None:
     settings = get_settings()
     configure_logging(settings.log_level, settings.log_json)
     init_db()
+    init_control_plane_db(settings)
     typer.echo(f"initialized {settings.db_path}")
+    typer.echo(f"initialized {settings.control_plane_db_path}")
+
+
+@app.command("refresh-opportunities")
+def refresh_control_plane_opportunities(
+    marketplace: list[str] = typer.Option(
+        ["mock", "opentask", "execution_market"],
+        "--marketplace",
+        "-m",
+        help="GET-only discovery sources.",
+    ),
+    limit: int = typer.Option(10, min=1, max=100),
+) -> None:
+    """Refresh governed opportunity decisions. Never performs marketplace writes."""
+    settings = get_settings()
+    configure_logging(settings.log_level, settings.log_json)
+    raw = _build_connectors(marketplace)
+    connectors = [DiscoveryOnlyConnector(connector) for connector in raw]
+
+    async def _run():
+        try:
+            return await refresh_opportunities(connectors, limit=limit, settings=settings)
+        finally:
+            for connector in connectors:
+                await connector.aclose()
+
+    decisions = asyncio.run(_run())
+    typer.secho("\nGOVERNED OPPORTUNITY REFRESH · DISCOVERY ONLY", bold=True)
+    for row in decisions:
+        actual = (
+            f"${row.actual_llm_inference_cost_usd:.6f}"
+            if row.actual_llm_inference_cost_usd is not None
+            else f"unavailable ({row.actual_llm_cost_status})"
+        )
+        typer.echo(
+            f"  [{row.marketplace}] {row.opportunity_id} · {row.package_eligibility}\n"
+            f"     actual LLM inference cost {actual} · projected task execution cost "
+            f"${row.estimated_task_execution_cost_usd:.4f} · projected expected margin "
+            f"${row.expected_margin_usd:.4f}\n"
+            f"     {row.rationale} · external execution {row.external_execution_status}"
+        )
+    typer.echo("No marketplace action was taken.\n")
+
+
+@app.command("create-package-candidate")
+def create_package_candidate(opportunity_id: str) -> None:
+    """Create a local pending candidate from an allowed opportunity."""
+    candidate = create_candidate(opportunity_id, get_settings())
+    typer.echo(f"{candidate.candidate_id} · pending · local approval required")
+
+
+@app.command("approve-local-package")
+def approve_local_package(candidate_id: str) -> None:
+    """Materialize an immutable package for a local worker; never a marketplace action."""
+    package = approve_candidate(candidate_id, settings=get_settings())
+    typer.echo(f"{package.package_id} · approved for local worker · not_submitted")
+    typer.echo(package.package_hash)
+
+
+@app.command("packages")
+def packages_command() -> None:
+    """List immutable approved local work packages."""
+    for package in list_packages(get_settings()):
+        typer.echo(
+            f"{package.package_id} · approved · not_submitted · "
+            f"projected execution ${package.estimated_task_execution_cost_usd:.4f} · "
+            f"projected margin ${package.expected_margin_usd:.4f}"
+        )
+
+
+@app.command("serve")
+def serve(
+    host: str = typer.Option("127.0.0.1", help="Loopback host only."),
+    port: int = typer.Option(8765, min=1, max=65535),
+) -> None:
+    """Serve the localhost GET-only governed work-package API."""
+    if not is_loopback_host(host):
+        raise typer.BadParameter("Agent Arbiter API may bind to loopback only")
+    import uvicorn
+
+    uvicorn.run("arbiter.api:app", host=host, port=port, log_level="info")
 
 
 @app.command()
@@ -162,7 +252,7 @@ def evaluate(
         typer.echo(f"  [{record.marketplace}] {record.title[:68]}")
         typer.echo(
             f"     {record.category} · {status} · provider {record.provider} · "
-            f"{record.total_latency_ms:.1f}ms · est. API cost "
+            f"{record.total_latency_ms:.1f}ms · projected task execution cost "
             f"${record.estimated_api_cost_usd:.4f}"
         )
         if record.skip_or_refusal_reason:
@@ -401,13 +491,17 @@ def estimate_check(
             f"fallback {'yes' if live.get('model_fallback_used') else 'no'} · "
             f"latency {live.get('latency_ms', 0):.1f}ms · feas {live['feasibility']:.2f} · p_succ "
             f"{live['p_success']:.2f} · conf {live['confidence']:.2f} · effort "
-            f"{live['est_effort_hours'] * 60:.0f}m · cost ${live['est_api_cost_usd']:.3f}"
+            f"{live['est_effort_hours'] * 60:.0f}m · projected task execution cost "
+            f"${live['estimated_task_execution_cost_usd']:.3f} · actual LLM inference "
+            f"cost {live.get('actual_llm_inference_cost_usd')}"
         )
         if base is not None and kind != "HEURISTIC":
             typer.echo(
                 f"   {'baseline':9} feas {base['feasibility']:.2f} · p_succ "
                 f"{base['p_success']:.2f} · conf {base['confidence']:.2f} · effort "
-                f"{base['est_effort_hours'] * 60:.0f}m · cost ${base['est_api_cost_usd']:.3f}"
+                f"{base['est_effort_hours'] * 60:.0f}m · projected task execution cost "
+                f"${base['estimated_task_execution_cost_usd']:.3f} · actual LLM inference "
+                f"cost ${base['actual_llm_inference_cost_usd']:.3f}"
             )
         typer.echo(f"   rationale: {live.get('rationale', '')[:150]}")
         typer.echo("")

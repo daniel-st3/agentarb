@@ -15,22 +15,27 @@ APP = str(Path(__file__).resolve().parents[1] / "src" / "arbiter" / "dashboard.p
 def temp_db(tmp_path, monkeypatch):
     monkeypatch.setenv("ARBITER_DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setenv("ARBITER_EVALUATION_DB_PATH", str(tmp_path / "evaluations.db"))
+    monkeypatch.setenv("ARBITER_CONTROL_PLANE_DB_PATH", str(tmp_path / "control-plane.db"))
+    monkeypatch.setenv("ARBITER_WORKER_ARTIFACT_DIR", str(tmp_path / "worker-artifacts"))
     monkeypatch.setenv("ARBITER_LLM_PROVIDER", "heuristic")
     monkeypatch.setenv("ARBITER_GROQ_API_KEY", "")
     import streamlit as st
 
     import arbiter.config as config
+    import arbiter.control_plane as control_plane
     import arbiter.db as db
     import arbiter.evaluation as evaluation
     config._settings = None
     db._engine = None
     evaluation.reset_evaluation_engine()
+    control_plane.reset_control_plane_engines()
     # @st.cache_data persists across AppTest runs in one process.
     st.cache_data.clear()
     yield
     config._settings = None
     db._engine = None
     evaluation.reset_evaluation_engine()
+    control_plane.reset_control_plane_engines()
 
 
 def test_renders_empty_state(temp_db):
@@ -47,7 +52,12 @@ async def test_renders_with_data(temp_db, settings):
 
     labels = [m.label for m in app.metric]
     assert {"Spent today", "Earned today", "Net today", "Tasks today"} <= set(labels)
-    assert len(app.tabs) == 8
+    assert len(app.tabs) == 13
+    assert any(tab.label == "Agent Profile" for tab in app.tabs)
+    assert any(tab.label == "Work Policy" for tab in app.tabs)
+    assert any(tab.label == "Opportunity Feed" for tab in app.tabs)
+    assert any(tab.label == "Governed Packages" for tab in app.tabs)
+    assert any(tab.label == "Worker Artifacts" for tab in app.tabs)
     assert app.dataframe, "tables should render"
 
 

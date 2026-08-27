@@ -10,6 +10,8 @@ wallet module and nothing here signs a transaction.
 from __future__ import annotations
 
 import asyncio
+import json
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -21,6 +23,22 @@ from arbiter.connectors import (
     ExecutionMarketConnector,
     MockMarketplaceConnector,
     OpenTaskConnector,
+)
+from arbiter.control_plane import (
+    AgentProfile,
+    WorkPolicy,
+    active_policy,
+    active_profile,
+    approve_candidate,
+    create_candidate,
+    init_control_plane_db,
+    list_candidates,
+    list_opportunities,
+    list_packages,
+    refresh_opportunities,
+    reject_candidate,
+    save_policy,
+    save_profile,
 )
 from arbiter.db import init_db, session_scope
 from arbiter.evaluation import (
@@ -50,6 +68,7 @@ st.set_page_config(page_title="Agent Arbiter", page_icon="🧭", layout="wide")
 settings = get_settings()
 configure_logging(settings.log_level, settings.log_json)
 init_db()
+init_control_plane_db(settings)
 
 CONNECTORS = {
     "opentask": OpenTaskConnector,
@@ -84,6 +103,27 @@ def load_golden_metrics() -> dict:
 
 def _connectors(markets: list[str]):
     return [CONNECTORS[m]() for m in markets]
+
+
+def do_control_plane_refresh(markets: list[str], limit: int) -> None:
+    """GET-only discovery and governed policy evaluation."""
+    from arbiter.evaluation import DiscoveryOnlyConnector
+
+    raw = _connectors(markets)
+    connectors = [DiscoveryOnlyConnector(connector) for connector in raw]
+
+    async def _run():
+        try:
+            return await refresh_opportunities(connectors, limit=limit, settings=settings)
+        finally:
+            for connector in connectors:
+                await connector.aclose()
+
+    rows = asyncio.run(_run())
+    st.cache_data.clear()
+    st.success(
+        f"Refreshed {len(rows)} governed decisions using discovery-only connector access."
+    )
 
 
 def do_scan(markets: list[str], limit: int, enqueue: int) -> None:
@@ -153,9 +193,10 @@ def decide(bounty_key: str, approved: bool, reason: str | None = None) -> None:
 
 st.title("🧭 Agent Arbiter")
 st.caption(
-    "**Agent Arbiter is a capability-aware, cross-marketplace opportunity "
-    "intelligence, safety-routing, and offline-evaluation layer for the "
-    "emerging agent economy.**"
+    "**Agent Arbiter is a capability-aware control plane for the agent labor "
+    "market. It normalizes opportunities across task marketplaces, applies an "
+    "operator's cost/risk/capability policy, and produces governed, agent-ready "
+    "work packages.**"
 )
 
 with st.expander("Evidence model — what each number means", expanded=True):
@@ -188,13 +229,25 @@ guard = RiskGuard(settings)
 totals = guard.totals_today()
 
 with st.sidebar:
-    st.header("Scan")
+    st.header("Control plane")
     markets = st.multiselect(
         "Marketplaces", list(CONNECTORS), default=list(CONNECTORS)
     )
     limit = st.slider("Bounties per marketplace", 5, 100, 25, step=5)
+    if st.button(
+        "Refresh public opportunities",
+        type="primary",
+        width="stretch",
+        disabled=not markets,
+    ):
+        with st.spinner("GET-only discovery and policy evaluation…"):
+            do_control_plane_refresh(markets, limit)
+
+    st.caption("Discovery only. This cannot bid, claim, accept, submit, or settle.")
+    st.divider()
+    st.caption("**Simulated lifecycle lab**")
     enqueue = st.slider("Send top N to approval queue", 0, 5, 2)
-    if st.button("Run scan", type="primary", width="stretch", disabled=not markets):
+    if st.button("Run simulated scan", width="stretch", disabled=not markets):
         with st.spinner("Scanning…"):
             do_scan(markets, limit, enqueue)
 
@@ -229,6 +282,11 @@ st.caption(
 
 queue_rows = pending_tasks()
 (
+    tab_profile,
+    tab_policy,
+    tab_opportunities,
+    tab_packages,
+    tab_worker,
     tab_queue,
     tab_ranked,
     tab_skipped,
@@ -239,11 +297,221 @@ queue_rows = pending_tasks()
     tab_log,
 ) = st.tabs(
     [
+        "Agent Profile",
+        "Work Policy",
+        "Opportunity Feed",
+        "Governed Packages",
+        "Worker Artifacts",
         f"⏸ Approval queue ({len(queue_rows)})",
         "Ranked", "Skipped (with reasons)", "Evaluation Review", "Tasks & P&L",
         "Calibration", "Marketplaces", "Audit log",
     ]
 )
+
+with tab_profile:
+    profile = active_profile(settings)
+    st.subheader(f"Active Agent Profile · v{profile.version}")
+    st.caption("Saving creates a new immutable version; historical decisions do not change.")
+    with st.form("agent-profile-form"):
+        name = st.text_input("Agent name", profile.name)
+        description = st.text_area("Description", profile.description)
+        categories = st.multiselect(
+            "Supported categories",
+            ["research", "summarization", "data_lookup", "small_code"],
+            default=profile.supported_categories,
+        )
+        tools = st.multiselect(
+            "Available tools",
+            ["local_text_transform", "structured_planning", "local_json_write"],
+            default=profile.allowed_tools,
+        )
+        max_cost = st.number_input(
+            "Maximum projected task execution cost (USD)",
+            min_value=0.0,
+            value=float(profile.max_execution_cost_usd),
+        )
+        max_minutes = st.number_input(
+            "Maximum execution time (minutes)", min_value=1, value=profile.max_execution_minutes
+        )
+        always_approval = st.checkbox(
+            "Human approval is always required", profile.human_approval_always_required
+        )
+        if st.form_submit_button("Save new Agent Profile version", type="primary"):
+            saved = save_profile(
+                AgentProfile(
+                    profile_id=profile.profile_id,
+                    name=name,
+                    description=description,
+                    supported_categories=categories,
+                    allowed_tools=tools,
+                    capabilities=profile.capabilities,
+                    prohibited_actions=profile.prohibited_actions,
+                    max_execution_cost_usd=max_cost,
+                    max_execution_minutes=int(max_minutes),
+                    reputation_by_marketplace=profile.reputation_by_marketplace,
+                    human_approval_always_required=always_approval,
+                ),
+                settings,
+            )
+            st.success(f"Activated Agent Profile v{saved.version}")
+            st.rerun()
+    st.markdown("**Prohibited actions**")
+    st.code(" · ".join(profile.prohibited_actions))
+    st.json({"reputation_by_marketplace": profile.reputation_by_marketplace})
+
+with tab_policy:
+    policy = active_policy(settings)
+    st.subheader(f"Active Work Policy · v{policy.version}")
+    st.caption(
+        "Expected margin is projected: payout × p_success − projected task execution "
+        "cost − projected other cost. It is not earnings or P&L."
+    )
+    with st.form("work-policy-form"):
+        min_payout = st.number_input(
+            "Minimum payout (USD)", min_value=0.0, value=float(policy.min_payout_usd)
+        )
+        min_margin = st.number_input(
+            "Minimum projected expected margin (USD)",
+            value=float(policy.min_expected_margin_usd),
+        )
+        min_confidence = st.slider(
+            "Minimum confidence", 0.0, 1.0, float(policy.min_confidence), step=0.05
+        )
+        allowed_markets = st.multiselect(
+            "Allowed marketplaces", list(CONNECTORS), default=policy.allowed_marketplaces
+        )
+        daily_cost = st.number_input(
+            "Maximum approved projected daily execution cost (USD)",
+            min_value=0.0,
+            value=float(policy.max_approved_projected_daily_cost_usd),
+        )
+        if st.form_submit_button("Save new Work Policy version", type="primary"):
+            saved = save_policy(
+                WorkPolicy(
+                    policy_id=policy.policy_id,
+                    min_payout_usd=min_payout,
+                    min_expected_margin_usd=min_margin,
+                    min_confidence=min_confidence,
+                    allowed_marketplaces=allowed_markets,
+                    blocked_risk_categories=policy.blocked_risk_categories,
+                    max_approved_projected_daily_cost_usd=daily_cost,
+                    human_approval=policy.human_approval,
+                ),
+                settings,
+            )
+            st.success(f"Activated Work Policy v{saved.version}")
+            st.rerun()
+    st.info("Projected cost limits do not create ledger entries or represent money spent.")
+
+with tab_opportunities:
+    st.subheader("Live + controlled opportunity feed")
+    st.caption(
+        "Live rows are public GET-only discovery. Mock rows are controlled inputs. "
+        "Allow means eligible for a local package—not eligible for marketplace execution."
+    )
+    opportunities = list_opportunities(settings)
+    if not opportunities:
+        st.info("No governed decisions yet. Use “Refresh public opportunities”.")
+    else:
+        frame = pd.DataFrame(
+            [
+                {
+                    "opportunity_id": row["opportunity_id"],
+                    "source": row["source_type"],
+                    "marketplace": row["marketplace"],
+                    "title": row["task"]["title"],
+                    "decision": row["package_eligibility"],
+                    "reason": row["explanation"],
+                    "actual_llm_inference_cost_usd": row[
+                        "actual_llm_inference_cost_usd"
+                    ],
+                    "estimated_task_execution_cost_usd": row[
+                        "estimated_task_execution_cost_usd"
+                    ],
+                    "estimated_other_cost_usd": row["estimated_other_cost_usd"],
+                    "expected_margin_usd": row["expected_margin_usd"],
+                    "external_execution": row["external_execution_status"],
+                }
+                for row in opportunities
+            ]
+        )
+        st.dataframe(frame, hide_index=True, width="stretch")
+        allowed = [row for row in opportunities if row["package_eligibility"] == "allow"]
+        for row in allowed:
+            with st.expander(
+                f"Create local package candidate · {row['marketplace']} · {row['task']['title']}"
+            ):
+                st.write(row["explanation"])
+                st.caption("This action does not bid, claim, accept, submit, or settle.")
+                if st.button("Create local candidate", key=f"candidate-{row['opportunity_id']}"):
+                    candidate = create_candidate(row["opportunity_id"], settings)
+                    st.success(f"{candidate.candidate_id} · pending local approval")
+                    st.rerun()
+
+with tab_packages:
+    st.subheader("Governed work packages · local worker only")
+    st.caption("Immutable after approval · not_submitted · marketplace action unauthorized")
+    candidates = list_candidates(settings)
+    pending = [candidate for candidate in candidates if candidate["status"] == "pending"]
+    if pending:
+        st.markdown("**Pending local approval**")
+    for candidate in pending:
+        with st.container(border=True):
+            st.code(candidate["candidate_id"])
+            st.write(candidate["draft_payload"]["decision"]["rationale"])
+            left, right = st.columns(2)
+            if left.button(
+                "Approve for local worker",
+                key=f"approve-{candidate['candidate_id']}",
+                type="primary",
+            ):
+                package = approve_candidate(candidate["candidate_id"], settings=settings)
+                st.success(f"{package.package_id} materialized · not_submitted")
+                st.rerun()
+            if right.button("Reject local package", key=f"reject-{candidate['candidate_id']}"):
+                reject_candidate(candidate["candidate_id"], "rejected by local operator", settings)
+                st.rerun()
+    packages = list_packages(settings)
+    if not packages:
+        st.info("No approved governed packages yet.")
+    for package in packages:
+        with st.expander(f"{package.package_id} · approved · not_submitted"):
+            st.code(package.package_hash)
+            st.write(
+                f"Actual LLM inference cost: {package.actual_llm_inference_cost_usd} "
+                f"({package.actual_llm_cost_status})"
+            )
+            st.write(
+                f"Projected task execution cost: "
+                f"${package.estimated_task_execution_cost_usd:.4f}"
+            )
+            st.write(f"Projected expected margin: ${package.expected_margin_usd:.4f}")
+            st.code(f"GET http://127.0.0.1:8765/v1/work-packages/{package.package_id}")
+            st.json(package.model_dump(mode="json"))
+
+with tab_worker:
+    st.subheader("Local WorkerExecutionArtifact evidence")
+    st.caption(
+        "Append-only deterministic dry-runs. Never marketplace outcomes, calibration, "
+        "settlement, or P&L."
+    )
+    artifact_dir = Path(settings.worker_artifact_dir)
+    artifact_files = (
+        sorted(artifact_dir.glob("*.json"), reverse=True) if artifact_dir.exists() else []
+    )
+    if not artifact_files:
+        st.info("No worker artifacts yet.")
+    for path in artifact_files:
+        try:
+            artifact = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        with st.expander(f"{artifact.get('execution_id')} · {artifact.get('state')}"):
+            st.write(
+                f"external_actions_taken={artifact.get('external_actions_taken')} · "
+                f"marketplace_submission_status={artifact.get('marketplace_submission_status')}"
+            )
+            st.json(artifact)
 
 with tab_queue:
     st.subheader("Bounties waiting at the claim gate")
@@ -288,16 +556,19 @@ with tab_ranked:
         if scored.empty:
             st.info("Nothing cleared the filters in this run.")
         else:
-            st.dataframe(
-                scored[[
-                    "rank", "marketplace", "title", "payout_usd", "score", "net_ev_usd",
+            ranked_display = scored[[
+                    "rank", "marketplace", "title", "payout_usd", "score", "expected_margin_usd",
                     "p_success", "feasibility", "confidence", "est_effort_hours",
                     "estimator", "rationale",
-                ]],
+                ]]
+            st.dataframe(
+                ranked_display,
                 hide_index=True, width="stretch",
                 column_config={
                     "payout_usd": st.column_config.NumberColumn("payout", format="$%.2f"),
-                    "net_ev_usd": st.column_config.NumberColumn("net EV", format="$%.2f"),
+                    "expected_margin_usd": st.column_config.NumberColumn(
+                        "projected expected margin", format="$%.2f"
+                    ),
                     "score": st.column_config.NumberColumn("score", format="%.2f"),
                 },
             )
@@ -356,9 +627,9 @@ with tab_eval:
         if metrics["human_reviewed"] else "—",
     )
     e7.metric(
-        "Projected API cost",
-        f"${metrics['estimated_api_cost_usd']:.4f}",
-        help="Estimator projection only; this is not money spent.",
+        "Projected task execution cost",
+        f"${metrics['estimated_task_execution_cost_usd']:.4f}",
+        help="Projected bounded-plan cost only; this is not provider spend or P&L.",
     )
     e8.metric("Avg. latency", f"{metrics['average_latency_ms']:.1f} ms")
     e9.metric("Model used", metrics["model_used"])
@@ -371,15 +642,18 @@ with tab_eval:
             "opentask --limit 10`."
         )
     else:
-        st.dataframe(
-            evaluations[[
+        evaluation_display = evaluations[[
                 "id", "evaluation_type", "submission_status", "marketplace",
                 "task_identifier", "title", "category", "safety_allowed",
                 "safety_kind", "deliverable_state", "validation_passed",
                 "provider", "fallback_used", "estimated_api_cost_usd",
                 "total_latency_ms", "human_review_status", "human_quality_score",
                 "recommendation",
-            ]],
+            ]].rename(
+                columns={"estimated_api_cost_usd": "estimated_task_execution_cost_usd"}
+            )
+        st.dataframe(
+            evaluation_display,
             hide_index=True,
             width="stretch",
         )
@@ -610,10 +884,11 @@ with tab_log:
         )
     st.subheader("Decision log")
     if not decisions.empty:
-        st.dataframe(
-            decisions.sort_values("created_at", ascending=False)[[
+        audit_display = decisions.sort_values("created_at", ascending=False)[[
                 "created_at", "run_id", "marketplace", "title", "action",
-                "score", "net_ev_usd", "skip_reason", "estimator",
-            ]],
+                "score", "expected_margin_usd", "skip_reason", "estimator",
+            ]]
+        st.dataframe(
+            audit_display,
             hide_index=True, width="stretch",
         )

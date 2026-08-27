@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 90-second portfolio path: hermetic benchmark, public GET-only discovery,
-# then local not-submitted evaluation evidence.
+# 90-second portfolio path: benchmark plus governed GET-only discovery.
 # This script never bids, claims, accepts, submits, signs, pays, or settles.
 
 if command -v uv >/dev/null 2>&1; then
@@ -12,11 +11,13 @@ else
 fi
 
 "${ARBITER_CMD[@]}" golden-eval --corpus v1
-"${ARBITER_CMD[@]}" scan --market opentask --market execution_market --limit 5 --top 3 --no-persist
+ARBITER_LLM_PROVIDER=heuristic "${ARBITER_CMD[@]}" refresh-opportunities \
+  --marketplace mock --marketplace opentask --marketplace execution_market --limit 5
 "${ARBITER_CMD[@]}" markets
-"${ARBITER_CMD[@]}" evaluate --marketplace opentask --limit 3
-"${ARBITER_CMD[@]}" export-evaluations --format csv --output data/evaluations.csv
 "${ARBITER_CMD[@]}" calibrate --real-only
 
-echo "Read-only demo complete. Start the dashboard with:"
+echo "Discovery-only refresh complete. Start the dashboard with:"
 echo "  uv run streamlit run src/arbiter/dashboard.py"
+echo "Approve mock:mock-003 for the local worker, then run:"
+echo "  uv run arbiter serve --host 127.0.0.1 --port 8765"
+echo "  uv run python examples/local_worker_agent.py --api http://127.0.0.1:8765 --package-id wp_... --output-dir data/worker-artifacts/v1"

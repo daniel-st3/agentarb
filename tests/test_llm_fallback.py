@@ -42,6 +42,20 @@ def ok_json(payload: str) -> httpx.Response:
     return httpx.Response(200, json={"choices": [{"message": {"content": payload}}]})
 
 
+def ok_json_with_usage(payload: str) -> httpx.Response:
+    return httpx.Response(
+        200,
+        json={
+            "choices": [{"message": {"content": payload}}],
+            "usage": {
+                "prompt_tokens": 1000,
+                "completion_tokens": 500,
+                "prompt_tokens_details": {"cached_tokens": 200},
+            },
+        },
+    )
+
+
 def model_not_found() -> httpx.Response:
     return httpx.Response(
         404,
@@ -61,6 +75,27 @@ VALID = (
 
 
 class TestFallsBack:
+    async def test_actual_inference_cost_uses_provider_usage_and_explicit_pricing(self):
+        client = httpx.AsyncClient(
+            transport=httpx.MockTransport(lambda request: ok_json_with_usage(VALID))
+        )
+        model = GroqEstimator(
+            "unit-test-key", "openai/gpt-oss-120b", client=client, backoff=0.0
+        )
+        result = await model.estimate(make())
+        expected = ((800 * 0.15) + (200 * 0.075) + (500 * 0.60)) / 1_000_000
+        assert result["actual_llm_inference_cost_usd"] == pytest.approx(expected)
+        assert result["actual_llm_cost_status"] == "calculated_from_provider_usage"
+        assert result["provider_usage"]["pricing_source"].startswith("https://")
+        assert result["estimated_task_execution_cost_usd"] == 0.05
+        await client.aclose()
+
+    async def test_missing_usage_is_null_not_projected_cost(self):
+        result = await estimator(responder(ok_json(VALID))).estimate(make())
+        assert result["actual_llm_inference_cost_usd"] is None
+        assert result["actual_llm_cost_status"] == "usage_unavailable"
+        assert result["estimated_task_execution_cost_usd"] == 0.05
+
     async def test_model_404_tries_configured_fallback_once(self):
         models = []
 

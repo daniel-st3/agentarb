@@ -239,7 +239,7 @@ def test_human_grade_validation(isolated):
 
 
 async def test_secret_is_never_persisted_in_evaluation_record(isolated):
-    secret = "gsk_test_secret_that_must_never_appear"
+    secret = "not-a-real-api-key_secret_that_must_never_appear"
     cfg = isolated.model_copy(update={"groq_api_key": secret, "groq_model": "test-model"})
 
     class FakeGroqEstimator(FakeEstimator):

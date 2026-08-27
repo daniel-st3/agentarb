@@ -74,8 +74,16 @@ class TestClaimGate:
     async def test_payload_carries_what_a_human_needs(self, setup):
         orchestrator, mock, _ = setup
         pending = await orchestrator.start(await mock.get("mock-007"))
-        for key in ("bounty_key", "payout_usd", "score", "net_ev_usd",
-                    "est_cost_usd", "p_success", "url"):
+        for key in (
+            "bounty_key",
+            "payout_usd",
+            "score",
+            "expected_margin_usd",
+            "estimated_task_execution_cost_usd",
+            "estimated_other_cost_usd",
+            "p_success",
+            "url",
+        ):
             assert key in pending.payload
 
     async def test_appears_in_the_queue(self, setup):

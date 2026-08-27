@@ -34,7 +34,7 @@ def test_v1_corpus_schema_and_coverage():
 
 
 async def test_offline_mode_ignores_key_and_makes_no_network_calls(monkeypatch):
-    monkeypatch.setenv("ARBITER_GROQ_API_KEY", "gsk_fake_value_must_never_be_used")
+    monkeypatch.setenv("ARBITER_GROQ_API_KEY", "not-a-real-api-key_value_must_never_be_used")
 
     def network_forbidden(*args, **kwargs):
         raise AssertionError("golden evaluation attempted network access")

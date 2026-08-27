@@ -1,16 +1,14 @@
 # Agent Arbiter
 
-**Agent Arbiter is a capability-aware, cross-marketplace opportunity
-intelligence, safety-routing, and offline-evaluation layer for the emerging
-agent economy.** It normalizes incompatible task markets, rejects work the
-system should not attempt, ranks the rest, and produces offline quality
-evidence without pretending discovery is execution.
+**Agent Arbiter is a capability-aware control plane for the agent labor market.**
+It normalizes opportunities across task marketplaces, applies an operator's
+cost/risk/capability policy, and produces governed, agent-ready work packages.
 
-> **Status: read-only live discovery + offline evaluation + simulated
-> lifecycle.** OpenTask and execution.market are public discovery sources only.
-> Human quality review is local and never submitted. The claim/submit/settle
-> lifecycle exists only for MockMarketplace and all P&L is simulated. **There
-> is no wallet code and nothing moves real or testnet funds.**
+> **Status: governed local packages + read-only live discovery.** OpenTask and
+> execution.market are public GET-only sources. Approved means approved for a
+> local worker—not claimed or accepted by a marketplace. The older lifecycle
+> lab remains MockMarketplace-only and every P&L figure there is simulated.
+> **There is no wallet code and nothing moves real or testnet funds.**
 
 ## Why it's interesting
 
@@ -26,14 +24,20 @@ flowchart LR
     O[OpenTask GET-only] --> N[Normalized Bounty]
     E[execution.market GET-only] --> N
     M[MockMarketplace] --> N
-    N --> S[Capability + safety + scoring]
-    C[Versioned golden corpus] --> B[Hermetic routing + safety benchmark]
-    B --> Q[Offline benchmark metrics]
-    S --> V[Offline generation + validation]
-    V --> R[Separate evaluation DB + human review]
-    S --> G[Checkpointed approval gate]
-    G -->|mock only| L[Simulated lifecycle + P&L]
-    G -.->|live connectors refuse| X[No bid / claim / submit / settlement]
+    P[Versioned Agent Profile] --> D[Policy decision]
+    W[Versioned Work Policy] --> D
+    N --> D
+    D -->|allow| C[Pending local candidate]
+    D -->|skip/refuse| X[Exact explanation]
+    C --> H[Local human approval]
+    H --> G[Immutable GovernedWorkPackage]
+    G --> A[Local GET-only API]
+    A --> R[Isolated deterministic worker]
+    R --> Z[Append-only WorkerExecutionArtifact]
+    Z --> Q[not_submitted / zero external actions]
+    GC[Versioned golden corpus] --> B[Hermetic routing + safety benchmark]
+    B --> E[Offline benchmark evidence]
+    N --> L[Mock-only simulated lifecycle + simulated P&L]
 ```
 
 **Only MockMarketplace can close a lifecycle loop today, and that loop is
@@ -48,6 +52,17 @@ cp .env.example .env          # works as-is; no keys needed for Week 1
 
 uv run arbiter scan                    # alert-only: scan, score, rank
 uv run arbiter scan -m mock            # deterministic, offline
+
+# Governed control plane. All connectors are capability-reduced to GET discovery.
+ARBITER_LLM_PROVIDER=heuristic uv run arbiter refresh-opportunities --marketplace mock \
+  --marketplace opentask --marketplace execution_market --limit 10
+uv run streamlit run src/arbiter/dashboard.py
+uv run arbiter serve --host 127.0.0.1 --port 8765
+
+# After approving a local package in the dashboard:
+uv run python examples/local_worker_agent.py \
+  --api http://127.0.0.1:8765 --package-id wp_... \
+  --output-dir data/worker-artifacts/v1
 
 # Read-only quality evidence. Every record is offline_evaluation/not_submitted.
 uv run arbiter evaluate --marketplace opentask --limit 10
@@ -83,6 +98,35 @@ returns a model-specific 404, Arbiter tries
 heuristic if both models fail. Generic 404s are not retried as model changes.
 Diagnostics log only model IDs and redacted error categories; API keys and task
 request bodies never appear in logs.
+
+## Governed work-package contract
+
+The worker never reads Arbiter's databases and never receives a marketplace
+connector. Its only input is an immutable approved package returned by the
+localhost GET API. Pending and rejected candidates return `404`. Every package
+is permanently `not_submitted` with `marketplace_action_authorized=false`.
+
+The isolated worker verifies schema, SHA-256 hash, approval, category, tools,
+profile/policy versions, and safety constraints. It performs local text
+transformation and structured planning only. Small-code work becomes a patch
+and test plan without repository access or code execution. Its append-only
+`WorkerExecutionArtifact` always reports `external_actions_taken=false` and is
+never a marketplace outcome.
+
+### Cost accounting
+
+| Field | Meaning |
+|---|---|
+| `actual_llm_inference_cost_usd` | Observed provider usage × explicit model pricing; zero with no call, null when usage/pricing is unavailable |
+| `estimated_task_execution_cost_usd` | Projected bounded-plan execution cost used by policy |
+| `estimated_other_cost_usd` | Additional projected non-LLM execution cost |
+| `expected_margin_usd` | `payout × p_success − projected task cost − projected other cost`; never realized earnings |
+| `simulated_pnl_usd` | Mock lifecycle-only; absent from control-plane decisions, packages, REST, and worker artifacts |
+
+Groq GPT-OSS 120B actual inference cost uses token usage from the response and
+the official on-demand pricing effective 2026-08-27: `$0.15/M` input,
+`$0.075/M` cached input, and `$0.60/M` output. Unknown pricing produces a null
+actual cost rather than a guess or projected-cost substitution.
 
 ## Evidence model
 
@@ -144,12 +188,14 @@ bounties we already know we cannot do:
 - *(post-estimate)* effort over the cap, or payout under est. cost × margin
 
 Survivors get an estimate — `feasibility`, `p_success`, `confidence`,
-`est_effort_hours`, `est_api_cost_usd`, `est_gas_cost_usd` — and then:
+`est_effort_hours`, `estimated_task_execution_cost_usd`, and
+`estimated_other_cost_usd` — and then:
 
 ```
-EV     = payout_usd * p_success
-net_EV = EV - (est_api_cost + est_gas_cost)
-score  = net_EV * feasibility * confidence / effort_hours
+expected_margin_usd = payout_usd * p_success
+                      - estimated_task_execution_cost_usd
+                      - estimated_other_cost_usd
+score = expected_margin_usd * feasibility * confidence / effort_hours
 ```
 
 Every field of every decision, including skip reasons, is written to the

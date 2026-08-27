@@ -68,6 +68,17 @@ class TestSkipFilter:
 
 
 class TestFormula:
+    def test_public_model_uses_explicit_cost_names(self):
+        score = compute_score(make(), ESTIMATE, "test")
+        payload = score.model_dump()
+        assert payload["estimated_task_execution_cost_usd"] == 0.05
+        assert payload["estimated_other_cost_usd"] == 0.0
+        assert payload["expected_margin_usd"] == pytest.approx(9.95)
+        assert payload["actual_llm_inference_cost_usd"] == 0.0
+        assert "est_api_cost_usd" not in payload
+        assert "est_gas_cost_usd" not in payload
+        assert "net_ev_usd" not in payload
+
     def test_matches_the_spec(self):
         score = compute_score(make(payout_usd=20.0), ESTIMATE, "test")
         assert score.ev_usd == pytest.approx(10.0)          # 20 * 0.5

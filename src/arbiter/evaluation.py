@@ -440,7 +440,11 @@ def evaluation_metrics(settings: Settings | None = None) -> dict[str, float | in
         "validated": sum(row.validation_passed for row in rows),
         "human_reviewed": len(reviewed),
         "average_human_quality": round(sum(quality) / len(quality), 2) if quality else 0.0,
-        "estimated_api_cost_usd": round(sum(row.estimated_api_cost_usd for row in rows), 6),
+        # Public label for the legacy persisted column. It has always been a
+        # projection of task execution, never observed provider spend.
+        "estimated_task_execution_cost_usd": round(
+            sum(row.estimated_api_cost_usd for row in rows), 6
+        ),
         "average_latency_ms": round(
             sum(row.total_latency_ms for row in rows) / len(rows), 2
         ) if rows else 0.0,

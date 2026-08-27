@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     #: Offline evaluation evidence is physically separate from lifecycle,
     #: outcome, calibration, and P&L data.
     evaluation_db_path: Path = Path("data/evaluations.db")
+    #: Governed opportunity decisions and immutable work packages. This is
+    #: deliberately separate from lifecycle, ledger, P&L, and evaluation data.
+    control_plane_db_path: Path = Path("data/control-plane.db")
+    #: Append-only local worker evidence; never a marketplace outcome.
+    worker_artifact_dir: Path = Path("data/worker-artifacts/v1")
 
     # --- Scoring / skip-filter ---
     min_payout_usd: float = 1.0
@@ -68,6 +73,11 @@ class Settings(BaseSettings):
     def evaluation_db_url(self) -> str:
         self.evaluation_db_path.parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{self.evaluation_db_path}"
+
+    @property
+    def control_plane_db_url(self) -> str:
+        self.control_plane_db_path.parent.mkdir(parents=True, exist_ok=True)
+        return f"sqlite:///{self.control_plane_db_path}"
 
 
 _settings: Settings | None = None

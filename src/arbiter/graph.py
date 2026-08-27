@@ -214,8 +214,11 @@ class ArbiterGraph:
                 "title": bounty.title,
                 "payout_usd": bounty.payout_usd,
                 "score": score.score,
-                "net_ev_usd": score.net_ev_usd,
-                "est_cost_usd": score.est_api_cost_usd + score.est_gas_cost_usd,
+                "expected_margin_usd": score.expected_margin_usd,
+                "estimated_task_execution_cost_usd": (
+                    score.estimated_task_execution_cost_usd
+                ),
+                "estimated_other_cost_usd": score.estimated_other_cost_usd,
                 "p_success": score.p_success,
                 "rationale": score.rationale,
                 "url": bounty.url,

@@ -141,10 +141,14 @@ def persist_scan(result: ScanResult, marketplaces: list[str]) -> None:
                     p_success=score.p_success,
                     confidence=score.confidence,
                     est_effort_hours=score.est_effort_hours,
-                    est_api_cost_usd=score.est_api_cost_usd,
-                    est_gas_cost_usd=score.est_gas_cost_usd,
+                    actual_llm_inference_cost_usd=score.actual_llm_inference_cost_usd,
+                    actual_llm_cost_status=score.actual_llm_cost_status,
+                    estimated_task_execution_cost_usd=(
+                        score.estimated_task_execution_cost_usd
+                    ),
+                    estimated_other_cost_usd=score.estimated_other_cost_usd,
                     ev_usd=score.ev_usd,
-                    net_ev_usd=score.net_ev_usd,
+                    expected_margin_usd=score.expected_margin_usd,
                     score=score.score,
                     rank=None if score.skipped else rank_index + 1,
                     estimator=score.estimator,
