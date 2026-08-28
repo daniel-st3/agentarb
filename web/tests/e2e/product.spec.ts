@@ -5,7 +5,7 @@ import { CONTROLLED_OPPORTUNITIES } from "../../src/lib/discovery";
 import { evaluateOpportunity } from "../../src/lib/policy";
 import type { PolicyEnvelope } from "../../src/lib/contracts";
 
-const shots = resolve("../docs/screenshots/web");
+const shots = resolve("test-results/screenshots");
 async function screenshot(page: Page, name: string) {
   await mkdir(shots, { recursive: true });
   await page.waitForTimeout(
@@ -122,6 +122,49 @@ test("mobile menu supports Escape and navigation", async ({ page }, info) => {
   await expect(
     page.getByRole("navigation", { name: "Mobile navigation" }),
   ).not.toBeVisible();
+});
+
+test("public limit message is safe and preserves the operator console", async ({
+  page,
+}) => {
+  await page.unroute("**/api/evaluate");
+  await page.route("**/api/evaluate", (route) =>
+    route.fulfill({
+      status: 429,
+      headers: { "Retry-After": "45" },
+      json: { error: "UNTRUSTED_INFRASTRUCTURE_DETAIL" },
+    }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Evaluate public opportunities", exact: true })
+    .click();
+  await expect(
+    page.getByText(
+      "You’ve reached the public sandbox limit. Please try again shortly.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.locator("body")).not.toContainText(
+    "UNTRUSTED_INFRASTRUCTURE_DETAIL",
+  );
+  // The configuration pane is intentionally hidden on mobile after evaluation.
+  await expect(page.locator(".evaluate-button")).toBeDisabled();
+});
+
+test("real production handlers fail closed without a trusted Vercel ingress", async ({
+  request,
+}) => {
+  for (const route of ["/api/discovery", "/api/evaluate"]) {
+    const response = route.endsWith("discovery")
+      ? await request.get(route)
+      : await request.post(route, { data: {} });
+    expect(response.status()).toBe(503);
+    expect(await response.json()).toEqual({
+      error:
+        "The public sandbox is temporarily unavailable. Please try again shortly.",
+    });
+  }
 });
 
 test("fresh browser session resets policy and has no persistent storage", async ({

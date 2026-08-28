@@ -1,5 +1,9 @@
 # Public web milestone verification
 
+Historical UI milestone record. The subsequent distributed-limiter configuration
+and verification are documented in `ABUSE-PROTECTION.md`; the old no-secrets and
+per-instance-only limitations below no longer describe production configuration.
+
 Verified locally on 28 August 2026. No deployment or push was attempted.
 
 ## Results

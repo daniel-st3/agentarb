@@ -4,7 +4,7 @@ Next.js App Router, strict TypeScript, React, Tailwind v4, GSAP/ScrollTrigger, a
 Framer Motion. The Python application remains the source of truth and is not
 deployed with this frontend.
 
-## Local production preview
+## Local development and production verification
 
 Requires Node 22.13+ and pnpm 11.19.
 
@@ -14,19 +14,28 @@ pnpm install --frozen-lockfile
 pnpm lint
 pnpm typecheck
 pnpm test
-NEXT_TELEMETRY_DISABLED=1 pnpm build
-pnpm start --hostname 127.0.0.1
+pnpm dev:local
 ```
 
-Open http://127.0.0.1:3000. No environment variables, LLM keys, accounts, database,
-or Python server are required. The only runtime network dependencies are two
-fixed public listing GETs. Font files are self-hosted by Next Font after the build.
+Open http://127.0.0.1:3000. With all three limiter variables **unset**, this explicit
+loopback development command uses a bounded in-memory limiter. It is unavailable
+in production or on Vercel, including Preview. Partial configuration fails closed.
+No LLM key or Python server is required. Fonts are self-hosted after the build.
+
+Production `pnpm build` and `pnpm start` require valid server-only limiter
+configuration; missing configuration is an intentional startup error. For
+hermetic verification without a cloud account, run `pnpm verify:build` followed
+by `pnpm test:e2e`. The test harness supplies synthetic configuration, not real
+credentials. Real protected routes stay closed; browser tests mock normal UI
+responses and separately verify the real fail-closed response. There is no
+production allow-all bypass. See [launch protection](ABUSE-PROTECTION.md).
 
 ## Architecture and source-of-truth boundary
 
 ```text
 React session state
   → validated POST /api/evaluate
+  → distributed admission BEFORE body parsing, discovery or evaluation
   → fixed public GET listing requests (parallel, bounded, no redirects)
   → normalized public records + separately labelled controlled fixtures
   → Python-derived safety rules + deterministic TypeScript policy evaluator
@@ -76,22 +85,29 @@ Allowed upstream URLs:
 The frontend never calls the local REST worker API. There are no approval,
 package download, worker, write, ledger, artifact, provider, wallet, payment, or
 authentication routes. Policy results and preview snapshots exist only in React
-memory and disappear on reload/new session. The server retains only short-lived
-anonymous cooldown timestamps, not profiles, policies, results, or task content.
+memory and disappear on reload/new session. A dedicated Upstash store retains only
+short-lived HMAC-keyed rate-limit timestamps and random event IDs, not raw IPs,
+profiles, policies, results, or task content. This is pseudonymous abuse metadata,
+not anonymous visitor data. There are no persistent user profiles or session IDs.
 Hosting infrastructure may keep standard access logs; this app never logs request
 bodies, profile inputs, or credentials.
 
-### Refresh limiting limitation
+### Distributed abuse protection
 
-The client enforces a 30-second refresh cooldown, including failed requests.
-Both server endpoints share a bounded, expiring, in-process cooldown map keyed by
-the random browser-session UUID. This prevents repeated normal-session refreshes
-on one instance. **It is not a distributed abuse-prevention guarantee**: Vercel
-can run multiple instances or cold-start, and an adversarial caller can rotate
-session IDs. Strict globally coordinated enforcement requires durable state,
-which this phase deliberately forbids. Before a broad public launch, configure
-Vercel edge/firewall rate limiting as an additional deployment gate; do not
-silently add a database or visitor tracking.
+Upstash Redis atomically enforces 20 discovery / 10 evaluation requests per client
+key in any rolling ten minutes. Every admitted attempt counts, including invalid
+policy input. The key is an HMAC-SHA-256 of a validated, normalized Vercel forwarding
+address, with a 32-byte secret salt. Session IDs do not affect this limit. No
+production process-memory limiter remains; the 30-second browser cooldown is UX.
+
+429 responses include safe `Retry-After` metadata. Missing configuration, unknown
+proxy identity, malformed headers, Redis failure, timeout, or an invalid decision
+returns a generic 503 before application work. The limiter transport permits only
+one fixed Redis script, with no retries or redirects. Its Redis POST is an explicit
+infrastructure-only exception; marketplace requests remain strictly GET-only.
+
+Read [ABUSE-PROTECTION.md](ABUSE-PROTECTION.md) for exact privacy, proxy, expiry,
+configuration, local-mode, and launch-verification requirements.
 
 ## Evidence and cost accounting
 
@@ -125,7 +141,8 @@ pnpm test:e2e
 Run E2E against the production preview, not the development server. The hermetic
 browser tests explicitly simulate public-source unavailability and use controlled
 fixtures. They capture hero, sandbox, configuration, loading, decisions, preview,
-safety, mobile, and 1440/1024/768/390px checks in `../docs/screenshots/web/`.
+safety, mobile, and 1440/1024/768/390px checks in `test-results/screenshots/`.
+The committed portfolio baseline remains in `../docs/screenshots/web/`.
 Fresh public checks are separate from those controlled screenshots.
 
 Native dialog focus containment, Escape dismissal, focus restoration, semantic
@@ -140,10 +157,13 @@ idle animation loop, external illustration, or third-party runtime script exists
    `claude/verify-bounty-api-facts-f6ccdu`.
 3. Set **Root Directory: `web`**, framework **Next.js**, Node **22.x** or newer
    supported version, install **`pnpm install --frozen-lockfile`**, build **`pnpm build`**.
-4. Do not add marketplace credentials, Groq keys, worker API URLs, databases,
-   payments, authentication, or other integrations. No application secrets are needed.
-5. Review edge rate limiting, hosting quotas, function timeouts, and platform
-   logging settings before public exposure. Do not enable paid services implicitly.
+4. Configure the dedicated Upstash limiter and the three server-only variables
+   documented in [ABUSE-PROTECTION.md](ABUSE-PROTECTION.md), separately for Preview
+   and Production. Do not add marketplace credentials, Groq keys, worker URLs,
+   payments, authentication, or any application-data store.
+5. Review hosting/store quotas, function timeouts, eviction/backup settings, and
+   platform logs before exposure. Edge protection remains useful against IP
+   rotation and volumetric attacks. Do not enable paid services implicitly.
 6. Verify the preview environment’s fixed GET sources, source labels, reduced motion,
    mobile layout, and unavailable-source fallback before promoting it.
 

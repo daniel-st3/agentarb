@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
+import {
+  assertProductionLimiterConfig,
+  limiterConfig,
+} from "./src/server/limiter-config";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -22,4 +27,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default function config(phase: string): NextConfig {
+  if (phase === PHASE_DEVELOPMENT_SERVER) limiterConfig();
+  else assertProductionLimiterConfig();
+  return nextConfig;
+}

@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { policyEnvelopeSchema } from "@/lib/contracts";
 import { discoverPublic } from "@/lib/discovery";
 import { evaluateOpportunity } from "@/lib/policy";
-import { checkRefreshCooldown } from "@/lib/rate-limit";
 import { isSameOrigin, readLimitedJson } from "@/lib/http-boundary";
+import { enforcePublicLimit } from "@/server/public-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const blocked = await enforcePublicLimit(request, "evaluation");
+  if (blocked) return blocked;
   if (!isSameOrigin(request) || new URL(request.url).search) {
     return NextResponse.json(
       {
@@ -38,19 +40,6 @@ export async function POST(request: Request) {
         issues: parsed.error.issues.map((issue) => issue.message),
       },
       { status: 400 },
-    );
-  }
-  const cooldown = checkRefreshCooldown(parsed.data.sessionId);
-  if (!cooldown.allowed) {
-    return NextResponse.json(
-      {
-        error: "Public listings were refreshed recently.",
-        retryAfterSeconds: cooldown.retryAfterSeconds,
-      },
-      {
-        status: 429,
-        headers: { "Retry-After": String(cooldown.retryAfterSeconds) },
-      },
     );
   }
   const { opportunities, statuses } = await discoverPublic();

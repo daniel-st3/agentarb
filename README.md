@@ -20,11 +20,10 @@ approval, REST worker, lifecycle, or persistence surfaces shown below.
 ```bash
 cd web
 pnpm install --frozen-lockfile
-pnpm build
-pnpm start --hostname 127.0.0.1
+pnpm dev:local
 ```
 
-Open http://127.0.0.1:3000. No API key or Python backend is required. Vercel
+Open http://127.0.0.1:3000. Loopback development requires no keys or Python backend. Vercel
 preparation uses **Root Directory `web`**, **Next.js**, and Node **22.13+**.
 Nothing has been deployed. See [web architecture, safety contract, tests, and
 deployment steps](web/README.md) and the [design brief](web/DESIGN.md).
@@ -35,9 +34,13 @@ failures fall back to explicitly controlled fixtures. Live snapshots become
 cached labels after 30 seconds. Actual LLM inference cost remains zero, projected
 margin is not earnings, and real marketplace outcome evidence remains zero.
 
-The browser and per-instance server enforce a 30-second refresh cooldown.
-Distributed abuse prevention is an explicit deployment limitation; no database
-or persistent visitor tracking was added to conceal that limitation.
+Production requires a dedicated Upstash Redis limiter and three server-only
+variables: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and
+`RATE_LIMIT_SALT`. Atomic rolling limits are 20 discovery and 10 evaluation
+requests per hashed client address per ten minutes. Invalid configuration or
+an unavailable limiter fails closed. Only expiring abuse-prevention metadata is
+stored; profiles, policies, opportunities, and outcomes remain unpersisted.
+See [launch configuration and privacy](web/ABUSE-PROTECTION.md).
 
 ## Why it's interesting
 

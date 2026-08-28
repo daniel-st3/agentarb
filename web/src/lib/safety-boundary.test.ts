@@ -1,13 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { POST } from "../app/api/evaluate/route";
 import { GET } from "../app/api/discovery/route";
 import { TEMPLATE_DEFAULTS, policyEnvelopeSchema } from "./contracts";
-import { clearRateLimitsForTests } from "./rate-limit";
 import { CONTROLLED_OPPORTUNITIES } from "./discovery";
 import { createPackagePreview, evaluateOpportunity } from "./policy";
 import { isSameOrigin } from "./http-boundary";
+
+vi.mock("@/server/public-rate-limit", () => ({
+  enforcePublicLimit: vi.fn(async () => null),
+}));
 
 const sessionId = "b62cfb55-84e6-4b6f-a550-199e932e7549";
 const envelope = () => ({
@@ -24,7 +27,6 @@ const request = (body: unknown) =>
     },
     body: JSON.stringify(body),
   });
-beforeEach(() => clearRateLimitsForTests());
 afterEach(() => vi.restoreAllMocks());
 
 describe("fail-closed public boundary", () => {
@@ -97,7 +99,7 @@ describe("fail-closed public boundary", () => {
       /untrusted-do-not-forward|simulated_pnl|package_hash|approved|private_key/,
     );
   });
-  it("shares the cooldown between GET discovery and POST evaluation", async () => {
+  it("keeps both validated routes usable after distributed admission", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(
       async () => new Response('{"tasks":[]}'),
     );
@@ -110,7 +112,7 @@ describe("fail-closed public boundary", () => {
         )
       ).status,
     ).toBe(200);
-    expect((await POST(request(envelope()))).status).toBe(429);
+    expect((await POST(request(envelope()))).status).toBe(200);
   });
   it("rejects alternate routes and missing sessions", async () => {
     const upstream = vi.spyOn(globalThis, "fetch");
@@ -148,7 +150,15 @@ it("runtime import graph contains no persistence, worker, connector, shell, or p
     expect(content).not.toMatch(
       /from\s+["'][^"']*(?:node:fs|child_process|sqlite|prisma|arbiter_worker|connectors|groq|openai)["']/,
     );
-    expect(content).not.toMatch(
+    const withoutFixedLimiterScript = file.endsWith(
+      "/server/public-rate-limit.ts",
+    )
+      ? content.replace(
+          /redis\.eval\(\s*ROLLING_WINDOW_SCRIPT,/,
+          "redis.fixedInfrastructureScript(",
+        )
+      : content;
+    expect(withoutFixedLimiterScript).not.toMatch(
       /\b(?:eval|exec|writeFile|appendFile|localStorage|sessionStorage)\s*\(/,
     );
   }

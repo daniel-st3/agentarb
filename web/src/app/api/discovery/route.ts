@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { discoverPublic } from "@/lib/discovery";
 import { z } from "zod";
-import { checkRefreshCooldown } from "@/lib/rate-limit";
 import { isSameOrigin } from "@/lib/http-boundary";
+import { enforcePublicLimit } from "@/server/public-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const blocked = await enforcePublicLimit(request, "discovery");
+  if (blocked) return blocked;
   const session = z
     .string()
     .uuid()
@@ -22,16 +24,6 @@ export async function GET(request: Request) {
         error: "A valid session header and fixed discovery route are required.",
       },
       { status: 400 },
-    );
-  }
-  const cooldown = checkRefreshCooldown(session.data);
-  if (!cooldown.allowed) {
-    return NextResponse.json(
-      { error: "Refresh cooldown active." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(cooldown.retryAfterSeconds) },
-      },
     );
   }
   const { opportunities, statuses } = await discoverPublic();

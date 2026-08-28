@@ -171,6 +171,16 @@ export function PolicySandbox() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...config, sessionId }),
       });
+      if (request.status === 429 || request.status === 503) {
+        const retry = Number(request.headers.get("Retry-After"));
+        if (Number.isInteger(retry) && retry > 0 && retry <= 600)
+          setCooldown(retry);
+        throw new Error(
+          request.status === 429
+            ? "You’ve reached the public sandbox limit. Please try again shortly."
+            : "The public sandbox is temporarily unavailable. Please try again shortly.",
+        );
+      }
       const payload = await request.json();
       if (!request.ok)
         throw new Error(

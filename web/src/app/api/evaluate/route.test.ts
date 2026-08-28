@@ -1,7 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
-import { clearRateLimitsForTests } from "@/lib/rate-limit";
 import { TEMPLATE_DEFAULTS } from "@/lib/contracts";
+
+// These regression tests isolate policy/UX behavior. Distributed enforcement
+// is exercised without this mock in server/public-rate-limit.test.ts.
+vi.mock("@/server/public-rate-limit", () => ({
+  enforcePublicLimit: vi.fn(async () => null),
+}));
 
 vi.mock("@/lib/discovery", () => ({
   discoverPublic: vi.fn(async () => ({
@@ -35,15 +40,13 @@ function request(body: unknown) {
   });
 }
 
-beforeEach(() => clearRateLimitsForTests());
-
 describe("session-only evaluation route", () => {
   it("fails closed on invalid input", async () => {
     const response = await POST(request({ policy: {} }));
     expect(response.status).toBe(400);
   });
 
-  it("returns a no-persistence boundary and rate-limits each browser session", async () => {
+  it("returns a no-persistence boundary without treating session IDs as a security limiter", async () => {
     const body = {
       ...structuredClone(TEMPLATE_DEFAULTS["Research Analyst"]),
       sessionId: "b62cfb55-84e6-4b6f-a550-199e932e7549",
@@ -58,6 +61,6 @@ describe("session-only evaluation route", () => {
       },
     });
     const second = await POST(request(body));
-    expect(second.status).toBe(429);
+    expect(second.status).toBe(200);
   });
 });

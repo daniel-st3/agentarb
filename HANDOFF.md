@@ -2,7 +2,7 @@
 
 **Repository:** https://github.com/daniel-st3/agentarb
 **Branch:** `claude/verify-bounty-api-facts-f6ccdu`
-**Current milestone:** standalone Next.js public Policy Sandbox and Vercel build readiness (local only; not deployed or pushed)
+**Current milestone:** distributed public-route abuse protection (local only; not deployed or pushed)
 **Previous handoff baseline:** `607d1a511f01b12640a472ce2be7d5d5b00530c1`
 **Updated:** 2026-08-28
 
@@ -11,7 +11,37 @@
 
 ---
 
-## Standalone public web experience — 2026-08-28
+## Distributed public-route protection — 2026-08-28
+
+Both public handlers now check Upstash Redis before parsing bodies, evaluating
+policy or contacting marketplaces. Exact atomic rolling-window limits: discovery
+20 and evaluation 10 requests per normalized, HMAC-keyed client address in ten
+minutes. Session rotation and function cold starts do not reset the shared limit.
+The previous process-memory server cooldown was removed; browser cooldown remains.
+
+Production build/start require `UPSTASH_REDIS_REST_URL`,
+`UPSTASH_REDIS_REST_TOKEN`, and `RATE_LIMIT_SALT`. Missing/invalid configuration,
+untrusted ingress, malformed forwarding headers, timeout, Redis errors, or invalid
+decisions fail closed. No limiter details are returned or logged. A custom Upstash
+requester allows only the fixed infrastructure script and disables redirects,
+retries, telemetry, and arbitrary commands. Marketplace traffic remains GET-only.
+
+Only expiring pseudonymous limiter metadata is stored, never raw IPs, policy data,
+opportunities or outcomes. See `web/ABUSE-PROTECTION.md` for the exact trust/privacy
+contract and manual store/Vercel setup. No cloud store was created or contacted.
+Real Upstash connectivity remains a manual launch gate. Tests execute the actual
+Lua script in an in-memory Redis emulator and exercise the real SDK with a mocked
+HTTP boundary. `pnpm verify:build` uses synthetic configuration; protected routes
+still fail closed, and no production bypass exists.
+
+Local development uses `pnpm dev:local` on loopback with all three variables unset.
+The local fallback is forbidden on Vercel and in production. No visual redesign
+was made; only polished 429/503 handling was added.
+
+## Standalone public web experience — previous milestone, 2026-08-28
+
+The configuration and limiter limitations described in this historical section
+are superseded by the distributed protection above.
 
 The new `web/` Next.js application sits alongside the unchanged Python/Streamlit
 operator application. It uses strict TypeScript, React, Tailwind, self-hosted
