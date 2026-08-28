@@ -10,6 +10,35 @@ cost/risk/capability policy, and produces governed, agent-ready work packages.
 > lab remains MockMarketplace-only and every P&L figure there is simulated.
 > **There is no wallet code and nothing moves real or testnet funds.**
 
+## Public web experience — Next.js
+
+**Decide what an agent may do—before it acts.** The standalone `web/` application
+lets visitors configure a hypothetical worker, evaluate public listings, and
+inspect policy rationale in a session-only sandbox. It does not expose the local
+approval, REST worker, lifecycle, or persistence surfaces shown below.
+
+```bash
+cd web
+pnpm install --frozen-lockfile
+pnpm build
+pnpm start --hostname 127.0.0.1
+```
+
+Open http://127.0.0.1:3000. No API key or Python backend is required. Vercel
+preparation uses **Root Directory `web`**, **Next.js**, and Node **22.13+**.
+Nothing has been deployed. See [web architecture, safety contract, tests, and
+deployment steps](web/README.md) and the [design brief](web/DESIGN.md).
+
+The TypeScript evaluator uses generated Python rule tables and 184 cross-language
+parity cases. Public listings are fetched only via fixed GET routes; source
+failures fall back to explicitly controlled fixtures. Live snapshots become
+cached labels after 30 seconds. Actual LLM inference cost remains zero, projected
+margin is not earnings, and real marketplace outcome evidence remains zero.
+
+The browser and per-instance server enforce a 30-second refresh cooldown.
+Distributed abuse prevention is an explicit deployment limitation; no database
+or persistent visitor tracking was added to conceal that limitation.
+
 ## Why it's interesting
 
 The marketplaces are genuinely incompatible with each other: open pull-claim
@@ -44,7 +73,7 @@ flowchart LR
 explicitly simulated.** That is a finding, not a shortcut — see
 [Marketplaces](#marketplaces).
 
-## Quickstart
+## Local Python operator quickstart (not exposed by the public website)
 
 ```bash
 uv sync --extra dev

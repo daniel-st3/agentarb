@@ -2,12 +2,54 @@
 
 **Repository:** https://github.com/daniel-st3/agentarb
 **Branch:** `claude/verify-bounty-api-facts-f6ccdu`
-**Current milestone:** premium Streamlit UI and Community Cloud readiness (local commit; see completion report for exact SHA)
+**Current milestone:** standalone Next.js public Policy Sandbox and Vercel build readiness (local only; not deployed or pushed)
 **Previous handoff baseline:** `607d1a511f01b12640a472ce2be7d5d5b00530c1`
-**Updated:** 2026-08-27
+**Updated:** 2026-08-28
 
 > This branch is the only branch in the repository. There is no `main` and no
 > open pull request, so there is nothing to merge into yet.
+
+---
+
+## Standalone public web experience — 2026-08-28
+
+The new `web/` Next.js application sits alongside the unchanged Python/Streamlit
+operator application. It uses strict TypeScript, React, Tailwind, self-hosted
+Next Font assets, scoped GSAP/ScrollTrigger, and reduced-motion-aware Motion
+transitions. The public site is an editorial single-page product with a
+three-panel policy console and a native modal read-only contract preview.
+
+The runtime has only two route handlers: GET `/api/discovery` and validated
+session-only POST `/api/evaluate`. Both use fixed GET public list URLs, no
+redirects, no forwarded auth/cookies/body, bounded input/output, timeouts, and a
+shared per-instance 30-second cooldown. No provider, database, filesystem,
+worker, approval, package persistence, marketplace-write, wallet, or payment
+runtime exists. Local worker APIs are neither linked nor proxied.
+
+Python remains the source of truth. `scripts/export_web_contract.py --check`
+verifies generated public rule tables and 184 parity cases against the existing
+hosted engine. Safety runs before estimation. All projected/actual cost fields
+retain the exact accounting names, actual inference cost is zero, and no
+simulated P&L is included. Preview snapshots retain the evaluated profile/policy
+even when visitors subsequently edit controls.
+
+Evidence labels distinguish live, cached, controlled, unavailable, and simulation
+from real outcomes (zero). A successful public snapshot is labelled cached
+after 30 seconds; no controlled record becomes live. The hero diagram is
+explicitly a controlled example, and the proof strip is scoped to the offline
+Python baseline and golden corpus.
+
+Deployment remains manual: root directory `web`, Next.js, Node 22.13+, pnpm
+11.19, build `pnpm build`; no secrets are required. **The cooldown is not a
+distributed abuse-prevention guarantee across Vercel instances or caller-rotated
+UUIDs.** Review edge/firewall protection and hosting quotas before public launch;
+do not add persistent state or paid infrastructure without approval.
+
+See `web/README.md` for the contract and verification commands,
+`web/DESIGN.md` for the audit/design rationale, and
+`docs/screenshots/web/` for fresh breakpoint and interaction evidence.
+No deployment, push, marketplace login, or external state-changing operation
+was performed.
 
 ---
 

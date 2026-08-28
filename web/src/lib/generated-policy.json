@@ -1,0 +1,309 @@
+{
+  "schema_version": "python-hosted-rules/1",
+  "source_sha256": {
+    "classification.py": "04833cd760e889e64c3cc6686e1f2390a0462932e675d455de2309e06f071a3d",
+    "governance.py": "6bfd4d43a7c10fb794d9431b03e8c5699e4bf25cbe74104375039275db894cdf",
+    "llm.py": "046935bb50d3f677024774a9b4594a5256d79fffb26ba91975f9ca6994c15ea2",
+    "sandbox.py": "7aa366738405d2f45587d404bde3abd3681f88fcfcd2c4f1fd3fd10c5d19d6dd",
+    "executors/safety.py": "66b05bc576df8768e68f5151a75e32a1341f2bcf8e8accb4cf8a0a41af3e5f43",
+    "connectors/opentask.py": "74614d54e60dbb5feebde491031172b064bcebf2d4569b31b9285deed039c28a",
+    "connectors/execution_market.py": "42ae4041ac16f7cc250755d2b745a3d781be69758259869e746cbe80324d74b3"
+  },
+  "control_patterns": [
+    [
+      "\\b(password|api key|private key|seed phrase|credential)\\b",
+      "credentials"
+    ],
+    [
+      "\\b(integrate|initiate|send|make|process|connect|use)\\b.{0,40}\\b(payment|stripe|x402|wallet|escrow)\\b",
+      "payments_or_wallet"
+    ],
+    [
+      "\\b(payment|stripe|x402|wallet|escrow)\\b.{0,30}\\b(integration|transaction|transfer|connection)\\b",
+      "payments_or_wallet"
+    ],
+    ["\\b(sign|broadcast)\\b.{0,30}\\b(message|transaction)\\b", "signing"],
+    [
+      "\\b(bid|claim|accept|submit|settle|cancel)\\b.{0,40}\\b(task|bounty|marketplace|work)\\b",
+      "marketplace_write"
+    ],
+    [
+      "\\b(run|execute)\\b.{0,30}\\b(untrusted )?(code|script|command|binary)\\b",
+      "code_execution"
+    ],
+    ["\\b(log in|login to|sign in)\\b", "browser_login"],
+    [
+      "\\b(private|personal|confidential)\\s+(data|record|information)\\b",
+      "private_data"
+    ],
+    [
+      "\\b(send email|post message|make a phone call|purchase|book appointment)\\b",
+      "external_action"
+    ]
+  ],
+  "harmful_patterns": [
+    ["\\b(ddos|denial[- ]of[- ]service|botnet)\\b", "attack tooling"],
+    ["\\b(keylogger|ransomware|rootkit|spyware|stealer)\\b", "malware"],
+    ["\\b(phish|phishing|credential harvest\\w*)\\b", "phishing"],
+    [
+      "\\bbypass\\w*\\s+(auth\\w*|2fa|mfa|captcha|paywall|drm|licen[cs]\\w+)",
+      "access-control bypass"
+    ],
+    [
+      "\\b(crack|keygen|pirat\\w+|tors?ent)\\b.*\\b(licen[cs]\\w+|software|drm)\\b",
+      "piracy"
+    ],
+    [
+      "\\bscrape\\w*\\b.*\\b(personal|private|pii|email address(es)?)\\b",
+      "personal-data scraping"
+    ],
+    ["\\b(dox+|doxx\\w*)\\b", "doxxing"],
+    [
+      "\\b(fake|forged|fraudulent)\\b.*\\b(ids?|identit(y|ies)|documents?|reviews?|invoices?|testimonials?|ratings?)\\b",
+      "forgery/fraud"
+    ],
+    [
+      "\\bsql\\s*inject\\w*|\\bexploit\\s+(a\\s+)?(vulnerab\\w+|cve)\\b",
+      "exploitation"
+    ],
+    ["\\b(spam|bulk\\s+unsolicited)\\b.*\\b(email|dm|message)", "spam"],
+    ["\\bimpersonat\\w+\\b", "impersonation"]
+  ],
+  "scope_patterns": [
+    [
+      "\\b(photograph|photo of|take a picture|in[- ]person|on[- ]site|visit\\s+the)\\b",
+      "requires physical presence"
+    ],
+    [
+      "\\b(notari[sz]e|courier|deliver\\s+a\\s+package|drive\\s+to)\\b",
+      "requires physical action"
+    ],
+    [
+      "\\b(phone\\s*call|call\\s+them|speak\\s+with|interview\\s+in\\s+person)\\b",
+      "requires real-time human interaction"
+    ],
+    [
+      "\\b(log\\s*in\\s+to|sign\\s+in\\s+to|use\\s+my\\s+account|my\\s+credentials|api\\s+key\\s+provided)\\b",
+      "requires credentials we will not accept"
+    ],
+    [
+      "\\b(use|provide|paste|send|share|load|read)\\b.{0,30}\\b(api\\s*key|access\\s*token|bearer\\s*token|password|private\\s*key|seed\\s*phrase|mnemonic|wallet\\s*secret)\\b",
+      "requires credentials or secrets we will not accept"
+    ],
+    [
+      "\\b(connect|link)\\b.{0,20}\\b(wallet|metamask|walletconnect)\\b",
+      "requires wallet connection"
+    ],
+    [
+      "\\bsign\\b.{0,25}\\b(message|transaction|authorization|eip[- ]?(191|3009)|payload)\\b",
+      "requires signing a message or transaction"
+    ],
+    [
+      "\\b(run|execute)\\b.*\\b(script|binary|executable|attached\\s+code|untrusted)\\b",
+      "requires executing untrusted code"
+    ],
+    [
+      "\\b(deploy\\s+to\\s+production|push\\s+to\\s+main|merge\\s+the\\s+pr)\\b",
+      "requires write access to live systems"
+    ],
+    [
+      "\\b(send|transfer|pay)\\s+(\\$?\\d[\\d,.]*\\s*)?(funds|money|usdc|usdt|eth|sol|btc|dollars?)\\b",
+      "requires moving real funds"
+    ],
+    [
+      "\\b(make\\s+a\\s+payment|withdraw\\s+(funds|money)|buy\\s+.{0,20}\\bon[- ]chain\\b)\\b",
+      "requires moving real funds"
+    ],
+    [
+      "\\b(initiate|execute|complete|release|refund|deposit|capture)\\b.{0,35}\\b(x402|escrow|payment|on[- ]chain\\s+transaction)\\b",
+      "requires payment or escrow interaction"
+    ],
+    [
+      "\\b(bid|claim|accept|submit|cancel|settle)\\b.{0,35}\\b(task|bounty|work|marketplace|submission)\\b",
+      "requires a marketplace write action"
+    ]
+  ],
+  "vague_patterns": [
+    "^\\s*(test|testing|hello|hi|asdf|todo|tbd|placeholder)\\s*\\.?\\s*$",
+    "\\b(as\\s+discussed|you\\s+know\\s+what\\s+to\\s+do|same\\s+as\\s+(last\\s+time|before))\\b",
+    "\\b(details\\s+(to\\s+follow|on\\s+request)|will\\s+share\\s+later|dm\\s+for\\s+details)\\b"
+  ],
+  "min_description_chars": 40,
+  "category_tags": [
+    [
+      "small_code",
+      [
+        "api-integration",
+        "automation",
+        "bug-fix",
+        "code",
+        "coding",
+        "javascript",
+        "python",
+        "refactor",
+        "script",
+        "sql",
+        "typescript"
+      ]
+    ],
+    [
+      "summarization",
+      [
+        "content-writing",
+        "copywriting",
+        "editing",
+        "report-writing",
+        "summarization",
+        "summary",
+        "transcription"
+      ]
+    ],
+    [
+      "data_lookup",
+      [
+        "csv",
+        "data-entry",
+        "data-extraction",
+        "enrichment",
+        "json",
+        "lookup",
+        "scraping",
+        "web-scraping"
+      ]
+    ],
+    [
+      "research",
+      [
+        "analysis",
+        "competitive-analysis",
+        "due-diligence",
+        "market-research",
+        "openapi",
+        "research"
+      ]
+    ]
+  ],
+  "execution_categories": {
+    "research": "research",
+    "knowledge_access": "research",
+    "data_collection": "data_lookup",
+    "data_processing": "data_lookup",
+    "content_generation": "summarization",
+    "api_integration": "small_code"
+  },
+  "heuristic_base": {
+    "summarization": [0.9, 0.72, 0.05],
+    "research": [0.85, 0.65, 0.12],
+    "data_lookup": [0.8, 0.62, 0.15],
+    "small_code": [0.7, 0.55, 0.2],
+    "unknown": [0.05, 0.05, 2]
+  },
+  "heuristic_flags": [
+    "deploy",
+    "production",
+    "on-call",
+    "multi-tenant",
+    "infrastructure",
+    "photograph",
+    "in person",
+    "on-site",
+    "notarize",
+    "phone call",
+    "long-term",
+    "ongoing",
+    "full-time"
+  ],
+  "heuristic_scale_pattern": "\\b(\\d{2,})\\s+(?:(?:public|annual|lengthy|individual)\\s+){0,3}(?:reports?|records?|filings?|pages?|items?|rows?|documents?|entries?|tables?|companies|urls?|sites?|files?|tasks?|articles?)\\b",
+  "controlled_records": [
+    {
+      "marketplace": "mock",
+      "bounty_id": "demo-research",
+      "title": "Plan a comparison of public API documentation",
+      "description": "Create a question matrix and evidence checklist comparing pagination, versioning, and error handling in public API documentation. Produce only a structured research plan.",
+      "category": "research",
+      "payout_usd": 24,
+      "payout_text": "",
+      "currency": null,
+      "deadline": null,
+      "tags": ["research"],
+      "url": null,
+      "posted_at": null,
+      "raw": {}
+    },
+    {
+      "marketplace": "mock",
+      "bounty_id": "demo-data",
+      "title": "Structure a supplied product inventory",
+      "description": "Create a field map for this supplied inventory: Cedar desk, SKU D01, quantity 4; Oak shelf, SKU S02, quantity 7. Preserve provenance and list unresolved fields.",
+      "category": "data_lookup",
+      "payout_usd": 18,
+      "payout_text": "",
+      "currency": null,
+      "deadline": null,
+      "tags": ["data_lookup"],
+      "url": null,
+      "posted_at": null,
+      "raw": {}
+    },
+    {
+      "marketplace": "mock",
+      "bounty_id": "demo-code",
+      "title": "Plan a timezone edge-case fix",
+      "description": "Draft pseudocode and a test strategy for a date formatter that rolls UTC midnight into the wrong calendar day. Produce a bounded patch outline without repository access.",
+      "category": "small_code",
+      "payout_usd": 18,
+      "payout_text": "",
+      "currency": null,
+      "deadline": null,
+      "tags": ["small_code"],
+      "url": null,
+      "posted_at": null,
+      "raw": {}
+    },
+    {
+      "marketplace": "mock",
+      "bounty_id": "demo-summary",
+      "title": "Outline a supplied release note",
+      "description": "Summarize this supplied text: Release 2.4 adds cursor pagination and fixes duplicate event IDs. Existing endpoints remain compatible. New clients should retain cursors.",
+      "category": "summarization",
+      "payout_usd": 12,
+      "payout_text": "",
+      "currency": null,
+      "deadline": null,
+      "tags": ["summarization"],
+      "url": null,
+      "posted_at": null,
+      "raw": {}
+    },
+    {
+      "marketplace": "mock",
+      "bounty_id": "demo-low",
+      "title": "Plan a tiny documentation correction",
+      "description": "Create a short patch outline for correcting the spelling of a variable in the supplied documentation example. No executable verification is requested.",
+      "category": "small_code",
+      "payout_usd": 0.25,
+      "payout_text": "",
+      "currency": null,
+      "deadline": null,
+      "tags": ["small_code"],
+      "url": null,
+      "posted_at": null,
+      "raw": {}
+    },
+    {
+      "marketplace": "mock",
+      "bounty_id": "demo-refusal",
+      "title": "Access restricted customer records",
+      "description": "Log in to a private customer system using provided credentials and extract private data.",
+      "category": "data_lookup",
+      "payout_usd": 80,
+      "payout_text": "",
+      "currency": null,
+      "deadline": null,
+      "tags": ["data_lookup"],
+      "url": null,
+      "posted_at": null,
+      "raw": {}
+    }
+  ]
+}
