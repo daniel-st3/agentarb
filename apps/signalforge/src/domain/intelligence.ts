@@ -50,6 +50,7 @@ const common = {
   freshness: FreshnessSchema,
   observedAt: z.string().datetime(),
   sourceUrl: safeUrl,
+  termsUrl: safeUrl.optional(),
   rawReference: z.string().max(240).optional(),
   sourceUpdatedAt: z.string().max(60).optional(),
   executionStatus: z.literal("execution_not_enabled"),
@@ -196,6 +197,16 @@ export const CatalogQuerySchema = z
       .optional(),
     maxPriceUsd: z.coerce.number().finite().min(0).max(10000).optional(),
     query: z.string().trim().max(120).optional(),
+    sort: z
+      .enum([
+        "route_fit",
+        "structured_price",
+        "freshest",
+        "reliability",
+        "newest",
+      ])
+      .optional(),
+    availability: z.enum(["observed", "demo", "unavailable"]).optional(),
     limit: z.coerce.number().int().min(1).max(50).default(20),
   })
   .strict();
@@ -211,6 +222,13 @@ export const NetworkResponseSchema = z
   })
   .strict();
 export type NetworkResponse = z.infer<typeof NetworkResponseSchema>;
+export const NetworkStatusSchema = NetworkResponseSchema.omit({
+  records: true,
+}).extend({
+  observedCount: z.number().int().nonnegative(),
+  observedCapabilities: z.array(z.enum(capabilityIds)),
+  rateLimitMode: z.enum(["distributed", "best_effort"]),
+});
 export function matchListing(l: Listing, q: CatalogQuery) {
   const caps =
     l.listingType === "service_offer" ? l.capabilities : l.requiredCapabilities;
@@ -225,6 +243,12 @@ export function matchListing(l: Listing, q: CatalogQuery) {
     (!q.listingType || q.listingType === l.listingType) &&
     (!q.freshness || q.freshness === l.freshness) &&
     (!q.actionability || q.actionability === action) &&
+    (!q.availability ||
+      (q.availability === "observed"
+        ? ["live", "cached_live"].includes(l.freshness)
+        : q.availability === "demo"
+          ? ["simulated_demo", "seeded_catalog"].includes(l.freshness)
+          : ["unavailable", "error"].includes(l.freshness))) &&
     (!q.priceModel ||
       (l.listingType === "service_offer" &&
         q.priceModel === l.pricing.model)) &&
@@ -236,11 +260,42 @@ export function matchListing(l: Listing, q: CatalogQuery) {
     (!q.query ||
       JSON.stringify(
         l.listingType === "service_offer"
-          ? [l.name, l.description, l.tags]
-          : [l.title, l.description],
+          ? [l.name, l.description, l.tags, caps, l.sourceName, l.sourceId]
+          : [l.title, l.description, caps, l.sourceName, l.sourceId],
       )
         .toLowerCase()
         .includes(q.query.toLowerCase()))
+  );
+}
+export function compareListings(a: Listing, b: Listing, q: CatalogQuery) {
+  const price = (l: Listing) =>
+    l.listingType === "service_offer" &&
+    l.pricing.parseConfidence === "exact" &&
+    ["per_call", "free"].includes(l.pricing.model)
+      ? (l.pricing.amountUsd ?? Infinity)
+      : Infinity;
+  const reliability = (l: Listing) =>
+    l.listingType === "service_offer" ? (l.observedReliabilityScore ?? -1) : -1;
+  const updated = (l: Listing) => Date.parse(l.sourceUpdatedAt ?? "") || 0;
+  const delta =
+    q.sort === "structured_price"
+      ? price(a) - price(b)
+      : q.sort === "freshest"
+        ? Date.parse(b.observedAt) - Date.parse(a.observedAt)
+        : q.sort === "newest"
+          ? updated(b) - updated(a)
+          : q.sort === "reliability"
+            ? reliability(b) - reliability(a)
+            : supplyFit(b, q.capability ? [q.capability] : []) -
+              supplyFit(a, q.capability ? [q.capability] : []);
+  return (
+    (Number.isFinite(delta)
+      ? delta
+      : delta === Infinity
+        ? 1
+        : delta === -Infinity
+          ? -1
+          : 0) || a.id.localeCompare(b.id)
   );
 }
 /** Supply ranking is discovery fit, never execution authorization or profitability. */

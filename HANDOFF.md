@@ -1,6 +1,29 @@
 # SignalForge — Handoff
 
-## Active increment: agent routing and live catalog intelligence (2026-08-30)
+## Active increment: Command Surface + product foundations (2026-08-30)
+
+- Open editorial command canvas: local capability preview shares deterministic
+  decomposition rules; no model call on typing. Native budget/policy controls,
+  Cmd/Ctrl+Enter and a truthful observation rail. Original routed-S favicon.
+- Four public fixed GET sources: MCP Registry, APIs.guru NYT, Models.dev Groq
+  text models and LiteLLM Mistral chat models. Live checks observed 28/11/11/25
+  records respectively. No listed provider is executed; prices remain unit-qualified
+  catalog metadata, not exact task quotes. Source assessments and notices in docs.
+- URL-backed /network search/filter/sort, safe 50-result cap, source/license details,
+  and listing reference handoff as context only.
+- /developers/try makes real REST/MCP calls and fetches this deployment's Agent Card.
+  Responses are typed, route contracts remain execution_not_enabled, and route
+  history remains tab-local. REST and MCP share the exact planner and safe tool surface.
+- Upstash + KV aliases, CACHE_MODE auto/durable/memory (legacy redis accepted),
+  shared snapshots/leases/health and rolling quotas. Stale-while-revalidate uses
+  Next.js after(), not an unawaited detached promise. See docs/durable-network.md.
+- A configured store plus independent RATE_LIMIT_SALT is required for actual
+  distributed production protection. Without configuration the public demo still
+  works and says non_durable_demo / best_effort. No account/store was provisioned.
+- All prior no-execution/payment/marketplace-action boundaries remain unchanged.
+  Do not modify the legacy web Vercel project. Never inspect or print real keys.
+
+## Previous increment: agent routing and live catalog intelligence (2026-08-30)
 
 - Production app remains `apps/signalforge`; existing production branch is
   `claude/verify-bounty-api-facts-f6ccdu`. This increment is authorized for push

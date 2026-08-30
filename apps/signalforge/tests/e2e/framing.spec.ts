@@ -15,7 +15,9 @@ test("landing command → local frame → deterministic route, with edit and met
   await page
     .getByRole("button", { name: /Build a verified competitive/ })
     .click();
-  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Compile route", exact: true })
+    .click();
   await expect(page.getByRole("status")).toHaveText("Local demo decomposition");
   await expect(page.locator(".frame-dimension")).toHaveCount(5);
   await expect(page.locator(".question-anchor")).toContainText("AI search");
@@ -32,7 +34,9 @@ test("landing command → local frame → deterministic route, with edit and met
   await expect(
     page.getByRole("textbox", { name: "Agent objective" }),
   ).toHaveValue(/AI search/);
-  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Compile route", exact: true })
+    .click();
   await page.getByRole("button", { name: "Build execution route" }).click();
   await expect(
     page.getByRole("heading", { name: "Capability route", exact: true }),
@@ -55,7 +59,9 @@ test("interrupted framing keeps the question and offers retry", async ({
   await page
     .getByRole("textbox", { name: "Agent objective" })
     .fill("Compare the research needs of two markets");
-  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Compile route", exact: true })
+    .click();
   await expect(page.locator(".error-message")).toContainText(
     "Decomposition was interrupted",
   );

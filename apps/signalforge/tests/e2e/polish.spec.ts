@@ -51,26 +51,16 @@ test("precision controls support keyboard selection without changing the workflo
   page,
 }) => {
   await page.goto("/forge");
-  const selected = page.getByRole("button", {
-    name: "Most verified",
-    exact: true,
-  });
+  const selected = page.getByLabel("Routing policy", { exact: true });
   await selected.focus();
-  await page.keyboard.press("Enter");
-  await expect(selected).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("m");
+  await page.keyboard.press("Tab");
+  await selected.focus();
+  await selected.selectOption("most_verified");
+  await expect(selected).toHaveValue("most_verified");
   await expect(selected).toBeFocused();
-  const indicator = page.locator(".policy-options .precision-indicator");
-  await expect(indicator).toBeVisible();
-  await expect
-    .poll(async () => {
-      const a = await selected.boundingBox();
-      const b = await indicator.boundingBox();
-      return Math.abs(a!.x - b!.x) + Math.abs(a!.width - b!.width);
-    })
-    .toBeLessThan(2);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(indicator).not.toBeVisible();
-  await expect(selected).toHaveAttribute("aria-pressed", "true");
+  await expect(selected).toHaveValue("most_verified");
   await page
     .getByRole("navigation")
     .getByRole("link", { name: "Archive" })

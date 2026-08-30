@@ -13,7 +13,16 @@ Base: `https://signalforge-rose-two.vercel.app`. JSON only. No credentials or co
 | GET `/api/v1/network/status` | none | source health, freshness, cache-mode warning; no raw records/secrets |
 | GET `/api/v1/openapi` | none | OpenAPI 3.1 documentation |
 
-Filters are local to a sampled catalog, not arbitrary upstream API queries. Unknown/duplicate query fields are rejected. No cursor is implemented. Maximum-price filter only considers exact structured service prices; unknown and modeled prices cannot pass as exact.
+Filters are evaluated server-side against bounded snapshots, not forwarded to upstream APIs. Unknown/duplicate query fields are rejected. No cursor is implemented. Maximum-price filter only considers exact structured service prices; unknown and modeled prices cannot pass as exact.
+
+Additional query fields: `sort=route_fit|structured_price|freshest|reliability|newest`
+and `availability=observed|demo|unavailable`. Price sorting compares exact per-call
+USD only; token/subscription units and absent measurements are not treated as zero.
+The network UI retains filters in the URL. Status adds observedCount,
+observedCapabilities and rateLimitMode, all aggregate and without configuration.
+
+Use [/developers/try](https://signalforge-rose-two.vercel.app/developers/try) to send
+an actual validated request and inspect its typed response; no response is fabricated.
 
 ```bash
 curl 'https://signalforge-rose-two.vercel.app/api/v1/catalog?capability=news_search&limit=10'

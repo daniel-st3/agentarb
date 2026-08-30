@@ -26,7 +26,7 @@ Human operator or calling agent
 - Open Agent Objective Console, optional public context URL, budget presets/custom cap, four policies.
 - Typed ObjectiveFrame: objective type, capability priorities/dependencies, hard constraints, verification standard, output contract and ambiguity.
 - Pure TypeScript route competition under budget, latency, reliability, critical-capability and verification constraints. Partial routes are explicit, never disguised as success.
-- Real read-only catalog observations from the **Official MCP Registry** and **APIs.guru**. Source freshness, observation times, catalog age, unknown prices and access requirements are visible.
+- Real read-only catalog observations from the **Official MCP Registry**, **APIs.guru**, **Models.dev**, and **LiteLLM's model-cost map**. Source freshness, observation times, catalog age, unit-qualified prices and access limits are visible. Model catalogs are not live inference providers.
 - A premium editorial `/network` explorer; services and task opportunities remain different models. Current tasks are controlled fixtures only.
 - Immutable-shaped, Zod-validated downloadable route contract, session-only archive, local contract-state simulation and a separate fictional research output.
 - Versioned REST planning/catalog API, four real Streamable HTTP MCP tools, and an explicitly **A2A-style discovery-only** card.
@@ -96,7 +96,8 @@ Optional `apps/signalforge/.env.local` settings are documented in [.env.example]
 
 - `GROQ_API_KEY`: server-only Goal Decomposition Agent, currently `openai/gpt-oss-20b` (checked against Groq docs 2026-08-30). Vercel AI SDK structured streaming, bounded timeout, no retries/tools. Failure/missing key → `local_demo_fallback`. It does not browse, invent facts, select providers or verify evidence.
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `RATE_LIMIT_SALT` (32+ characters): configure together for shared cache and rate limits.
-- `CACHE_MODE=auto|redis|memory`: auto uses configured Redis, otherwise a visibly non-durable demo fallback. Partial shared config fails closed.
+- `CACHE_MODE=auto|durable|memory`: auto uses configured Redis, otherwise a visibly non-durable demo fallback. Partial shared config fails closed. Legacy redis remains a durable alias.
+- `KV_REST_API_URL`, `KV_REST_API_TOKEN`: alternative Vercel KV-compatible names. Same server-only adapter; no NEXT_PUBLIC_ secrets.
 - `DISCOVERY_MODE=live|offline`: live allows only approved catalog GETs; offline disables all discovery network calls.
 
 ## Demo Planning API and MCP
@@ -113,7 +114,25 @@ MCP Streamable HTTP: `https://signalforge-rose-two.vercel.app/api/mcp`. Client s
 
 [Agent Card](https://signalforge-rose-two.vercel.app/.well-known/agent-card.json) is A2A-style metadata only: no A2A message/task transport is claimed. [OpenAPI](https://signalforge-rose-two.vercel.app/api/v1/openapi), [llms.txt](https://signalforge-rose-two.vercel.app/llms.txt), and robots metadata support discovery.
 
-Planning 10/client/10min; catalog 60/client/10min. Shared Redis sliding windows when configured; otherwise fixed-window per-instance fallback—not distributed production protection. Hashes only, no raw IP logs. No unrestricted refresh endpoint. Catalog refresh leases hourly; stale observations retained at most 24h. See security/source docs for cold-start and proxy assumptions.
+Planning 10/client/10min; catalog 60/client/10min. Shared Redis sliding windows when configured; otherwise fixed-window per-instance demo fallback—not distributed production protection. Hashes only, no raw IP logs. No unrestricted refresh endpoint. MCP/APIs.guru refresh hourly; Models.dev/LiteLLM every six hours. Stale-while-revalidate retains observations at most 24h. [Production store setup and privacy](docs/durable-network.md).
+
+## Command surface and agent integration proof
+
+The first viewport is an Agent Objective Command Surface with budget/policy
+dropdowns, Cmd/Ctrl+Enter compilation and a local capability-chain preview.
+Preview typing never calls a model; network counts come from observed snapshots.
+GSAP scopes entry rails and capability transitions; mobile and reduced motion retain
+static readable states. The routed-S favicon is original SVG.
+
+`/network` searches bounded snapshots with URL-backed source, type, capability,
+freshness, pricing, availability and actionability filters. Sorting never compares
+token prices as exact per-task costs. “Use in route” carries discovery context,
+not execution permission.
+
+`/developers/try` sends real REST and Streamable HTTP MCP requests, validates the
+returned contract, displays the exact JSON and fetches this deployment's Agent Card.
+It works without Groq or Redis in explicitly labeled demo mode. Both model catalogs
+are observed live, but all selected execution steps remain controlled fixtures.
 
 ## Vercel
 

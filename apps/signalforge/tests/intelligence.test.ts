@@ -108,7 +108,7 @@ describe("observed data, not invented access", () => {
   });
 });
 describe("GET-only connector transport", () => {
-  it("has exactly two fixed destinations and forwards no request state", async () => {
+  it("has only fixed destinations and forwards no request state", async () => {
     const fetcher = vi
       .fn()
       .mockImplementation(async () => response(mcpFixture));

@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import Link from "next/link";
 import { Navigation } from "@/components/navigation";
+import { NetworkState } from "@/components/network-state";
 import { ResearchSession } from "@/components/session";
 import { seedRuns } from "@/domain/engine";
 import "./globals.css";
 import "./polish.css";
 import "./command.css";
 import "./network.css";
+import "./command-canvas.css";
 import { PageChoreography } from "@/components/editorial/atmosphere";
 const geist = Geist({
   subsets: ["latin"],
@@ -49,10 +51,12 @@ export default async function RootLayout({
           Skip to content
         </a>
         <ResearchSession seeds={seeds}>
-          <Navigation />
-          <main id="main">
-            <PageChoreography>{children}</PageChoreography>
-          </main>
+          <NetworkState>
+            <Navigation />
+            <main id="main">
+              <PageChoreography>{children}</PageChoreography>
+            </main>
+          </NetworkState>
         </ResearchSession>
         <footer className="site-footer container">
           <span>

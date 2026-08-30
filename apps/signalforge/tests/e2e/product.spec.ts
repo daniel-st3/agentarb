@@ -95,10 +95,12 @@ test("question → plan → run → evidence → receipt, exports and session re
     .getByRole("button", { name: /Build a verified competitive/ })
     .click();
   await page
-    .getByRole("button", { name: "Most verified", exact: true })
-    .click();
+    .getByLabel("Routing policy", { exact: true })
+    .selectOption("most_verified");
   await screenshot(page, `${info.project.name}-configured`);
-  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Compile route", exact: true })
+    .click();
   await expect(page.getByRole("status")).toHaveText("Local demo decomposition");
   await page
     .getByRole("button", { name: "Build execution route", exact: true })
@@ -158,9 +160,11 @@ test("zero-budget route refuses missing critical capabilities", async ({
 }) => {
   await page.goto("/forge");
   await page.getByRole("button", { name: /Find the cheapest/ }).click();
-  await page.getByRole("button", { name: "Cheapest", exact: true }).click();
-  await page.getByRole("button", { name: "$0.00", exact: true }).click();
-  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await page.getByLabel("Routing policy",{exact:true}).selectOption("cheapest");
+  await page.getByLabel("Hard route budget",{exact:true}).selectOption("0");
+  await page
+    .getByRole("button", { name: "Compile route", exact: true })
+    .click();
   await expect(page.getByRole("status")).toHaveText("Local demo decomposition");
   await page
     .getByRole("button", { name: "Build execution route", exact: true })
@@ -220,7 +224,7 @@ test("request-in-flight and recoverable network failure are honest", async ({
   page,
 }, info) => {
   await page.goto("/forge");
-  await page.getByRole("button", { name: /Choose the best service/ }).click();
+  await page.getByRole("textbox",{name:"Agent objective"}).fill("Choose the best service sequence for extracting and validating a public document.");
   let release: (() => void) | undefined;
   const held = new Promise<void>((resolve) => {
     release = resolve;
@@ -229,7 +233,9 @@ test("request-in-flight and recoverable network failure are honest", async ({
     await held;
     await route.abort();
   });
-  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Compile route", exact: true })
+    .click();
   await expect(page.getByRole("status")).toHaveText("Local demo decomposition");
   await page
     .getByRole("button", { name: "Build execution route", exact: true })

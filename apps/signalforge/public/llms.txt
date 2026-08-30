@@ -3,11 +3,14 @@
 Routing intelligence for the agent economy. Discovery, comparison and planning only.
 
 - [Developer guide](https://signalforge-rose-two.vercel.app/developers)
+- [Real API and MCP request workbench](https://signalforge-rose-two.vercel.app/developers/try)
 - [Live agent network](https://signalforge-rose-two.vercel.app/network)
 - [Discovery card](https://signalforge-rose-two.vercel.app/.well-known/agent-card.json)
 - Demo planning: POST /api/v1/routes/plan
 - Catalog metadata: GET /api/v1/catalog
 - Connector health: GET /api/v1/network/status
+- API schemas: GET /api/v1/openapi
+- Opportunity evaluation only: POST /api/v1/opportunities/evaluate
 - MCP Streamable HTTP: /api/mcp
 
 All contracts state execution_not_enabled. No marketplace writes, service execution,

@@ -4,12 +4,14 @@ import Link from "next/link";
 import {
   NetworkResponseSchema,
   matchListing,
+  compareListings,
   CatalogQuerySchema,
   type NetworkResponse,
   type Listing,
 } from "@/domain/intelligence";
 import { capabilityIds } from "@/domain/objective";
 import { money } from "./ui";
+import { candidateSources } from "@/server/intelligence/connectors/candidates";
 const labels: Record<string, string> = {
   live: "LIVE OBSERVATION",
   cached_live: "CACHED LIVE",
@@ -114,6 +116,21 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
             </a>{" "}
             · {l.rawReference ?? l.id}
           </dd>
+          {l.termsUrl && (
+            <>
+              <dt>Access / reuse assessment</dt>
+              <dd>
+                <a
+                  className="text-link"
+                  href={l.termsUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Source terms or license ↗
+                </a>
+              </dd>
+            </>
+          )}
         </dl>
         {l.dataQuality.warnings.map((w) => (
           <p key={w} className="field-help">
@@ -129,7 +146,7 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
         <div className="network-actions">
           <Link
             className="text-link"
-            href={`/forge?capability=${encodeURIComponent(caps[0] ?? "web_research")}`}
+            href={`/forge?capability=${encodeURIComponent(caps[0] ?? "web_research")}&listing=${encodeURIComponent(l.id)}`}
           >
             Forge a route for this capability →
           </Link>
@@ -148,43 +165,86 @@ export function NetworkExplorer() {
   const [network, setNetwork] = useState<NetworkResponse | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
+    [ready, setReady] = useState(false),
     [filters, setFilters] = useState<Record<string, string>>({});
   useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/v1/catalog?limit=50", { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok)
-          throw new Error(
-            response.status === 429
-              ? "You’ve reached the public sandbox limit. Please try again shortly."
-              : "Live discovery is unavailable. You can still forge a controlled demo route.",
-          );
-        const value = await response.json();
-        const { matchedCount: _, truncated: __, ...data } = value;
-        void _;
-        void __;
-        setNetwork(NetworkResponseSchema.parse(data));
-      })
-      .catch((e) => {
-        if (!controller.signal.aborted)
-          setError(
-            e instanceof Error &&
-              e.message ===
-                "You’ve reached the public sandbox limit. Please try again shortly."
-              ? e.message
-              : "Live discovery is unavailable. You can still forge a controlled demo route.",
-          );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
+    const restore = () => {
+      const raw = Object.fromEntries(
+        new URLSearchParams(window.location.search),
+      );
+      const parsed = CatalogQuerySchema.safeParse(raw);
+      setFilters(
+        parsed.success
+          ? Object.fromEntries(
+              Object.entries(parsed.data)
+                .filter(([k]) => k !== "limit")
+                .map(([k, v]) => [k, String(v)]),
+            )
+          : {},
+      );
+      setReady(true);
+    };
+    restore();
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
   }, []);
+  const filterQuery = new URLSearchParams(
+    Object.entries(filters).filter(([, v]) => v),
+  ).toString();
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    window.history.replaceState(
+      null,
+      "",
+      "/network" + (filterQuery ? "?" + filterQuery : ""),
+    );
+    const timer = setTimeout(() => {
+      setLoading(true);
+      setError("");
+      fetch("/api/v1/catalog?limit=50&" + filterQuery, {
+        signal: controller.signal,
+      })
+        .then(async (response) => {
+          if (!response.ok)
+            throw new Error(
+              response.status === 429
+                ? "You’ve reached the public sandbox limit. Please try again shortly."
+                : "Live discovery is unavailable. You can still forge a controlled demo route.",
+            );
+          const value = await response.json();
+          const { matchedCount: _, truncated: __, ...data } = value;
+          void _;
+          void __;
+          setNetwork(NetworkResponseSchema.parse(data));
+        })
+        .catch((e) => {
+          if (!controller.signal.aborted)
+            setError(
+              e instanceof Error &&
+                e.message ===
+                  "You’ve reached the public sandbox limit. Please try again shortly."
+                ? e.message
+                : "Live discovery is unavailable. You can still forge a controlled demo route.",
+            );
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setLoading(false);
+        });
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [filterQuery, ready]);
   const query = CatalogQuerySchema.parse({
       ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
       limit: 50,
     }),
-    records = network?.records.filter((l) => matchListing(l, query)) ?? [];
+    records =
+      network?.records
+        .filter((l) => matchListing(l, query))
+        .sort((a, b) => compareListings(a, b, query)) ?? [];
   const select = (key: string, label: string, values: string[]) => (
     <label>
       {label}
@@ -261,7 +321,7 @@ export function NetworkExplorer() {
             <label className="network-search">
               Search this bounded sample
               <input
-                placeholder="Search names, descriptions, or tags"
+                placeholder="Search names, capabilities, sources"
                 maxLength={120}
                 value={filters.query ?? ""}
                 onChange={(e) =>
@@ -287,7 +347,22 @@ export function NetworkExplorer() {
             {select("priceModel", "Price model", [
               "free",
               "per_call",
+              "per_token",
+              "subscription",
+              "quote_required",
               "unknown",
+            ])}
+            {select("sort", "Sort order", [
+              "route_fit",
+              "structured_price",
+              "freshest",
+              "reliability",
+              "newest",
+            ])}
+            {select("availability", "Availability", [
+              "observed",
+              "demo",
+              "unavailable",
             ])}
             {select("actionability", "Observed access", [
               "catalog_only",
@@ -298,6 +373,11 @@ export function NetworkExplorer() {
           </div>
           <p className="eyebrow">
             {records.length} MATCHES / EXECUTION NOT ENABLED
+          </p>
+          <p className="field-help">
+            At most 50 matches per query. Price sorting compares exact USD
+            per-call quotes only; missing prices and measured reliability sort
+            last. “Newest” uses source update dates when supplied.
           </p>
           {["live", "cached_live", "seeded_catalog", "simulated_demo"].map(
             (state) => {
@@ -328,6 +408,11 @@ export function NetworkExplorer() {
       )}
       <details className="route-ledger">
         <summary>Sources not enabled</summary>
+        {candidateSources.map((s) => (
+          <p key={s.id}>
+            <strong>{s.name} / DISABLED</strong> — {s.reason}
+          </p>
+        ))}
         <p>
           Task marketplaces, Bazaar, and external Agent Cards remain disabled
           where public redistribution or access requirements have not been

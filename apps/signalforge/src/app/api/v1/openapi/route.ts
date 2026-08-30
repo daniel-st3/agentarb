@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { ObjectiveInputSchema } from "@/domain/objective";
-import { CatalogQuerySchema } from "@/domain/intelligence";
+import {
+  CatalogQuerySchema,
+  ListingSchema,
+  NetworkStatusSchema,
+} from "@/domain/intelligence";
+import { PlanningResponseSchema } from "@/domain/planning-response";
 import { checkPlanningLimit } from "@/server/planning-limit";
 export async function GET(request: Request) {
   const denied = await checkPlanningLimit(request, "catalog");
@@ -15,6 +20,13 @@ export async function GET(request: Request) {
           "execution_not_enabled. No external task service execution or marketplace actions.",
       },
       servers: [{ url: "https://signalforge-rose-two.vercel.app" }],
+      components: {
+        schemas: {
+          PlanningResponse: z.toJSONSchema(PlanningResponseSchema),
+          Listing: z.toJSONSchema(ListingSchema),
+          NetworkStatus: z.toJSONSchema(NetworkStatusSchema),
+        },
+      },
       paths: {
         "/api/v1/routes/plan": {
           post: {
@@ -29,6 +41,11 @@ export async function GET(request: Request) {
             },
             responses: {
               "200": {
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/PlanningResponse" },
+                  },
+                },
                 description:
                   "ObjectiveFrame, route contract, decompositionSource, freshnessSummary, warnings, executionStatus",
               },

@@ -15,6 +15,9 @@ export default function Page() {
       </p>
       <section>
         <h2>Plan across capabilities</h2>
+        <Link className="text-link" href="/developers/try">
+          Send a real REST or MCP planning request →
+        </Link>
         <pre>{curl}</pre>
         <p>
           Returns ObjectiveFrame, ExecutionRouteContract, decompositionSource,

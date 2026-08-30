@@ -1,6 +1,7 @@
 import "server-only";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
+import { storeConfig } from "../store-config";
 import { DiscoverySnapshotSchema } from "@/domain/intelligence";
 export const CacheEntrySchema = z
   .object({
@@ -58,31 +59,11 @@ class RedisSnapshotCache implements SnapshotCache {
 let cache: SnapshotCache | undefined;
 export function snapshotCache(): SnapshotCache {
   if (cache) return cache;
-  const mode = process.env.CACHE_MODE ?? "auto";
-  if (!["auto", "memory", "redis"].includes(mode))
-    throw new Error("cache_unavailable");
-  const configured = Boolean(
-    process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_TOKEN,
-  );
-  if (configured || mode === "redis") {
-    if (
-      !process.env.UPSTASH_REDIS_REST_URL ||
-      !process.env.UPSTASH_REDIS_REST_TOKEN
-    )
-      throw new Error("cache_unavailable");
-    const u = new URL(process.env.UPSTASH_REDIS_REST_URL);
-    if (
-      u.protocol !== "https:" ||
-      !u.hostname.endsWith(".upstash.io") ||
-      u.username ||
-      u.password ||
-      u.pathname !== "/"
-    )
-      throw new Error("cache_unavailable");
+  const configured = storeConfig();
+  if (configured) {
     cache = new RedisSnapshotCache(
       new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        ...configured,
         retry: false,
         signal: () => AbortSignal.timeout(2500),
       }),

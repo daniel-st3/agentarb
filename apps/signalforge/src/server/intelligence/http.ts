@@ -4,6 +4,7 @@ import {
   CatalogQuerySchema,
   NetworkResponseSchema,
   ListingSchema,
+  NetworkStatusSchema,
 } from "@/domain/intelligence";
 import {
   searchCatalog,
@@ -58,9 +59,25 @@ export async function catalogOperation(
     }).parse(result);
   }
   if (kind === "status") {
-    const { records: _, ...status } = await networkSnapshot();
-    void _;
-    return status;
+    const { records, ...status } = await networkSnapshot();
+    const observed = records.filter((r) =>
+      ["live", "cached_live"].includes(r.freshness),
+    );
+    return NetworkStatusSchema.parse({
+      ...status,
+      observedCount: observed.length,
+      observedCapabilities: [
+        ...new Set(
+          observed.flatMap((r) =>
+            r.listingType === "service_offer"
+              ? r.capabilities
+              : r.requiredCapabilities,
+          ),
+        ),
+      ],
+      rateLimitMode:
+        status.cacheMode === "shared" ? "distributed" : "best_effort",
+    });
   }
   const id =
     kind === "evaluate"

@@ -3,6 +3,7 @@ import { createHmac, randomBytes } from "node:crypto";
 import { isIP } from "node:net";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
+import { storeConfig } from "./store-config";
 
 /** Best-effort per-instance protection, NOT a distributed production quota. */
 export function createPlanningLimiter(now = () => Date.now(), maximum = 10) {
@@ -69,28 +70,11 @@ export async function checkPlanningLimit(
       `${new URL(request.url).protocol}//${request.headers.get("host") ?? new URL(request.url).host}`
   )
     return Response.json({ error: "Origin not allowed." }, { status: 403 });
-  if (
-    !process.env.UPSTASH_REDIS_REST_URL &&
-    !process.env.UPSTASH_REDIS_REST_TOKEN &&
-    process.env.CACHE_MODE !== "redis"
-  )
-    return (category === "planning" ? localPlanning : localCatalog)(request);
   try {
-    if (
-      !process.env.UPSTASH_REDIS_REST_URL ||
-      !process.env.UPSTASH_REDIS_REST_TOKEN ||
-      !process.env.RATE_LIMIT_SALT ||
-      process.env.RATE_LIMIT_SALT.length < 32
-    )
-      throw new Error("configuration");
-    const u = new URL(process.env.UPSTASH_REDIS_REST_URL);
-    if (
-      u.protocol !== "https:" ||
-      !u.hostname.endsWith(".upstash.io") ||
-      u.username ||
-      u.password ||
-      u.pathname !== "/"
-    )
+    const configured = storeConfig();
+    if (!configured)
+      return (category === "planning" ? localPlanning : localCatalog)(request);
+    if (!process.env.RATE_LIMIT_SALT || process.env.RATE_LIMIT_SALT.length < 32)
       throw new Error("configuration");
     const header =
         request.headers.get("x-vercel-forwarded-for") ??
@@ -107,8 +91,7 @@ export async function checkPlanningLimit(
       .digest("hex");
     const limiter = new Ratelimit({
       redis: new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        ...configured,
         retry: false,
         signal: () => AbortSignal.timeout(2500),
       }),

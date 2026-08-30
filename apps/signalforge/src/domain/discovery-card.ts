@@ -24,6 +24,7 @@ export const agentCardSchema = z.object({
     ),
     executionBoundary: z.string(),
     api: z.record(z.string(), z.string()),
+    supportedSchemas: z.array(z.string()),
     mcp: z.object({
       endpoint: z.string(),
       transport: z.literal("streamable-http"),
@@ -65,7 +66,15 @@ export const agentCard = agentCardSchema.parse({
       routePlanning: "/api/v1/routes/plan",
       catalog: "/api/v1/catalog",
       networkStatus: "/api/v1/network/status",
+      opportunityEvaluation: "/api/v1/opportunities/evaluate",
+      openapi: "/api/v1/openapi",
     },
+    supportedSchemas: [
+      "ObjectiveFrame/1.0",
+      "ExecutionRouteContract/1.0",
+      "CatalogService/1.0",
+      "TaskOpportunity/1.0",
+    ],
     mcp: {
       endpoint: "/api/mcp",
       transport: "streamable-http",

@@ -2,6 +2,9 @@ import "server-only";
 export const discoveryEndpoints = {
   mcp: "https://registry.modelcontextprotocol.io/v0.1/servers?limit=30&version=latest&search=search",
   apisguru: "https://api.apis.guru/v2/nytimes.com.json",
+  modelsdev: "https://models.dev/api.json",
+  litellm:
+    "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json",
 } as const;
 /** No URL input, headers, body, redirects, payment or credential surface. */
 export async function publicDiscoveryGet(
@@ -10,6 +13,12 @@ export async function publicDiscoveryGet(
 ): Promise<unknown> {
   if (!Object.hasOwn(discoveryEndpoints, source))
     throw new Error("unsupported_source");
+  const byteLimit =
+    source === "modelsdev"
+      ? 6_000_000
+      : source === "litellm"
+        ? 4_000_000
+        : 1_000_000;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const response = await fetcher(discoveryEndpoints[source], {
@@ -29,8 +38,12 @@ export async function publicDiscoveryGet(
         throw new Error("upstream_unavailable");
       }
       if (
-        !response.headers.get("content-type")?.includes("json") ||
-        Number(response.headers.get("content-length") ?? 0) > 1_000_000
+        !(
+          response.headers.get("content-type")?.includes("json") ||
+          (source === "litellm" &&
+            response.headers.get("content-type")?.startsWith("text/plain"))
+        ) ||
+        Number(response.headers.get("content-length") ?? 0) > byteLimit
       ) {
         await response.body?.cancel();
         throw new Error("invalid_payload");
@@ -45,7 +58,7 @@ export async function publicDiscoveryGet(
           const { done, value } = await reader.read();
           if (done) break;
           size += value.length;
-          if (size > 1_000_000) throw new Error("invalid_payload");
+          if (size > byteLimit) throw new Error("invalid_payload");
           text += decoder.decode(value, { stream: true });
         }
         text += decoder.decode();

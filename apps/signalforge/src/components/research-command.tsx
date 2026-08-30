@@ -16,7 +16,8 @@ import { policies } from "@/domain/schema";
 import { policyLabels } from "@/domain/engine";
 
 import { useResearchSession } from "./session";
-import { SignalField, PrecisionSelector } from "./editorial/atmosphere";
+import { SignalField } from "./editorial/atmosphere";
+import { CommandPreview, ObservedSupply } from "./command-preview";
 import { money } from "./ui";
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -27,6 +28,12 @@ const objectiveExamples = [
   "Create a due-diligence route that requires independent verification for high-impact claims.",
   "Choose the best service sequence for extracting, validating, and summarizing a long public document.",
 ].map((question, i) => ({ name: String(i), question }));
+const placeholders = [
+  "Build a verified due-diligence route for a startup under $0.25.",
+  "Find the lowest-cost reliable route to extract pricing from 100 websites.",
+  "Design a daily monitoring route for competitor pricing changes below $3/month.",
+  "Choose the best agent-service chain to parse, validate, and summarize a public document.",
+];
 
 export function ResearchCommand({
   landing = false,
@@ -45,6 +52,8 @@ export function ResearchCommand({
     [budget, setBudget] = useState("0.25"),
     [custom, setCustom] = useState(false);
   const [policy, setPolicy] = useState<(typeof policies)[number]>("best_value");
+  const [focused, setFocused] = useState(false),
+    [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [phase, setPhase] = useState<
     "input" | "framing" | "ready" | "planning"
   >("input");
@@ -52,6 +61,19 @@ export function ResearchCommand({
     [progress, setProgress] = useState("Parsing objective…"),
     [error, setError] = useState("");
   useEffect(() => () => abort.current?.abort(), []);
+  useEffect(() => {
+    if (
+      question ||
+      focused ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    const timer = setInterval(
+      () => setPlaceholderIndex((i) => (i + 1) % placeholders.length),
+      7000,
+    );
+    return () => clearInterval(timer);
+  }, [question, focused]);
   useEffect(() => {
     if (phase === "framing")
       root.current?.scrollIntoView({ block: "start", behavior: "instant" });
@@ -62,6 +84,24 @@ export function ResearchCommand({
     () => {
       const media = gsap.matchMedia();
       media.add("(prefers-reduced-motion: no-preference)", () => {
+        if (phase === "input") {
+          gsap.from(".command-heading", {
+            y: 8,
+            opacity: 0.35,
+            duration: 0.45,
+          });
+          gsap.from(".canvas-rule", {
+            scaleX: 0,
+            transformOrigin: "left",
+            duration: 0.6,
+          });
+          gsap.from(".command-marker", { x: -6, opacity: 0, duration: 0.35 });
+          gsap.from(".canvas-bridge path", {
+            strokeDashoffset: 1,
+            duration: 0.7,
+            delay: 0.1,
+          });
+        }
         if (phase === "framing")
           gsap.from(".question-anchor", {
             y: 14,
@@ -206,114 +246,188 @@ export function ResearchCommand({
       {phase === "input" ? (
         <>
           <header className="command-heading">
-            <p className="eyebrow">AGENT ROUTING / DEMO CONTROL PLANE</p>
+            <p className="eyebrow">AGENT ROUTING LAYER / DEMO CONTROL PLANE</p>
             <h1>What should your agent accomplish?</h1>
             <p>
-              Describe an objective. Set constraints. SignalForge selects the
-              best route across specialized services.
+              Describe an objective. Set the constraints. Compile the route.
             </p>
           </header>
-          <form onSubmit={submit} className="command-form">
-            <label className="sr-only" htmlFor="research-question">
-              Agent objective
-            </label>
-            <textarea
-              id="research-question"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              required
-              minLength={12}
-              maxLength={2000}
-              placeholder="Describe a goal, the required output, and what your agent must not do."
-              aria-describedby="command-privacy"
-            />
-            <div className="command-controls">
-              <fieldset>
-                <legend>
-                  Hard route budget <span>modeled USD</span>
-                </legend>
-                <PrecisionSelector
-                  className="budget-options"
-                  value={custom ? "custom" : budget}
-                >
-                  {[0, 0.1, 0.25, 1].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      aria-pressed={!custom && Number(budget) === n}
-                      onClick={() => {
-                        setBudget(String(n));
-                        setCustom(false);
+          <div className="command-canvas">
+            <svg
+              className="canvas-bridge"
+              viewBox="0 0 100 100"
+              aria-hidden="true"
+            >
+              <path d="M0 15 H25 C60 15 40 85 75 85 H100" pathLength="1" />
+              <circle cx="98" cy="85" r="2" />
+            </svg>
+            <div className="command-desk">
+              <form
+                onSubmit={submit}
+                className="command-form"
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" &&
+                    (e.metaKey || e.ctrlKey) &&
+                    !e.nativeEvent.isComposing
+                  ) {
+                    e.preventDefault();
+                    e.currentTarget.requestSubmit();
+                  }
+                }}
+              >
+                <div className="canvas-rule" />
+                <span className="canvas-rail">01 / OBJECTIVE</span>
+                <div className="command-writing">
+                  <span className="command-marker" aria-hidden="true">
+                    ›
+                  </span>
+                  <label className="sr-only" htmlFor="research-question">
+                    Agent objective
+                  </label>
+                  <textarea
+                    id="research-question"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    required
+                    minLength={12}
+                    maxLength={2000}
+                    placeholder={placeholders[placeholderIndex]}
+                    data-placeholder-overlay={!question && !focused}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    aria-describedby="command-privacy"
+                  />
+                  {!question && !focused && (
+                    <span
+                      key={placeholderIndex}
+                      className="placeholder-echo"
+                      aria-hidden="true"
+                    >
+                      {placeholders[placeholderIndex]}
+                    </span>
+                  )}
+                </div>
+                <span className="canvas-rail">02 / CONSTRAINTS</span>
+                <div className="command-controls">
+                  <label>
+                    BUDGET
+                    <select
+                      aria-label="Hard route budget"
+                      value={custom ? "custom" : budget}
+                      onChange={(e) => {
+                        setCustom(e.target.value === "custom");
+                        if (e.target.value !== "custom")
+                          setBudget(e.target.value);
                       }}
                     >
-                      {money(n)}
-                    </button>
-                  ))}
-                </PrecisionSelector>
-              </fieldset>
-              <fieldset>
-                <legend>Routing policy</legend>
-                <PrecisionSelector className="policy-options" value={policy}>
-                  {policies.map((p) => (
-                    <button
-                      type="button"
-                      key={p}
-                      aria-pressed={p === policy}
-                      onClick={() => setPolicy(p)}
+                      {[0, 0.1, 0.25, 1].map((n) => (
+                        <option value={String(n)} key={n}>
+                          {money(n)}
+                        </option>
+                      ))}
+                      <option value="custom">Custom</option>
+                    </select>
+                  </label>
+                  <label>
+                    POLICY
+                    <select
+                      aria-label="Routing policy"
+                      value={policy}
+                      onChange={(e) =>
+                        setPolicy(e.target.value as typeof policy)
+                      }
                     >
-                      {policyLabels[p]}
-                    </button>
-                  ))}
-                </PrecisionSelector>
-              </fieldset>
-              <button type="submit" className="button command-submit">
-                Forge route <ArrowRight size={19} />
-              </button>
-            </div>
-            <details className="command-options">
-              <summary>Optional context & custom budget</summary>
-              <div>
-                <label htmlFor="command-url">
-                  Target URL · context only, not fetched
-                </label>
-                <input
-                  id="command-url"
-                  type="url"
-                  value={targetUrl}
-                  onChange={(e) => setTargetUrl(e.target.value)}
-                  maxLength={500}
-                  placeholder="https://…"
-                />
-                <label htmlFor="command-budget">Custom budget ($0–$10)</label>
-                <input
-                  id="command-budget"
-                  type="number"
-                  min="0"
-                  max="10"
-                  step=".01"
-                  value={budget}
-                  onChange={(e) => {
-                    setCustom(true);
-                    setBudget(e.target.value);
-                  }}
-                />
+                      {policies.map((p) => (
+                        <option value={p} key={p}>
+                          {policyLabels[p]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <span className="command-mode">
+                    MODE<strong>DEMO</strong>
+                  </span>
+                  <button type="submit" className="button command-submit">
+                    Compile route <ArrowUpRight size={19} />
+                  </button>
+                </div>
+                {custom && (
+                  <label className="custom-budget">
+                    Custom budget ($0–$10)
+                    <input
+                      aria-label="Custom route budget"
+                      type="number"
+                      min="0"
+                      max="10"
+                      step=".01"
+                      required
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                    />
+                  </label>
+                )}
+                <p className="command-shortcut">
+                  ⌘ / CTRL + ENTER TO COMPILE · MODELED USD
+                </p>
+                <details className="command-options">
+                  <summary>Optional context & custom budget</summary>
+                  <div>
+                    <label htmlFor="command-url">
+                      Target URL · context only, not fetched
+                    </label>
+                    <input
+                      id="command-url"
+                      type="url"
+                      value={targetUrl}
+                      onChange={(e) => setTargetUrl(e.target.value)}
+                      maxLength={500}
+                      placeholder="https://…"
+                    />
+                    <label htmlFor="command-budget">
+                      Custom budget ($0–$10)
+                    </label>
+                    <input
+                      id="command-budget"
+                      type="number"
+                      min="0"
+                      max="10"
+                      step=".01"
+                      value={budget}
+                      onChange={(e) => {
+                        setCustom(true);
+                        setBudget(e.target.value);
+                      }}
+                    />
+                  </div>
+                </details>
+              </form>
+              <div className="command-examples">
+                <span className="eyebrow">START WITH AN OBJECTIVE</span>
+                {objectiveExamples.slice(0, 3).map((topic, i) => (
+                  <button
+                    key={topic.name}
+                    type="button"
+                    aria-label={topic.question}
+                    title={topic.question}
+                    onClick={() => setQuestion(topic.question)}
+                  >
+                    <span>0{i + 1}</span>
+                    {
+                      [
+                        "Competitive intelligence",
+                        "Structured extraction",
+                        "Pricing monitor",
+                      ][i]
+                    }
+                    <ArrowUpRight size={13} />
+                  </button>
+                ))}
               </div>
-            </details>
-          </form>
-          <div className="command-examples">
-            <span className="eyebrow">START WITH AN OBJECTIVE</span>
-            {objectiveExamples.map((topic, i) => (
-              <button
-                key={topic.name}
-                type="button"
-                onClick={() => setQuestion(topic.question)}
-              >
-                <span>0{i + 1}</span>
-                {topic.question}
-                <ArrowUpRight size={13} />
-              </button>
-            ))}
+            </div>
+            <CommandPreview objective={question} contextUrl={targetUrl} />
           </div>
+          <ObservedSupply />
           <p className="command-provenance" id="command-privacy">
             Demo mode · no task services are called · no payments are made.{" "}
             <span>

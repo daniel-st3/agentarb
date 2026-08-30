@@ -1,11 +1,12 @@
 import "server-only";
+import { after } from "next/server";
 import {
   ListingSchema,
   DiscoverySnapshotSchema,
   NetworkResponseSchema,
   CatalogQuerySchema,
   matchListing,
-  supplyFit,
+  compareListings,
   type ConnectorHealth,
   type DiscoverySnapshot,
   type Listing,
@@ -15,6 +16,8 @@ import { serviceOffers } from "@/domain/service-registry";
 import { publicDiscoveryGet } from "./transport";
 import { mcpDefinition, parseMcpRegistry } from "./connectors/mcp-registry";
 import { apisGuruDefinition, parseApisGuru } from "./connectors/apis-guru";
+import { modelsDevDefinition, parseModelsDev } from "./connectors/models-dev";
+import { litellmDefinition, parseLiteLlm } from "./connectors/litellm";
 import { snapshotCache, type SnapshotCache } from "./cache";
 export interface MarketplaceIntelligenceConnector {
   id: string;
@@ -28,12 +31,24 @@ export interface MarketplaceIntelligenceConnector {
   health(): Promise<ConnectorHealth>;
   discover(input: { limit: number }): Promise<DiscoverySnapshot>;
 }
-export const definitions = [mcpDefinition, apisGuruDefinition];
+export const definitions = [
+  mcpDefinition,
+  apisGuruDefinition,
+  modelsDevDefinition,
+  litellmDefinition,
+];
+const parsers = {
+  mcp: parseMcpRegistry,
+  apisguru: parseApisGuru,
+  modelsdev: parseModelsDev,
+  litellm: parseLiteLlm,
+};
 export function createConnector(
   def: (typeof definitions)[number],
   cache: SnapshotCache,
   fetcher: typeof fetch = fetch,
   now = () => Date.now(),
+  defer?: (job: () => Promise<void>) => void,
 ): MarketplaceIntelligenceConnector {
   const initial = (): ConnectorHealth => ({
     connectorId: def.id,
@@ -132,56 +147,68 @@ export function createConnector(
       // A shared lease prevents a thundering herd. No public force-refresh path.
       if (!(await cache.lease(def.id, def.refreshTtlSeconds))) return view();
       const attempt = new Date(time).toISOString();
-      try {
-        const raw = await publicDiscoveryGet(
-          def.id as "mcp" | "apisguru",
-          fetcher,
-        );
-        const records = (def.id === "mcp" ? parseMcpRegistry : parseApisGuru)(
-          raw,
-          attempt,
-        );
-        const snapshot = DiscoverySnapshotSchema.parse({
-          connectorId: def.id,
-          observedAt: attempt,
-          records,
-          health: {
-            ...initial(),
-            status: "healthy",
-            freshness: "live",
-            lastAttemptAt: attempt,
-            lastSuccessAt: attempt,
-            cachedRecordCount: records.length,
-            nextRefreshAfter: new Date(
-              time + def.refreshTtlSeconds * 1000,
-            ).toISOString(),
-          },
-        });
-        await cache.set(def.id, {
-          snapshot,
-          failures: 0,
-          nextAttempt: time + def.refreshTtlSeconds * 1000,
-          lastAttempt: attempt,
-          error: false,
-        });
-        return { ...snapshot, records: records.slice(0, input.limit) };
-      } catch {
-        const failures = (entry?.failures ?? 0) + 1;
-        entry = {
-          ...entry,
-          failures,
-          nextAttempt:
-            time + (failures >= 3 ? 6 * 3600000 : def.refreshTtlSeconds * 1000),
-          lastAttempt: attempt,
-          error: true,
-        };
-        await cache.set(def.id, entry);
-        console.warn("connector_discovery", {
-          connectorId: def.id,
-          errorCategory: "upstream_unavailable",
+      const refresh = async (): Promise<DiscoverySnapshot> => {
+        try {
+          const raw = await publicDiscoveryGet(
+            def.id as keyof typeof parsers,
+            fetcher,
+          );
+          const records = parsers[def.id as keyof typeof parsers](raw, attempt);
+          const snapshot = DiscoverySnapshotSchema.parse({
+            connectorId: def.id,
+            observedAt: attempt,
+            records,
+            health: {
+              ...initial(),
+              status: "healthy",
+              freshness: "live",
+              lastAttemptAt: attempt,
+              lastSuccessAt: attempt,
+              cachedRecordCount: records.length,
+              nextRefreshAfter: new Date(
+                time + def.refreshTtlSeconds * 1000,
+              ).toISOString(),
+            },
+          });
+          await cache.set(def.id, {
+            snapshot,
+            failures: 0,
+            nextAttempt: time + def.refreshTtlSeconds * 1000,
+            lastAttempt: attempt,
+            error: false,
+          });
+          return { ...snapshot, records: records.slice(0, input.limit) };
+        } catch {
+          const failures = (entry?.failures ?? 0) + 1;
+          entry = {
+            ...entry,
+            failures,
+            nextAttempt:
+              time +
+              (failures >= 3 ? 6 * 3600000 : def.refreshTtlSeconds * 1000),
+            lastAttempt: attempt,
+            error: true,
+          };
+          await cache.set(def.id, entry);
+          console.warn("connector_discovery", {
+            connectorId: def.id,
+            errorCategory: "upstream_unavailable",
+          });
+          return view();
+        }
+      };
+      // Last-good data retains its observation time; refresh survives a serverless response.
+      if (
+        defer &&
+        entry?.snapshot &&
+        time - Date.parse(entry.snapshot.observedAt) <= 86400000
+      ) {
+        defer(async () => {
+          await refresh();
         });
         return view();
       }
+      return refresh();
     },
   };
 }
@@ -265,7 +292,15 @@ export function demoListings(): Listing[] {
 export async function networkSnapshot() {
   const cache = snapshotCache();
   const snapshots = await Promise.all(
-    definitions.map((d) => createConnector(d, cache).discover({ limit: 50 })),
+    definitions.map((d) =>
+      createConnector(
+        d,
+        cache,
+        fetch,
+        () => Date.now(),
+        (job) => after(job),
+      ).discover({ limit: 50 }),
+    ),
   );
   return NetworkResponseSchema.parse({
     version: "1.0",
@@ -289,12 +324,7 @@ export async function searchCatalog(raw: CatalogQuery) {
     network = await networkSnapshot();
   const matches = network.records
     .filter((l) => matchListing(l, q))
-    .sort(
-      (a, b) =>
-        supplyFit(b, q.capability ? [q.capability] : []) -
-          supplyFit(a, q.capability ? [q.capability] : []) ||
-        a.id.localeCompare(b.id),
-    );
+    .sort((a, b) => compareListings(a, b, q));
   return {
     ...network,
     records: matches.slice(0, q.limit),

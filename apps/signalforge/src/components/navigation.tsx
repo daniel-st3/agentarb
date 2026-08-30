@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Brand } from "./ui";
+import { NetworkIndicator } from "./network-state";
 export function Navigation() {
   const path = usePathname();
   return (
@@ -11,9 +12,10 @@ export function Navigation() {
         <nav aria-label="Main navigation">
           {path === "/" ? (
             <>
-              <span className="nav-mode">AGENT ROUTING / DEMO MODE</span>
               <Link href="/network">Network</Link>
+              <Link href="/developers/try">Developers</Link>
               <Link href="/history">Archive</Link>
+              <NetworkIndicator />
             </>
           ) : (
             <>

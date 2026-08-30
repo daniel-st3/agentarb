@@ -1,10 +1,25 @@
 import Link from "next/link";
-import { ArrowUpRight, ArrowRight, AudioLines } from "lucide-react";
+import { ArrowUpRight, ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 export function Brand() {
   return (
     <Link href="/" className="brand" aria-label="SignalForge home">
-      <AudioLines size={25} strokeWidth={1.8} />
+      <svg
+        width="25"
+        height="25"
+        viewBox="0 0 32 32"
+        fill="none"
+        aria-hidden="true"
+        className="brand-signal"
+      >
+        <path
+          d="M25 5H13a7 7 0 0 0 0 14h7a4 4 0 0 1 0 8H7M7 27V5"
+          stroke="currentColor"
+          strokeWidth="1.4"
+        />
+        <circle cx="25" cy="5" r="2" fill="#b7b5e9" />
+        <circle cx="7" cy="27" r="2" fill="currentColor" />
+      </svg>
       <span>
         SignalForge<span className="brand-dot">.</span>
       </span>

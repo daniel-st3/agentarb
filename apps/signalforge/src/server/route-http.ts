@@ -11,6 +11,7 @@ import { supplyFit } from "@/domain/intelligence";
 import { frameWithProvider } from "./framing-provider";
 import { readBounded } from "./http";
 import { checkPlanningLimit } from "./planning-limit";
+import { PlanningResponseSchema } from "@/domain/planning-response";
 const headers = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
@@ -51,14 +52,14 @@ export async function planRouteService(
       reason:
         "Observed catalog metadata only. No executable adapter, measured quality, or defensible price is available. Excluded from executable steps; ranked for discovery fit only.",
     }));
-  return {
+  return PlanningResponseSchema.parse({
     objectiveFrame: route.objectiveFrame,
     route: ExecutionRouteContractSchema.parse(route),
     ...(result ? { decompositionSource: result.source } : {}),
     freshnessSummary: network.sources,
     warnings: [warnings[0], ...network.warnings],
     executionStatus: "execution_not_enabled" as const,
-  };
+  });
 }
 export async function handleRoutePlan(request: Request, compileOnly = false) {
   const limited = await checkPlanningLimit(request);

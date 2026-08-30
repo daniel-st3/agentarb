@@ -25,7 +25,34 @@ Tools:
 
 All tool inputs are strict Zod schemas. Descriptions are untrusted plain text. No arbitrary URL or credential field, payment tool or execution method is registered. MCP methods share the API service functions, quotas, cache, validation and safety boundaries.
 
-## A2A-style discovery document
+## Browser integration proof
+
+`/developers/try` is a small actual MCP client: it sends initialize, then a
+tools/call request over same-origin Streamable HTTP. It displays the returned JSON
+and validates the ExecutionRouteContract before adding it to tab-local state.
+There is no external agent invocation, service call or persisted visitor run.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "signalforge_plan_route",
+    "arguments": {
+      "objective": "Build a verified due-diligence route for a startup",
+      "budget_usd": 0.25,
+      "optimization_policy": "most_verified"
+    }
+  }
+}
+```
+
+The same remote endpoint can be inspected using an MCP Inspector with Streamable
+HTTP. Browser cross-origin calls are rejected by default; use the built-in
+same-origin workbench or a non-browser client. No secret or marketplace login is needed.
+
+## Agent Card
 
 `https://signalforge-rose-two.vercel.app/.well-known/agent-card.json`
 

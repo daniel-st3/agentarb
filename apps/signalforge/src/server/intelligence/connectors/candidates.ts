@@ -1,6 +1,13 @@
 /** No network methods: access/redistribution gate has not passed. */
 export const candidateSources = [
   {
+    id: "openrouter",
+    name: "OpenRouter models",
+    accessMode: "unsupported",
+    reason:
+      "Public model API documentation exists, but current service terms restrict copying and competing-service use. Redistribution permission not established; disabled.",
+  },
+  {
     id: "bazaar",
     name: "Coinbase Bazaar",
     accessMode: "unsupported",

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { ArrowRight, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useResearchSession } from "./session";
@@ -265,6 +266,49 @@ function downloadContract(route: ExecutionRouteContract) {
   a.click();
   URL.revokeObjectURL(url);
 }
+function IntegrationActions({ route }: { route: ExecutionRouteContract }) {
+  const [message, setMessage] = useState("");
+  const payload = {
+    objective: route.objective,
+    budgetUsd: route.budget.hardCapUsd,
+    optimizationPolicy: route.objectiveFrame.constraints.optimizationPolicy,
+    mode: "demo",
+  };
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      setMessage("API payload copied. Review the objective before sharing.");
+    } catch {
+      setMessage("Copy unavailable; select the payload below.");
+    }
+  }
+  return (
+    <section className="route-ledger">
+      <h2>Inspect with another agent</h2>
+      <div className="network-actions">
+        <button className="text-link" onClick={copy}>
+          Copy API payload
+        </button>
+        <Link href="/developers/try" className="text-link">
+          Try REST & MCP →
+        </Link>
+      </div>
+      <details>
+        <summary>Planning API payload / MCP connection</summary>
+        <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+          {JSON.stringify(payload, null, 2)}
+        </pre>
+        <p>Connect an MCP client or Inspector using Streamable HTTP:</p>
+        <code>https://signalforge-rose-two.vercel.app/api/mcp</code>
+        <p>
+          Tool: signalforge_plan_route. Inputs: objective, budget_usd,
+          optimization_policy. Planning only, not execution permission.
+        </p>
+      </details>
+      <p role="status">{message}</p>
+    </section>
+  );
+}
 export function ExecutionRouteView({ id }: { id: string }) {
   const { routes } = useResearchSession(),
     route = routes.find((r) => r.routeId === id);
@@ -319,6 +363,7 @@ export function ExecutionRouteView({ id }: { id: string }) {
           </section>
           <Rejections route={route} />
           <Supply route={route} />
+          <IntegrationActions route={route} />
           <section className="route-ledger">
             <h2>Example output: research brief</h2>
             <p>

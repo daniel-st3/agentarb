@@ -9,6 +9,8 @@ export default defineConfig({
       OPENROUTER_API_KEY: "",
       UPSTASH_REDIS_REST_URL: "",
       UPSTASH_REDIS_REST_TOKEN: "",
+      KV_REST_API_URL: "",
+      KV_REST_API_TOKEN: "",
       CACHE_MODE: "memory",
       DISCOVERY_MODE: "offline",
     },
