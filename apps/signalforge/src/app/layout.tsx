@@ -5,6 +5,8 @@ import { Navigation } from "@/components/navigation";
 import { ResearchSession } from "@/components/session";
 import { seedRuns } from "@/domain/engine";
 import "./globals.css";
+import "./polish.css";
+import { PageChoreography } from "@/components/editorial/atmosphere";
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
@@ -46,7 +48,9 @@ export default async function RootLayout({
         </a>
         <ResearchSession seeds={seeds}>
           <Navigation />
-          <main id="main">{children}</main>
+          <main id="main">
+            <PageChoreography>{children}</PageChoreography>
+          </main>
         </ResearchSession>
         <footer className="site-footer container">
           <span>
@@ -60,6 +64,12 @@ export default async function RootLayout({
           >
             Source on GitHub ↗
           </Link>
+          <p className="maker-credit">
+            <Link href="https://github.com/daniel-st3/agentarb">
+              Designed and built by Daniel Rodríguez · AI systems, data, and
+              product
+            </Link>
+          </p>
         </footer>
       </body>
     </html>

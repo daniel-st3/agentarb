@@ -6,6 +6,7 @@ import {
   ReportPreview,
 } from "@/components/editorial/narrative";
 import { seedRuns } from "@/domain/engine";
+import { SignalField, MagneticLink } from "@/components/editorial/atmosphere";
 export default async function Home() {
   const [example] = await seedRuns();
   return (
@@ -56,15 +57,16 @@ export default async function Home() {
         </p>
       </section>
       <section className="closing container">
+        <SignalField variant="closing" />
         <p className="eyebrow">LESS UNCERTAINTY. MORE CONTEXT.</p>
         <h2>
           Make the route
           <br />
           <em>visible.</em>
         </h2>
-        <Link className="editorial-action" href="/forge">
+        <MagneticLink href="/forge">
           Forge your first brief <ArrowRight size={22} />
-        </Link>
+        </MagneticLink>
       </section>
     </>
   );

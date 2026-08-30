@@ -79,7 +79,10 @@ test("question → plan → run → evidence → receipt, exports and session re
   });
   await page
     .locator(".paper-report")
-    .screenshot({ path: `${shots}/${info.project.name}-paper-report.png` });
+    .screenshot({
+      path: `${shots}/${info.project.name}-paper-report.png`,
+      style: ".site-nav, .skip-link { visibility: hidden !important; }",
+    });
   await page
     .getByRole("navigation")
     .getByRole("link", { name: "Forge a brief" })

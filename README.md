@@ -171,7 +171,7 @@ Playwright starts a production server on port 3002; build first. Tests cover
 API flow, downloads, session isolation, reduced motion, and 390/768/1024/1440px
 geometry. Screenshots: apps/signalforge/test-results/screenshots/.
 
-## Visual system — SignalForge V2
+## Visual system — SignalForge V3
 
 An editorial interface: Newsreader display/report typography, Geist UI, Geist Mono
 metadata, near-black fields and an ivory research memo. Hairline rows replace
@@ -185,8 +185,16 @@ two simulated corroborations. No new evidence or provider capability is implied.
 
 Below 900px width or 850px height, and for reduced motion, the route becomes a
 static staged story without pinning. The landing remains readable without
-JavaScript. See [V2 design contract](apps/signalforge/DESIGN.md) and
-[verification report](apps/signalforge/VERIFICATION-V2.md).
+JavaScript. V3 adds a procedural contour field with finite, off-screen-paused
+motion; a selected-route trail and collapsing rejected branch; a one-time
+two-source evidence connection; magnetic primary links; keyboard-safe precision
+selectors; and lightweight page entrances. Completed briefs use an ivory/ink
+report surface and archival metadata. Reduced motion retains the final composed
+state, without pinning, drift, or animated controls. No stock imagery, video,
+new animation dependency, or provider behavior was introduced.
+
+See the [V3 design brief](apps/signalforge/DESIGN-V3.md) and
+[verification report](apps/signalforge/VERIFICATION-V3.md).
 
 ## Vercel deployment — manual, not performed
 

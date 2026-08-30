@@ -7,6 +7,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import type { Run } from "@/domain/schema";
 import { money } from "../ui";
+import { SignalField, MagneticLink } from "./atmosphere";
+import { LivingEvidence } from "./living-evidence";
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function SignalLine() {
@@ -15,7 +17,18 @@ export function SignalLine() {
       className="signal-line"
       aria-label="Illustrative route: web, news, profile, verification, brief ready"
     >
-      <div className="signal-rule" />
+      <svg
+        className="signal-trace"
+        viewBox="0 0 1000 60"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          className="signal-rule"
+          pathLength="1"
+          d="M0 30 H190 Q210 30 220 20 L230 10 H430 Q450 10 460 20 L470 30 H690 Q710 30 720 40 L730 50 H820 Q840 50 850 40 L860 30 H1000"
+        />
+      </svg>
       {["WEB", "NEWS", "PROFILE", "VERIFY"].map((name, i) => (
         <span className={"signal-marker marker-" + i} key={name}>
           <i />
@@ -51,7 +64,7 @@ export function OpeningScene() {
           .from(".sample-question", { opacity: 0, y: 6, duration: 0.5 }, 0.8)
           .from(
             ".signal-rule",
-            { scaleX: 0, transformOrigin: "left", duration: 0.7 },
+            { strokeDasharray: 1, strokeDashoffset: 1, duration: 0.7 },
             0.9,
           )
           .from(
@@ -68,6 +81,15 @@ export function OpeningScene() {
   );
   return (
     <section className="opening container" ref={ref}>
+      <SignalField />
+      <aside
+        className="research-rail"
+        aria-label="Illustrative demo coordinates"
+      >
+        <span>DEMO / INTERFACE SIGNALS</span>
+        <span>BUDGET LOCK / $0.25</span>
+        <span>ACTUAL SPEND / $0.00</span>
+      </aside>
       <p className="eyebrow opening-label">INTELLIGENCE ROUTING / 01</p>
       <h1>
         <span className="headline-mask">
@@ -89,9 +111,9 @@ export function OpeningScene() {
           conclusion.
         </p>
         <div className="hero-actions">
-          <Link className="editorial-action" href="/forge">
+          <MagneticLink href="/forge">
             Forge a brief <ArrowRight size={21} />
-          </Link>
+          </MagneticLink>
           <a className="text-link" href="#how-it-works">
             Watch the route <ArrowDown size={15} />
           </a>
@@ -138,6 +160,11 @@ export function ProviderRouteMap() {
     >
       <svg viewBox="0 0 460 380" fill="none" aria-hidden="true">
         <path
+          className="confidence-trail"
+          d="M24 48 H128 V128 H292 V210 H426 M128 128 V300 H292 V210"
+        />
+        <path className="rejected-path" pathLength="1" d="M128 128 V58 H360" />
+        <path
           className="route-guide"
           d="M24 48 H128 V128 H292 V210 H426 M128 128 V300 H292 V210"
         />
@@ -154,6 +181,11 @@ export function ProviderRouteMap() {
         <circle cx="128" cy="128" r="5" />
         <circle className="green-node" cx="128" cy="300" r="5" />
         <circle cx="292" cy="210" r="5" />
+        <circle className="convergence-ring" cx="292" cy="210" r="13" />
+        <path
+          className="route-direction"
+          d="m416 204 10 6-10 6 M286 199 l6 11 6-11"
+        />
       </svg>
       <span className="map-origin">QUESTION</span>
       <div className="map-node research-node">
@@ -179,6 +211,7 @@ export function ProviderRouteMap() {
           <s>Premium catalog</s> · metadata only
         </span>
       </div>
+      <span className="route-annotation">2 modeled source families →</span>
     </div>
   );
 }
@@ -204,6 +237,9 @@ export function RouteNarrative({ run }: { run: Run }) {
           gsap.set(panels.slice(1), { autoAlpha: 0, y: 12 });
           gsap.set(".route-path", { strokeDasharray: 1, strokeDashoffset: 1 });
           gsap.set(".verification-final", { autoAlpha: 0 });
+          gsap.set(".confidence-trail, .convergence-ring, .route-annotation", {
+            opacity: 0,
+          });
           gsap.set(
             ".verify-node, .synthesis-node, .evidence-field, .map-alternatives",
             { opacity: 0.12 },
@@ -242,6 +278,30 @@ export function RouteNarrative({ run }: { run: Run }) {
           });
           timeline
             .to(".map-alternatives", { opacity: 0.65, duration: 0.6 }, 2)
+            .to(
+              ".rejected-path",
+              {
+                strokeDasharray: 1,
+                strokeDashoffset: 1,
+                opacity: 0.2,
+                duration: 1,
+              },
+              3,
+            )
+            .to(".map-alternatives", { opacity: 0.35, y: -3, duration: 0.7 }, 4)
+            .to(".confidence-trail", { opacity: 0.12, duration: 1 }, 4)
+            .to(".route-annotation", { opacity: 1, duration: 0.5 }, 5.8)
+            .to(".convergence-ring", { opacity: 0.5, duration: 0.25 }, 6)
+            .to(
+              ".convergence-ring",
+              {
+                scale: 1.8,
+                transformOrigin: "center",
+                opacity: 0,
+                duration: 0.8,
+              },
+              6.3,
+            )
             .to(
               ".verify-node, .synthesis-node",
               { opacity: 1, duration: 0.6 },
@@ -473,6 +533,7 @@ export function ReportPreview({ run }: { run: Run }) {
           </article>
           <EvidenceMargin run={run} />
         </div>
+        <LivingEvidence run={run} />
         <div className="paper-bottom">
           <span>
             {run.receipt!.sourceCount} FICTIONAL DOCUMENTS /{" "}

@@ -17,6 +17,7 @@ import {
 import { policyLabels } from "@/domain/engine";
 import { useResearchSession } from "./session";
 import { DemoNotice, Eyebrow, StepHeader, money } from "./ui";
+import { PrecisionSelector } from "./editorial/atmosphere";
 const descriptions = {
   best_value: "Balance evidence, cost, reliability, and speed.",
   cheapest: "Lowest cost above the minimum quality threshold.",
@@ -116,7 +117,10 @@ export function Composer() {
             <legend>
               Maximum research budget <span>modeled USD</span>
             </legend>
-            <div className="budget-options">
+            <PrecisionSelector
+              className="budget-options"
+              value={custom ? "custom" : budget}
+            >
               {[0, 0.1, 0.25, 1].map((n) => (
                 <button
                   key={n}
@@ -137,7 +141,7 @@ export function Composer() {
               >
                 Custom
               </button>
-            </div>
+            </PrecisionSelector>
             {custom && (
               <label className="custom-budget">
                 Custom budget ($0–$10)
@@ -158,7 +162,7 @@ export function Composer() {
               <SlidersHorizontal size={15} />
               Routing policy
             </legend>
-            <div className="policy-options">
+            <PrecisionSelector className="policy-options" value={policy}>
               {policies.map((p) => (
                 <button
                   type="button"
@@ -169,7 +173,7 @@ export function Composer() {
                   {policyLabels[p]}
                 </button>
               ))}
-            </div>
+            </PrecisionSelector>
             <p className="field-help">{descriptions[policy]}</p>
           </fieldset>
         </div>

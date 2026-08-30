@@ -269,186 +269,207 @@ export function BriefView({ id }: { id: string }) {
     );
   const { brief, receipt } = run;
   return (
-    <Reveal className="brief-page container">
-      <StepHeader step="Brief" />
-      <div className="brief-title" data-reveal>
-        <Eyebrow>
-          SIGNALFORGE / {run.example ? "EXAMPLE BRIEF" : "SESSION BRIEF"} /{" "}
-          {policyLabels[run.request.optimizationPolicy]} / DEMO MODE
-        </Eyebrow>
-        <h1>{brief.title}</h1>
-        <p className="brief-question">{run.request.question}</p>
-        <div className="brief-meta">
-          <span>
-            <Clock size={14} />
-            {run.example
-              ? "Seeded example"
-              : `${receipt.elapsedSeconds < 0.01 ? "<0.01" : receipt.elapsedSeconds.toFixed(2)}s local processing`}
-          </span>
-          <span>
-            {receipt.sourceCount} fixture documents ·{" "}
-            {receipt.evidenceItemCount} excerpts
-          </span>
-          <span>
-            {receipt.verifiedClaimCount} claims corroborated in simulation
-          </span>
-          <span>$0.00 actual spend</span>
+    <div className="brief-paper">
+      <Reveal className="brief-page container">
+        <StepHeader step="Brief" />
+        <div className="brief-title" data-reveal>
+          <div className="report-masthead">
+            <span>
+              SIGNALFORGE / RESEARCH BRIEF /{" "}
+              {run.example
+                ? run.request.id.replace("example-", "00")
+                : "SESSION"}
+            </span>
+            <span className="report-stamp" aria-hidden="true">
+              SF / DEMO EDITION <i>＋</i>
+            </span>
+          </div>
+          <Eyebrow>
+            SIGNALFORGE / {run.example ? "EXAMPLE BRIEF" : "SESSION BRIEF"} /{" "}
+            {policyLabels[run.request.optimizationPolicy]} / DEMO MODE
+          </Eyebrow>
+          <h1>{brief.title}</h1>
+          <p className="brief-question">{run.request.question}</p>
+          <div className="brief-meta">
+            <span>
+              <Clock size={14} />
+              {run.example
+                ? "Seeded example"
+                : `${receipt.elapsedSeconds < 0.01 ? "<0.01" : receipt.elapsedSeconds.toFixed(2)}s local processing`}
+            </span>
+            <span>
+              {receipt.sourceCount} fixture documents ·{" "}
+              {receipt.evidenceItemCount} excerpts
+            </span>
+            <span>
+              {receipt.verifiedClaimCount} claims corroborated in simulation
+            </span>
+            <span>$0.00 actual spend</span>
+          </div>
+          <div className="provenance-banner">
+            <ShieldCheck size={18} />
+            <span>
+              <strong>Simulated demo evidence.</strong> Fictional companies and
+              authored documents. This is a predefined case brief, not bespoke
+              research. No live research was performed.
+            </span>
+          </div>
         </div>
-        <div className="provenance-banner">
-          <ShieldCheck size={18} />
-          <span>
-            <strong>Simulated demo evidence.</strong> Fictional companies and
-            authored documents. This is a predefined case brief, not bespoke
-            research. No live research was performed.
-          </span>
-        </div>
-      </div>
-      <div className="brief-layout">
-        <article className="report-body">
-          <section className="executive-answer" data-reveal>
-            <Eyebrow>THE ANSWER</Eyebrow>
-            <p>{brief.executiveSummary}</p>
-          </section>
-          <section className="findings" data-reveal>
-            <div className="section-topline">
-              <h2>Key findings</h2>
-              <span>Evidence-led, not certainty-led.</span>
-            </div>
-            {brief.claims.map((claim, i) => (
-              <div className="finding" key={claim.id}>
-                <span className="finding-number">0{i + 1}</span>
-                <div>
-                  <Status
-                    positive={
-                      claim.verificationStatus === "corroborated_in_simulation"
-                    }
-                  >
-                    {claim.verificationStatus === "corroborated_in_simulation"
-                      ? "Corroborated in simulation"
-                      : claim.verificationStatus === "single_source"
-                        ? "Single-source"
-                        : "Unverified"}
-                  </Status>
-                  <h3>{claim.text}</h3>
-                  <div className="citation-row">
-                    {claim.evidenceIds.map((eid, j) => (
-                      <a
-                        key={eid}
-                        href={`#${eid}`}
-                        onClick={() => {
-                          const ledger =
-                            document.getElementById("evidence-ledger");
-                          if (ledger instanceof HTMLDetailsElement)
-                            ledger.open = true;
-                        }}
-                      >
-                        <FileText size={12} />
-                        {brief.sources.find((s) => s.id === eid)?.providerId ===
-                        "demo-verification"
-                          ? "Independent review"
-                          : "Company fixture"}{" "}
-                        {j + 1}
-                      </a>
-                    ))}
+        <div className="brief-layout">
+          <article className="report-body">
+            <section className="executive-answer" id="answer" data-reveal>
+              <Eyebrow>THE ANSWER</Eyebrow>
+              <p>{brief.executiveSummary}</p>
+            </section>
+            <section className="findings" data-reveal>
+              <div className="section-topline">
+                <h2>Key findings</h2>
+                <span>Evidence-led, not certainty-led.</span>
+              </div>
+              {brief.claims.map((claim, i) => (
+                <div className="finding" key={claim.id}>
+                  <span className="finding-number">0{i + 1}</span>
+                  <div>
+                    <Status
+                      positive={
+                        claim.verificationStatus ===
+                        "corroborated_in_simulation"
+                      }
+                    >
+                      {claim.verificationStatus === "corroborated_in_simulation"
+                        ? "Corroborated in simulation"
+                        : claim.verificationStatus === "single_source"
+                          ? "Single-source"
+                          : "Unverified"}
+                    </Status>
+                    <h3>{claim.text}</h3>
+                    <div className="citation-row">
+                      {claim.evidenceIds.map((eid, j) => (
+                        <a
+                          key={eid}
+                          href={`#${eid}`}
+                          onClick={() => {
+                            const ledger =
+                              document.getElementById("evidence-ledger");
+                            if (ledger instanceof HTMLDetailsElement)
+                              ledger.open = true;
+                          }}
+                        >
+                          <FileText size={12} />
+                          {brief.sources.find((s) => s.id === eid)
+                            ?.providerId === "demo-verification"
+                            ? "Independent review"
+                            : "Company fixture"}{" "}
+                          {j + 1}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
+              ))}
+            </section>
+            <section className="known-grid" data-reveal>
+              <div>
+                <Eyebrow>WHAT WE KNOW IN THIS CASE</Eyebrow>
+                <h3>The evidence supports a direction.</h3>
+                <p>
+                  {receipt.verifiedClaimCount
+                    ? `${receipt.verifiedClaimCount} important claims have support from two independently modeled source families and providers.`
+                    : "The available material is single-source or insufficient. There is no independent corroboration."}
+                </p>
+                <p>
+                  These are simulation results—not independently established
+                  real-world facts.
+                </p>
               </div>
-            ))}
-          </section>
-          <section className="known-grid" data-reveal>
-            <div>
-              <Eyebrow>WHAT WE KNOW IN THIS CASE</Eyebrow>
-              <h3>The evidence supports a direction.</h3>
-              <p>
-                {receipt.verifiedClaimCount
-                  ? `${receipt.verifiedClaimCount} important claims have support from two independently modeled source families and providers.`
-                  : "The available material is single-source or insufficient. There is no independent corroboration."}
-              </p>
-              <p>
-                These are simulation results—not independently established
-                real-world facts.
-              </p>
+              <div>
+                <Eyebrow>WHAT REMAINS UNCERTAIN</Eyebrow>
+                <ul>
+                  {brief.risksAndUnknowns.map((u) => (
+                    <li key={u}>{u}</li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+            <details className="evidence-ledger" id="evidence-ledger">
+              <summary>
+                <span>Evidence ledger</span>
+                <span>
+                  {brief.sources.length} excerpts · inspect provenance
+                </span>
+              </summary>
+              {brief.sources.length === 0 && (
+                <p>
+                  No matching fixture evidence. No source URLs have been
+                  invented.
+                </p>
+              )}
+              {brief.sources.map((e) => (
+                <article id={e.id} key={e.id}>
+                  <Status>Simulated demo evidence</Status>
+                  <h3>{e.sourceTitle}</h3>
+                  <blockquote>{e.excerpt}</blockquote>
+                  <dl>
+                    <div>
+                      <dt>Provider</dt>
+                      <dd>{e.providerId}</dd>
+                    </div>
+                    <div>
+                      <dt>Source family</dt>
+                      <dd>{e.independentSourceId}</dd>
+                    </div>
+                    <div>
+                      <dt>Claim relevance</dt>
+                      <dd>
+                        {brief.claims.find((c) => c.id === e.claimId)?.text}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Materialized at</dt>
+                      <dd>{e.retrievedAt}</dd>
+                    </div>
+                    <div>
+                      <dt>Fixture confidence (not measured)</dt>
+                      <dd>{e.confidence.toFixed(2)}</dd>
+                    </div>
+                    <div>
+                      <dt>Source URL</dt>
+                      <dd>
+                        None — authored fixture document, not a public source.
+                      </dd>
+                    </div>
+                  </dl>
+                </article>
+              ))}
+            </details>
+            <div className="export-actions">
+              <button
+                className="button secondary"
+                onClick={() => download(run, "md")}
+              >
+                <Download size={16} />
+                Export Markdown
+              </button>
+              <button
+                className="button secondary"
+                onClick={() => download(run, "json")}
+              >
+                <Download size={16} />
+                Download audit JSON
+              </button>
+              <Link className="text-link" href="/forge">
+                Forge another <ArrowUpRight size={16} />
+              </Link>
             </div>
-            <div>
-              <Eyebrow>WHAT REMAINS UNCERTAIN</Eyebrow>
-              <ul>
-                {brief.risksAndUnknowns.map((u) => (
-                  <li key={u}>{u}</li>
-                ))}
-              </ul>
-            </div>
-          </section>
-          <details className="evidence-ledger" id="evidence-ledger">
-            <summary>
-              <span>Evidence ledger</span>
-              <span>{brief.sources.length} excerpts · inspect provenance</span>
-            </summary>
-            {brief.sources.length === 0 && (
-              <p>
-                No matching fixture evidence. No source URLs have been invented.
-              </p>
-            )}
-            {brief.sources.map((e) => (
-              <article id={e.id} key={e.id}>
-                <Status>Simulated demo evidence</Status>
-                <h3>{e.sourceTitle}</h3>
-                <blockquote>{e.excerpt}</blockquote>
-                <dl>
-                  <div>
-                    <dt>Provider</dt>
-                    <dd>{e.providerId}</dd>
-                  </div>
-                  <div>
-                    <dt>Source family</dt>
-                    <dd>{e.independentSourceId}</dd>
-                  </div>
-                  <div>
-                    <dt>Claim relevance</dt>
-                    <dd>
-                      {brief.claims.find((c) => c.id === e.claimId)?.text}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Materialized at</dt>
-                    <dd>{e.retrievedAt}</dd>
-                  </div>
-                  <div>
-                    <dt>Source URL</dt>
-                    <dd>
-                      None — authored fixture document, not a public source.
-                    </dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
-          </details>
-          <div className="export-actions">
-            <button
-              className="button secondary"
-              onClick={() => download(run, "md")}
-            >
-              <Download size={16} />
-              Export Markdown
-            </button>
-            <button
-              className="button secondary"
-              onClick={() => download(run, "json")}
-            >
-              <Download size={16} />
-              Download audit JSON
-            </button>
-            <Link className="text-link" href="/forge">
-              Forge another <ArrowUpRight size={16} />
-            </Link>
-          </div>
-          <p className="privacy-note">
-            Exports include your request and optional target URL. Review them
-            before sharing.
-          </p>
-        </article>
-        <ResearchReceipt run={run} />
-      </div>
-    </Reveal>
+            <p className="privacy-note">
+              Exports include your request and optional target URL. Review them
+              before sharing.
+            </p>
+          </article>
+          <ResearchReceipt run={run} />
+        </div>
+      </Reveal>
+    </div>
   );
 }
 export function HistoryView() {
