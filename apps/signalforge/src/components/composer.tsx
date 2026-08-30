@@ -181,7 +181,7 @@ export function Composer() {
         <div className="composer-bottom">
           <span>Hard budget limit. Actual spend: $0.</span>
           <button className="button" disabled={busy} type="submit">
-            {busy ? "Comparing demo services…" : "Forge brief"}
+            {busy ? "Comparing demo services…" : "Generate route"}
             <ArrowUpRight size={18} />
           </button>
         </div>

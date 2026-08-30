@@ -16,7 +16,7 @@ export function Navigation() {
             href="/history"
             aria-current={path === "/history" ? "page" : undefined}
           >
-            History
+            Archive
           </Link>
           <Link
             href="/forge"

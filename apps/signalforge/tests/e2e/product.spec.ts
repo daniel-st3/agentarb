@@ -1,6 +1,45 @@
 import { test, expect, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 const shots = "test-results/screenshots";
+
+test("short laptop windows keep the full route readable", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop");
+  await page.setViewportSize({ width: 1024, height: 720 });
+  await page.goto("/");
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  await page
+    .getByRole("heading", { name: "Show what holds up." })
+    .scrollIntoViewIfNeeded();
+  await expect(
+    page.getByRole("heading", { name: "Show what holds up." }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+test("landing narrative remains available without JavaScript", async ({
+  browser,
+}, info) => {
+  test.skip(info.project.name !== "desktop");
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("http://127.0.0.1:3002/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "One question.",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Show what holds up." }),
+  ).toBeVisible();
+  await expect(page.locator(".paper-report")).toContainText(
+    "DEMO OUTPUT — SIMULATED EVIDENCE",
+  );
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  await context.close();
+});
 async function screenshot(page: Page, name: string) {
   // Capture the static equivalent, with sticky navigation at the document top.
   // GSAP is separately exercised by the normal-motion interaction tests.
@@ -31,10 +70,16 @@ test("question → plan → run → evidence → receipt, exports and session re
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "Turn one question into a verified brief.",
+      name: "One question. A better route to the answer.",
     }),
   ).toBeVisible();
   await screenshot(page, `${info.project.name}-hero`);
+  await page.screenshot({
+    path: `${shots}/${info.project.name}-hero-viewport.png`,
+  });
+  await page
+    .locator(".paper-report")
+    .screenshot({ path: `${shots}/${info.project.name}-paper-report.png` });
   await page
     .getByRole("navigation")
     .getByRole("link", { name: "Forge a brief" })
@@ -48,9 +93,11 @@ test("question → plan → run → evidence → receipt, exports and session re
     .getByRole("button", { name: "Most verified", exact: true })
     .click();
   await screenshot(page, `${info.project.name}-configured`);
-  await page.getByRole("button", { name: "Forge brief", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Generate route", exact: true })
+    .click();
   await expect(
-    page.getByRole("heading", { name: "Here’s the research route." }),
+    page.getByRole("heading", { name: "Research route" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Independent review", exact: true }),
@@ -84,7 +131,7 @@ test("question → plan → run → evidence → receipt, exports and session re
   const mdDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export Markdown" }).click();
   expect((await mdDownload).suggestedFilename()).toMatch(/\.md$/);
-  await page.getByRole("link", { name: "History", exact: true }).click();
+  await page.getByRole("link", { name: "Archive", exact: true }).click();
   await expect(page.getByText(/THIS SESSION/)).toHaveCount(1);
   await screenshot(page, `${info.project.name}-history`);
   await page.reload();
@@ -97,7 +144,9 @@ test("cheapest route is free and single-source", async ({ page }) => {
   await page.getByRole("button", { name: /Evaluate AtlasGrid/ }).click();
   await page.getByRole("button", { name: "Cheapest", exact: true }).click();
   await page.getByRole("button", { name: "$0.00", exact: true }).click();
-  await page.getByRole("button", { name: "Forge brief", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Generate route", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Independent review", exact: true }),
   ).toHaveCount(0);
@@ -110,10 +159,10 @@ test("reduced motion retains usable route story and seeded brief", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page
-    .getByRole("heading", { name: "Keep the receipt" })
+    .getByRole("heading", { name: "Show what holds up." })
     .scrollIntoViewIfNeeded();
   await expect(
-    page.getByRole("heading", { name: "Keep the receipt" }),
+    page.getByRole("heading", { name: "Show what holds up." }),
   ).toBeVisible();
   await page.goto("/forge/example-1");
   await expect(
@@ -157,7 +206,9 @@ test("request-in-flight and recoverable network failure are honest", async ({
     await held;
     await route.abort();
   });
-  await page.getByRole("button", { name: "Forge brief", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Generate route", exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: "Comparing demo services…" }),
   ).toBeDisabled();
@@ -167,7 +218,7 @@ test("request-in-flight and recoverable network failure are honest", async ({
     page.getByRole("alert").filter({ hasText: /fetch|route|network/i }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Forge brief", exact: true }),
+    page.getByRole("button", { name: "Generate route", exact: true }),
   ).toBeEnabled();
 });
 for (const width of [390, 768, 1024, 1440]) {
@@ -190,3 +241,104 @@ for (const width of [390, 768, 1024, 1440]) {
     }
   });
 }
+test("editorial hero and a genuinely pinned, scrubbed route", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const story = page.locator(".route-narrative");
+  await expect(story).toHaveAttribute("data-enhanced", "true");
+  await expect(
+    page.locator(".hero-artifact, .use-case-grid, .feature-card"),
+  ).toHaveCount(0);
+  expect(
+    await page
+      .locator(".opening")
+      .evaluate((el) => getComputedStyle(el).borderRadius),
+  ).toBe("0px");
+  const start = await story.evaluate(
+    (el) => el.getBoundingClientRect().top + scrollY - 72,
+  );
+  await page.evaluate(
+    (y) => window.scrollTo({ top: y, behavior: "instant" }),
+    start + 200,
+  );
+  await expect(story).toHaveAttribute("data-chapter", "1");
+  const first = await page.locator(".route-scene").boundingBox();
+  const initial = await page
+    .locator(".path-research")
+    .evaluate((el) => getComputedStyle(el).strokeDashoffset);
+  await page.evaluate(
+    (y) => window.scrollTo({ top: y, behavior: "instant" }),
+    start + 1800,
+  );
+  await expect(story).toHaveAttribute("data-chapter", "3");
+  await expect(
+    page.getByRole("heading", { name: "Select only what helps." }),
+  ).toBeVisible();
+  await expect
+    .poll(async () =>
+      parseFloat(
+        await page
+          .locator(".path-research")
+          .evaluate((el) => getComputedStyle(el).strokeDashoffset),
+      ),
+    )
+    .toBeLessThan(parseFloat(initial));
+  const middle = await page.locator(".route-scene").boundingBox();
+  expect(Math.abs(middle!.y - first!.y)).toBeLessThan(3);
+  await page.screenshot({ path: shots + "/desktop-route-midscroll.png" });
+  await page.evaluate(
+    (y) => window.scrollTo({ top: y, behavior: "instant" }),
+    start + 2900,
+  );
+  await expect(story).toHaveAttribute("data-chapter", "4");
+  await expect(
+    page.getByRole("heading", { name: "Show what holds up." }),
+  ).toBeVisible();
+  await expect(page.locator(".modeled-counter")).toHaveText("$0.08");
+  await expect(page.locator(".verification-final")).toBeVisible();
+  await expect(page.locator(".verification-start")).not.toBeVisible();
+  await page.screenshot({ path: shots + "/desktop-route-verified.png" });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(story).not.toHaveAttribute("data-enhanced", "true");
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  await expect(page.locator(".verification-start")).toBeVisible();
+  await expect(page.locator(".verification-final")).toBeVisible();
+  for (const title of [
+    "Start with the boundary.",
+    "Not every source belongs.",
+    "Select only what helps.",
+    "Show what holds up.",
+  ]) {
+    await expect(page.getByRole("heading", { name: title })).toBeVisible();
+  }
+});
+test("mobile route is a readable vertical story, with no pinning", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "mobile");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  await expect(page.locator(".route-narrative")).not.toHaveAttribute(
+    "data-enhanced",
+    "true",
+  );
+  for (const title of [
+    "Start with the boundary.",
+    "Not every source belongs.",
+    "Select only what helps.",
+    "Show what holds up.",
+  ]) {
+    await page.getByRole("heading", { name: title }).scrollIntoViewIfNeeded();
+    await expect(page.getByRole("heading", { name: title })).toBeVisible();
+  }
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({ path: shots + "/mobile-route-story.png" });
+});

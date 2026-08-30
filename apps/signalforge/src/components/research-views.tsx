@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
-  Check,
   FileText,
   ShieldCheck,
   Layers,
@@ -24,6 +23,11 @@ import {
   ActionLink,
 } from "./ui";
 import { Reveal } from "./motion";
+import {
+  ResearchReceipt,
+  ArchiveRow,
+  Alternatives,
+} from "./editorial/artifacts";
 import { RunSchema, type Run } from "@/domain/schema";
 import { policyLabels } from "@/domain/engine";
 
@@ -56,34 +60,6 @@ function Budget({ run }: { run: Run }) {
         Hard cap enforced. Actual service spend: <strong>$0.00</strong>.
       </p>
     </div>
-  );
-}
-function Alternatives({ run }: { run: Run }) {
-  return (
-    <details className="alternatives">
-      <summary>
-        Alternatives not selected{" "}
-        <span>
-          {run.plan.steps.flatMap((s) => s.alternativesConsidered).length}
-        </span>
-      </summary>
-      {run.plan.steps
-        .flatMap((s) => s.alternativesConsidered)
-        .map((a) => (
-          <div className="alternative-row" key={a.providerId}>
-            <strong>{a.name}</strong>
-            <p>{a.reason}</p>
-            <code>
-              {a.code}
-              {a.code === "catalog_only" ? " · x402_catalog_only" : ""}
-            </code>
-          </div>
-        ))}
-      <p className="field-help">
-        Catalog concepts are illustrative local metadata—not discovered live
-        offers.
-      </p>
-    </details>
   );
 }
 export function PlanView({ id }: { id: string }) {
@@ -129,7 +105,7 @@ export function PlanView({ id }: { id: string }) {
       <StepHeader step="Plan" />
       <div className="workspace-title" data-reveal>
         <Eyebrow>TRANSPARENT PRE-FLIGHT</Eyebrow>
-        <h1>Here’s the research route.</h1>
+        <h1>Research route</h1>
         <p>{run.request.question}</p>
         <div className="metadata-row">
           <Status>{policyLabels[run.request.optimizationPolicy]}</Status>
@@ -138,6 +114,31 @@ export function PlanView({ id }: { id: string }) {
         </div>
       </div>
       <div className="plan-layout">
+        <aside className="plan-request">
+          <Eyebrow>REQUEST / CONSTRAINTS</Eyebrow>
+          <p>{run.request.question}</p>
+          <dl>
+            <div>
+              <dt>Policy</dt>
+              <dd>{policyLabels[run.request.optimizationPolicy]}</dd>
+            </div>
+            <div>
+              <dt>Budget cap</dt>
+              <dd>{money(run.request.budgetUsd)}</dd>
+            </div>
+            <div>
+              <dt>Modeled quality</dt>
+              <dd>{Math.round(run.plan.expectedQualityScore * 100)} / 100</dd>
+            </div>
+            <div>
+              <dt>Modeled duration</dt>
+              <dd>{run.plan.expectedLatencySeconds}s</dd>
+            </div>
+          </dl>
+          <p className="field-help">
+            Fixture inputs, not measured service performance. No external calls.
+          </p>
+        </aside>
         <div>
           <div className="plan-timeline">
             {run.plan.steps.map((step, i) => {
@@ -187,6 +188,30 @@ export function PlanView({ id }: { id: string }) {
             })}
           </div>
           <Alternatives run={run} />
+          <div className="run-action">
+            {error && (
+              <p className="error-message" role="alert">
+                {error}
+              </p>
+            )}
+            <button
+              className="button full-width"
+              disabled={busy}
+              onClick={execute}
+            >
+              {busy ? "Compiling demo evidence…" : "Run research"}
+              <ArrowRight size={18} />
+            </button>
+            <p className="privacy-note" aria-live="polite">
+              {busy
+                ? "Running local fixture adapters, checking independent support, and compiling the brief."
+                : "Run starts the selected demo route only. No external services are called."}
+            </p>
+            <Link className="text-link" href="/forge">
+              <ArrowLeft size={14} />
+              Change the request
+            </Link>
+          </div>
         </div>
         <aside className="plan-sidebar" data-reveal>
           <Eyebrow>WHY THIS ROUTE</Eyebrow>
@@ -208,28 +233,6 @@ export function PlanView({ id }: { id: string }) {
               fetch it.
             </p>
           )}
-          {error && (
-            <p className="error-message" role="alert">
-              {error}
-            </p>
-          )}
-          <button
-            className="button full-width"
-            disabled={busy}
-            onClick={execute}
-          >
-            {busy ? "Compiling demo evidence…" : "Run research"}
-            <ArrowRight size={18} />
-          </button>
-          <p className="privacy-note" aria-live="polite">
-            {busy
-              ? "Running local fixture adapters, checking independent support, and compiling the brief."
-              : "Run starts the selected demo route only. No external services are called."}
-          </p>
-          <Link className="text-link" href="/forge">
-            <ArrowLeft size={14} />
-            Change the request
-          </Link>
         </aside>
       </div>
       <DemoNotice />
@@ -270,9 +273,8 @@ export function BriefView({ id }: { id: string }) {
       <StepHeader step="Brief" />
       <div className="brief-title" data-reveal>
         <Eyebrow>
-          {run.example
-            ? "EXAMPLE REPORT / FICTIONAL CASE"
-            : "RESEARCH REPORT / DEMO RUN"}
+          SIGNALFORGE / {run.example ? "EXAMPLE BRIEF" : "SESSION BRIEF"} /{" "}
+          {policyLabels[run.request.optimizationPolicy]} / DEMO MODE
         </Eyebrow>
         <h1>{brief.title}</h1>
         <p className="brief-question">{run.request.question}</p>
@@ -444,64 +446,7 @@ export function BriefView({ id }: { id: string }) {
             before sharing.
           </p>
         </article>
-        <aside className="receipt" data-reveal>
-          <div className="receipt-header">
-            <Eyebrow>RESEARCH RECEIPT</Eyebrow>
-            <FileText size={19} />
-          </div>
-          <div className="receipt-total">
-            <span>Actual service spend</span>
-            <strong>$0.00</strong>
-            <Status positive>No external calls</Status>
-          </div>
-          <dl className="receipt-facts">
-            <div>
-              <dt>Hard modeled budget</dt>
-              <dd>{money(receipt.budgetUsd)}</dd>
-            </div>
-            <div>
-              <dt>Estimated route cost</dt>
-              <dd>{money(receipt.estimatedSpendUsd)}</dd>
-            </div>
-            <div>
-              <dt>Simulated route cost</dt>
-              <dd>{money(receipt.simulatedSpendUsd)}</dd>
-            </div>
-            <div>
-              <dt>Policy</dt>
-              <dd>{policyLabels[run.request.optimizationPolicy]}</dd>
-            </div>
-          </dl>
-          <Eyebrow>PROVIDER MIX</Eyebrow>
-          <div className="receipt-providers">
-            {receipt.providerBreakdown.map((p) => (
-              <div key={p.providerId}>
-                <Check size={13} />
-                <span>
-                  {p.name}
-                  <small>Mock · modeled {money(p.simulatedCostUsd)}</small>
-                </span>
-              </div>
-            ))}
-          </div>
-          <dl className="receipt-facts">
-            <div>
-              <dt>Fixture documents</dt>
-              <dd>{receipt.sourceCount}</dd>
-            </div>
-            <div>
-              <dt>Simulated corroborations</dt>
-              <dd>{receipt.verifiedClaimCount}</dd>
-            </div>
-          </dl>
-          <Alternatives run={run} />
-          <p className="receipt-disclaimer">{receipt.provenanceNotice}</p>
-          <div className="receipt-id">
-            <span>RUN ID / v1</span>
-            <code>{run.request.id}</code>
-            <span>{brief.createdAt}</span>
-          </div>
-        </aside>
+        <ResearchReceipt run={run} />
       </div>
     </Reveal>
   );
@@ -516,7 +461,7 @@ export function HistoryView() {
       <Eyebrow>YOUR RESEARCH, IN CONTEXT</Eyebrow>
       <div className="history-heading">
         <div>
-          <h1>A clearer record.</h1>
+          <h1>Archive</h1>
           <p>
             Example briefs and this tab’s research. No account, no permanent
             archive.
@@ -525,37 +470,17 @@ export function HistoryView() {
         <ActionLink href="/forge">Forge a brief</ActionLink>
       </div>
       <div className="history-list">
+        <div className="archive-labels" aria-hidden="true">
+          <span>DATE</span>
+          <span>REPORT / EVIDENCE</span>
+          <span>POLICY</span>
+          <span>COST</span>
+          <span>STATE</span>
+          <span>↗</span>
+        </div>
         {sorted.map((run) => (
-          <Link
-            href={`/forge/${run.request.id}${run.brief ? "" : "/plan"}`}
-            className="history-row"
-            key={run.request.id}
-          >
-            <div className="history-icon">
-              <FileText size={22} />
-            </div>
-            <div>
-              <div className="history-kicker">
-                {run.example ? "SEEDED EXAMPLE" : "THIS SESSION"} ·{" "}
-                {run.request.createdAt.slice(0, 10)} ·{" "}
-                {run.request.status === "complete" ? "COMPLETE" : "PLANNED"}
-              </div>
-              <h2>{run.brief?.title ?? run.request.question}</h2>
-              <p>
-                {policyLabels[run.request.optimizationPolicy]} ·{" "}
-                {run.receipt?.sourceCount ?? 0} fixture documents · Mock
-                providers
-              </p>
-            </div>
-            <div className="history-cost">
-              <strong>{money(run.request.budgetUsd)} budget</strong>
-              <span>
-                {money(run.plan.estimatedTotalCostUsd)} modeled / $0 actual
-              </span>
-            </div>
-            <ArrowUpRight size={19} />
-          </Link>
-        ))}
+          <ArchiveRow run={run} key={run.request.id} />
+        ))}{" "}
       </div>
       <DemoNotice />
       <p className="privacy-note">

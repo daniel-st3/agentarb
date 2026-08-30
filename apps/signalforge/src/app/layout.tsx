@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import Link from "next/link";
 import { Navigation } from "@/components/navigation";
 import { ResearchSession } from "@/components/session";
@@ -8,6 +8,17 @@ import "./globals.css";
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
+  display: "swap",
+});
+const display = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-newsreader",
+  display: "swap",
+  style: ["normal", "italic"],
+});
+const mono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
   display: "swap",
 });
 export const metadata: Metadata = {
@@ -25,7 +36,10 @@ export default async function RootLayout({
 }) {
   const seeds = await seedRuns();
   return (
-    <html lang="en" className={geist.variable}>
+    <html
+      lang="en"
+      className={`${geist.variable} ${display.variable} ${mono.variable}`}
+    >
       <body>
         <a className="skip-link" href="#main">
           Skip to content

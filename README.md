@@ -171,6 +171,23 @@ Playwright starts a production server on port 3002; build first. Tests cover
 API flow, downloads, session isolation, reduced motion, and 390/768/1024/1440px
 geometry. Screenshots: apps/signalforge/test-results/screenshots/.
 
+## Visual system — SignalForge V2
+
+An editorial interface: Newsreader display/report typography, Geist UI, Geist Mono
+metadata, near-black fields and an ivory research memo. Hairline rows replace
+enclosing panels in the composer, route sheet, brief, receipt and Archive.
+
+The landing's scoped GSAP sequence introduces a signal trace; a 300vh pinned
+ScrollTrigger narrative explains framing, service comparison, route composition
+and simulated corroboration. It replays the existing Northstar fixture:
+$0.25 cap, $0.08 modeled route, $0 actual spend, four documents, five excerpts,
+two simulated corroborations. No new evidence or provider capability is implied.
+
+Below 900px width or 850px height, and for reduced motion, the route becomes a
+static staged story without pinning. The landing remains readable without
+JavaScript. See [V2 design contract](apps/signalforge/DESIGN.md) and
+[verification report](apps/signalforge/VERIFICATION-V2.md).
+
 ## Vercel deployment — manual, not performed
 
 1. Review and push the branch yourself: claude/verify-bounty-api-facts-f6ccdu.

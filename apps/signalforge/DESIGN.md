@@ -1,25 +1,39 @@
-# SignalForge design contract
+# SignalForge V2 — editorial instrument
+## Audit and scope
+The V1 hero surrounded the question, provider selection, evidence and answer with
+nested surfaces; the composer, receipt and provider icons repeated that treatment.
+The landing repeated two three-column groups. Scroll motion revealed rows but did
+not tell a changing story. One sans family gave report prose and metadata equal
+weight. No planner, schemas, providers, repository, endpoints or exports change.
 
-The artifact is the product: a readable brief with an inspectable research receipt.
-First impression: calm, editorial, precise. Not a marketplace terminal or chat.
+V2 removes the enclosing hero, request, evidence, answer, composer, receipt,
+provider-icon and budget panels (8/8 identified nonessential panel families).
+Selected provider rows, evidence rows and receipt comparisons retain hairline
+separation. There is no feature-card grid. This is a family-level audit, not an
+invented measured percentage of DOM elements.
 
-- Graphite #141719 background, #1c2024 surfaces, warm #f1eee6 text.
-- Slate #abb3bc secondary text; cobalt #5267ed interaction; mint #afdbc8 only for
-  positive verification states. Status always has a text label.
-- Geist via next/font; report headings use the same family with lighter weight.
-- Fluid hero 44–76px, section 32–48px, report 32–56px, body 16–18px, metadata 12px.
-- Spacing 4/8/12/16/24/32/48/64/96; content max 1240px; radii 6/12/18px.
-- Split hero: left editorial statement, right original route-to-receipt artifact.
-  Workspace uses a quiet step breadcrumb; report uses a readable main column and
-  compact receipt. Mobile stacks by reading priority, never shrinks a desktop grid.
-- GSAP only. Scoped useGSAP, matchMedia reduced-motion handling, short transform/
-  opacity sequences and scroll progress, no loops, pinning, or hidden required text.
-- Visible focus, native controls/details, semantic headings, 44px touch controls,
-  no color-only status or fake execution activity. Errors are actionable and plain.
-- Voice: concise and literal. All modeled prices are explicitly simulated. Actual
-  spend is zero. Fictional fixture documents never masquerade as public citations.
+## Visual system
+- Ink-black #08090a story / warm near-black #0c0d0f app; ivory #f6f5ee type;
+  paper #f4f2eb report with ink #111318. CSS-only grain at 1.8% opacity.
+- Newsreader display/report, Geist interface, Geist Mono system truth. Self-hosted
+  through next/font, Latin subsets, consistent CSS font tokens.
+- Hero 55–112px, section 40–64px, report 42–62px, body 14–18px,
+  data 9–12px (small provenance stays secondary; core labels readable).
+- Spacing 8/12/16/24/32/40/56/80/110. Max width 1280px.
+- Rules and alignment instead of containing boxes. No panel shadows, no gradients.
+- Accent #9c9eff for selection/path; mineral #a7c6b4 for simulated corroboration;
+  #c8ad89 for uncertainty/provenance. Labels never depend on color alone.
 
-Reference audit: Agent Arbiter's eight-area operator UI and allow/skip vocabulary
-are wrong for an outcome-first research product. Keep its hard limits, explainable
-selection, typed contracts, isolated fixtures, and audit discipline; not its
-marketplace copy, settings density, or approval workflow.
+## Narrative and interaction
+- 2.15-second initial type/trace sequence. No loops.
+- One 300vh desktop pinned route, scoped useGSAP + matchMedia + scrub.
+  Frame → compare → compose → verify. Uses actual seeded fixture metrics:
+  $0.25 cap, $0.08 modeled route, $0 actual, 4 documents, 5 excerpts,
+  2 corroborated-in-simulation claims. The animation is explicitly a replay,
+  not a live run or real spending.
+- Mobile (<900px), short viewports (<850px) and reduced motion use the same
+  content as a static staged story; no pin. Media changes revert the context.
+- Native forms/details, visible keyboard focus, text/link underlines, no downloads
+  or workflow changes. Routes and report exports retain original provenance.
+- Paper report appears through a restrained scroll reveal; evidence margin notes
+  follow reading order. No content depends on animation to be understood.
