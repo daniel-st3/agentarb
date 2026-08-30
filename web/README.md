@@ -1,5 +1,9 @@
 # Agent Arbiter — public web experience
 
+> Archived/reference prototype. The active product is SignalForge in
+> apps/signalforge/. This app and its safety tests remain intact, but it is not
+> the SignalForge deployment root. Instructions below describe the old prototype.
+
 Next.js App Router, strict TypeScript, React, Tailwind v4, GSAP/ScrollTrigger, and
 Framer Motion. The Python application remains the source of truth and is not
 deployed with this frontend.

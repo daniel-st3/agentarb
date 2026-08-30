@@ -1,0 +1,24 @@
+{
+  "version": "v1",
+  "offers": [
+    {
+      "providerId": "catalog-web",
+      "name": "Web intelligence · catalog concept",
+      "description": "Illustrative future service listing, not a discovered or available vendor.",
+      "capabilities": ["web_research", "news_search"],
+      "providerType": "x402_catalog_only",
+      "pricePerCallUsd": 0.04,
+      "estimatedLatencySeconds": 8,
+      "reliabilityScore": 0.9,
+      "qualityScore": 0.9,
+      "requiresApiKey": false,
+      "isEnabled": false,
+      "metadata": {
+        "sourceGroup": "catalog-concept",
+        "diversityScore": 0.8,
+        "unavailableReason": "Catalog metadata only. Execution is structurally unavailable.",
+        "priceBasis": "simulation"
+      }
+    }
+  ]
+}

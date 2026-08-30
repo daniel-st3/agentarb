@@ -1,4 +1,35 @@
-# Agent Arbiter — Handoff
+# SignalForge — Handoff
+
+## Active product: SignalForge (2026-08-30)
+
+- Canonical Next.js/Vercel app: apps/signalforge (Next 16.3.3, strict TypeScript).
+- Fixture-only end-to-end request → plan → explicit Run → brief → receipt.
+- Three fictional cases; four reproducible policies; hard modeled budget checks
+  before planning selection and each execution step.
+- Actual spend always zero. Modeled cost and simulated corroboration remain explicit.
+- Public-source research is an unavailable adapter seam; catalog-only execution
+  throws. No API key can enable a real provider in this MVP.
+- No marketplace, worker, wallet, transaction, signing, account, arbitrary code,
+  scraping, or external provider call in the deployed app.
+- New runs remain in tab memory; reload clears them. API routes are stateless,
+  bounded, no-store, and rebuild plans rather than trusting client execution input.
+- SQLite is local-analysis-only; hosted persistence is a fail-closed stub.
+- GSAP motion respects reduced motion. All content has a static readable state.
+- README, docs/pivot-notes.md, apps/signalforge/DESIGN.md and STORAGE.md describe
+  the new architecture. Old README retained in docs/archive/.
+- Python and web/ are archived reference implementations, preserved with tests.
+- No deployment, account creation, paid service use, or push is authorized.
+- Verification: 65 SignalForge unit/API tests; 14 browser checks passing plus
+  four intentionally redundant geometry skips; lint, strict typecheck, production
+  build, and npm audit pass. Archived Python 305, archived web 253, golden 40/40.
+  Three archived live marketplace tests were not run for this new-product phase.
+- Receipt sourceCount counts distinct fixture documents, not evidence excerpts;
+  evidenceItemCount records the latter separately. Simulated corroboration still
+  requires distinct provider and source-family identities.
+- Next's bundled React lint plugin is not yet ESLint 10 compatible; ESLint 9.39.5
+  is pinned (deprecation warning documented), with a clean dependency audit.
+
+## Archived Agent Arbiter handoff
 
 **Repository:** https://github.com/daniel-st3/agentarb
 **Branch:** `claude/verify-bounty-api-facts-f6ccdu`
