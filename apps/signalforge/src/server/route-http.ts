@@ -7,7 +7,7 @@ import {
   ExecutionRouteContractSchema,
 } from "@/domain/route-planner";
 import { networkSnapshot } from "./intelligence/service";
-import { supplyFit } from "@/domain/intelligence";
+import { observedCatalogOptions } from "@/domain/observed-catalog";
 import { frameWithProvider } from "./framing-provider";
 import { readBounded } from "./http";
 import { checkPlanningLimit } from "./planning-limit";
@@ -33,25 +33,7 @@ export async function planRouteService(
   });
   const network = await networkSnapshot();
   const required = route.objectiveFrame.requiredCapabilities.map((c) => c.id);
-  route.observedSupply = network.records
-    .filter(
-      (l) =>
-        l.listingType === "service_offer" &&
-        ["live", "cached_live"].includes(l.freshness) &&
-        l.capabilities.some((c) => required.includes(c)),
-    )
-    .sort((a, b) => supplyFit(b, required) - supplyFit(a, required))
-    .slice(0, 8)
-    .map((l) => ({
-      id: l.id,
-      name: l.listingType === "service_offer" ? l.name : l.title,
-      freshness: l.freshness,
-      observedAt: l.observedAt,
-      sourceUrl: l.sourceUrl,
-      selectionStatus: "discovery_only_not_selected",
-      reason:
-        "Observed catalog metadata only. No executable adapter, measured quality, or defensible price is available. Excluded from executable steps; ranked for discovery fit only.",
-    }));
+  route.observedSupply = observedCatalogOptions(network.records, required);
   return PlanningResponseSchema.parse({
     objectiveFrame: route.objectiveFrame,
     route: ExecutionRouteContractSchema.parse(route),

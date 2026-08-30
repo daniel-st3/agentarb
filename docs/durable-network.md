@@ -13,6 +13,9 @@ No accounts or storage resources are provisioned by application code.
    Supported HTTPS REST hosts end in `.upstash.io`; credentials in URLs, ports,
    query strings and alternate hosts are rejected. Upstash names take precedence;
    a partial Upstash pair does not silently use KV.
+   Use a read/write REST token, not a read-only token. GET alone cannot establish
+   readiness: refresh leases, snapshot/health metadata and shared quota scripts
+   require writes. A read-only token correctly makes protected routes return 503.
 3. Add a separate random `RATE_LIMIT_SALT` of at least 32 characters. Use different
    stores/salts for Preview and Production. Never add a NEXT_PUBLIC_ prefix.
 4. Set `CACHE_MODE=durable` in Production, then redeploy the current production
@@ -26,6 +29,22 @@ No accounts or storage resources are provisioned by application code.
 
 Vercel Marketplace guide: https://vercel.com/docs/storage
 Upstash rate limiting: https://upstash.com/docs/redis/sdks/ratelimit-ts/overview
+
+## Explicit server runtime gate
+
+From `apps/signalforge`, run `npm run verify:runtime` only when intending to contact
+the configured Groq and Redis services. It is separate from hermetic unit/e2e tests.
+Next's environment loader loads local configuration into the server process; the
+verifier never prints or inspects credential values. It returns fixed status
+categories only, validates a real ObjectiveFrame, probes expiring cache leases,
+reads normalized snapshots/health/refresh metadata through an independent Redis
+client, and checks both shared quota categories. No task provider is executed.
+
+The gate exits non-zero if Groq falls back or durable storage/counters cannot be
+verified. Do not push a configuration rollout until it succeeds. If reads succeed
+but writes are denied, correct permissions on `UPSTASH_REDIS_REST_TOKEN` (or the
+chosen `KV_REST_API_TOKEN`) directly with the provider; never paste values into chat.
+No anonymous diagnostic endpoint, credential dump, or configuration bypass exists.
 
 ## Mode semantics
 

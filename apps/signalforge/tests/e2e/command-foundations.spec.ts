@@ -131,3 +131,62 @@ test("agent proof makes real REST and MCP planning calls and validates returned 
     ),
   ).toBe(true);
 });
+test("observed options remain visibly separate from simulated route providers", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/v1/routes/plan", async (route) => {
+    const response = await route.fetch();
+    const value = await response.json();
+    // Authored browser fixture only, not an assertion about a live provider.
+    value.route.observedSupply = [
+      {
+        id: "test:catalog-option",
+        name: "Authored catalog test option",
+        sourceId: "test",
+        sourceName: "Test catalog",
+        freshness: "cached_live",
+        observedAt: new Date().toISOString(),
+        sourceUrl: "https://example.com/catalog",
+        accessMode: "official_catalog",
+        actionability: "catalog_only",
+        capabilities: ["synthesis"],
+        pricing: {
+          model: "per_token",
+          parseConfidence: "unstructured",
+          rawPriceText: "Unit pricing requires review",
+        },
+        label: "Observed Catalog Option",
+        boundaryLabel: "NOT CALLED / NOT PAID / EXECUTION DISABLED",
+        selectionStatus: "discovery_only_not_selected",
+        servicesCalled: false,
+        paymentsMade: false,
+        executionStatus: "execution_not_enabled",
+        reason: "Catalog context only; not a selected provider.",
+      },
+    ];
+    await route.fulfill({ response, json: value });
+  });
+  await page.goto("/developers/try");
+  await page.getByRole("button", { name: "Send REST request" }).click();
+  await page.getByRole("link", { name: "Inspect compiled route" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Observed Catalog Options" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("NOT CALLED / NOT PAID / EXECUTION DISABLED", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Unit pricing requires review", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Price confidence: unstructured", { exact: false }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});

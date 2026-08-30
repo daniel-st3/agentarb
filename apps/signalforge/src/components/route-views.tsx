@@ -162,11 +162,10 @@ function Rejections({ route }: { route: ExecutionRouteContract }) {
 function Supply({ route }: { route: ExecutionRouteContract }) {
   return (
     <section className="route-ledger">
-      <h2>Observed supply</h2>
+      <h2>Observed Catalog Options</h2>
       <p>
-        Live catalog matches inform discovery, not execution. These offers were
-        excluded from the demo route because no safe executable adapter is
-        configured.
+        Capability-matched catalog observations, separate from the simulated
+        demo providers selected above. These options were not called or paid.
       </p>
       {route.observedSupply.length ? (
         route.observedSupply.map((l) => (
@@ -180,7 +179,17 @@ function Supply({ route }: { route: ExecutionRouteContract }) {
               {l.name} ↗
             </a>
             <p className="eyebrow">
-              {l.freshness.replaceAll("_", " ")} · {l.observedAt}
+              {l.sourceName} · {l.freshness.replaceAll("_", " ")} ·{" "}
+              {l.observedAt}
+            </p>
+            <p className="eyebrow">{l.boundaryLabel}</p>
+            <p className="field-help">
+              {l.accessMode.replaceAll("_", " ")} /{" "}
+              {l.actionability.replaceAll("_", " ")}
+              {l.pricing.rawPriceText
+                ? ` · ${l.pricing.rawPriceText}`
+                : " · Task price not established"}
+              {` · Price confidence: ${l.pricing.parseConfidence}`}
             </p>
             <p className="field-help">{l.reason}</p>
           </div>

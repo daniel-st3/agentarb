@@ -93,6 +93,50 @@ it("shared rejection returns a safe retry interval", async () => {
   expect(denied?.status).toBe(429);
   expect(Number(denied?.headers.get("Retry-After"))).toBeGreaterThan(0);
 });
+it("normalized IPv6 and salt determine keys; raw addresses are never sent or logged", async () => {
+  fake.limit.mockResolvedValue({ success: true, reset: Date.now() + 600000 });
+  const log = vi.spyOn(console, "log"),
+    warn = vi.spyOn(console, "warn"),
+    error = vi.spyOn(console, "error");
+  const { checkPlanningLimit } = await import("../src/server/planning-limit");
+  await checkPlanningLimit(request("2001:0db8:0000:0000:0000:0000:0000:0001"));
+  await checkPlanningLimit(request("2001:db8::1"));
+  expect(fake.limit.mock.calls[0][0]).toBe(fake.limit.mock.calls[1][0]);
+  vi.stubEnv("RATE_LIMIT_SALT", "another-synthetic-salt-not-a-real-secret");
+  await checkPlanningLimit(request("2001:db8::1"));
+  expect(fake.limit.mock.calls[0][0]).not.toBe(fake.limit.mock.calls[2][0]);
+  expect(
+    fake.limit.mock.calls.every(([key]) => /^[a-f0-9]{64}$/.test(key)),
+  ).toBe(true);
+  expect(JSON.stringify(fake.limit.mock.calls)).not.toContain("2001:");
+  expect(log).not.toHaveBeenCalled();
+  expect(warn).not.toHaveBeenCalled();
+  expect(error).not.toHaveBeenCalled();
+  vi.restoreAllMocks();
+});
+it("read-only credentials cannot bypass shared counters or durable writes", async () => {
+  fake.get.mockResolvedValue(null);
+  fake.set.mockRejectedValue(new Error("NOPERM synthetic fixture"));
+  fake.limit.mockRejectedValue(new Error("NOPERM synthetic fixture"));
+  const { snapshotCache } = await import("../src/server/intelligence/cache");
+  expect(await snapshotCache().get("mcp")).toBeNull();
+  await expect(snapshotCache().lease("mcp", 60)).rejects.toThrow();
+  const { checkPlanningLimit } = await import("../src/server/planning-limit");
+  const denied = await checkPlanningLimit(request());
+  expect(denied?.status).toBe(503);
+  expect(await denied?.text()).not.toMatch(
+    /NOPERM|fixture|redis|upstash|192\.0/i,
+  );
+});
+it.each(["", "too-short"])(
+  "invalid salt prevents any shared limit operation",
+  async (salt) => {
+    vi.stubEnv("RATE_LIMIT_SALT", salt);
+    const { checkPlanningLimit } = await import("../src/server/planning-limit");
+    expect((await checkPlanningLimit(request()))?.status).toBe(503);
+    expect(fake.limit).not.toHaveBeenCalled();
+  },
+);
 it("shared cache stores only validated source snapshots with expiry and atomic refresh leases", async () => {
   fake.set.mockResolvedValue("OK");
   fake.get.mockResolvedValue(null);

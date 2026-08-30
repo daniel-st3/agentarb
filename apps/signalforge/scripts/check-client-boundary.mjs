@@ -27,7 +27,7 @@ if (!chunks.length)
 for (const file of chunks) {
   // Check server-only identifiers, never read or compare any real secret value.
   if (
-    /GROQ_API_KEY|OPENROUTER_API_KEY|UPSTASH_REDIS_REST_TOKEN|KV_REST_API_TOKEN|RATE_LIMIT_SALT|api\.groq\.com|openrouter\.ai\/api/.test(
+    /GROQ_API_KEY|OPENROUTER_API_KEY|UPSTASH_REDIS_REST_(?:URL|TOKEN)|KV_REST_API_(?:URL|TOKEN)|RATE_LIMIT_SALT|api\.groq\.com|openrouter\.ai\/api/.test(
       readFileSync(file, "utf8"),
     )
   )

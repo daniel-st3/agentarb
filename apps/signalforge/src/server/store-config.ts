@@ -1,7 +1,9 @@
 import "server-only";
 
 /** Server-only adapter configuration. Never include values in errors or responses. */
-export function storeConfig(env: Record<string, string | undefined> = process.env) {
+export function storeConfig(
+  env: Record<string, string | undefined> = process.env,
+) {
   const mode = env.CACHE_MODE ?? "auto";
   if (!["auto", "durable", "memory", "redis"].includes(mode))
     throw new Error("store_unavailable");
@@ -14,7 +16,12 @@ export function storeConfig(env: Record<string, string | undefined> = process.en
   const token = upstash ? env.UPSTASH_REDIS_REST_TOKEN : env.KV_REST_API_TOKEN;
   if (!upstash && !kv && !["durable", "redis"].includes(mode)) return null;
   if (!url || !token) throw new Error("store_unavailable");
-  const parsed = new URL(url);
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("store_unavailable");
+  }
   if (
     parsed.protocol !== "https:" ||
     !parsed.hostname.endsWith(".upstash.io") ||

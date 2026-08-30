@@ -58,6 +58,17 @@ Response envelope (abbreviated, not an actual execution):
 
 Arrays/contract fields above are shortened for readability. Actual outputs contain capability dependencies, provider rationales, rejected alternatives, fallbacks, stop conditions and observed catalog matches. Catalog-only observations are never promoted to executable steps.
 
+`route.observedSupply` is the separate **Observed Catalog Options** collection,
+shared unchanged by REST and MCP planning. Each item includes source name/ID,
+observation time, live/cached-live freshness, access/actionability limits,
+capabilities and unit-qualified price metadata. It carries
+`NOT CALLED / NOT PAID / EXECUTION DISABLED`, `servicesCalled:false`,
+`paymentsMade:false`, and `executionStatus:execution_not_enabled`. Only validated,
+capability-matched official/curated observations from the last 24 hours qualify;
+seeded/simulated/error/unavailable data cannot enter this collection. Token or
+unstructured catalog prices never become exact task costs. Selected/fallback
+route providers remain separate simulated fixtures.
+
 ## Limits and errors
 
 Planning/decomposition/compile share 10 requests/client-key/rolling 10 minutes with Redis; memory fallback uses a conservative fixed 10-minute window. Catalog/MCP protocol requests share 60/10 minutes. MCP planning also consumes planning quota. `429` includes `Retry-After`; `400` invalid input, `413` body >16 KiB, `403` invalid Origin, `404` missing listing, `503` shared infrastructure or catalog unavailable. No stack traces or vendor error bodies.

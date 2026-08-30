@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("ai", () => ({
-  streamText: vi.fn(),
+  generateText: vi.fn(),
   Output: { object: vi.fn(() => ({})) },
 }));
-import { streamText } from "ai";
+import { generateText } from "ai";
 import {
   ObjectiveFrameSchema,
   ObjectiveInputSchema,
@@ -36,12 +36,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 function mockStream(output: unknown) {
-  vi.mocked(streamText).mockReturnValue({
-    partialOutputStream: (async function* () {
-      yield output;
-    })(),
-    output: Promise.resolve(output),
-  } as never);
+  vi.mocked(generateText).mockResolvedValue({ output } as never);
 }
 describe("objective decomposition boundary", () => {
   it.each([
@@ -105,7 +100,7 @@ describe("objective decomposition boundary", () => {
     );
     expect(result.source).toBe("local_demo_fallback");
     expect(result.reason).toBe("not_configured");
-    expect(streamText).not.toHaveBeenCalled();
+    expect(generateText).not.toHaveBeenCalled();
   });
   it("validated real-provider response is labeled decomposition, not research", async () => {
     vi.stubEnv("GROQ_API_KEY", "test-placeholder");
@@ -119,6 +114,19 @@ describe("objective decomposition boundary", () => {
     expect(result.source).toBe("groq");
     expect(result.label).toBe("Decomposed with Groq");
     expect(result.fallback).toBe(false);
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerOptions: {
+          groq: {
+            structuredOutputs: true,
+            strictJsonSchema: false,
+            reasoningEffort: "low",
+          },
+        },
+        maxRetries: 0,
+        experimental_telemetry: { isEnabled: false },
+      }),
+    );
     expect(
       events.every((e) => DecompositionEventSchema.safeParse(e).success),
     ).toBe(true);
@@ -128,7 +136,7 @@ describe("objective decomposition boundary", () => {
     "provider %s fails safely",
     async (code) => {
       vi.stubEnv("GROQ_API_KEY", "test-placeholder");
-      vi.mocked(streamText).mockImplementation(() => {
+      vi.mocked(generateText).mockImplementation(() => {
         throw new Error(code + " private provider details");
       });
       const log = vi.spyOn(console, "error");
@@ -224,6 +232,6 @@ describe("objective decomposition boundary", () => {
       );
       expect(res.status).toBe(400);
     }
-    expect(streamText).not.toHaveBeenCalled();
+    expect(generateText).not.toHaveBeenCalled();
   });
 });

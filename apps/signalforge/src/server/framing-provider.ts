@@ -1,5 +1,5 @@
 import "server-only";
-import { streamText, Output } from "ai";
+import { generateText, Output } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import {
   ObjectiveFrameSchema,
@@ -57,42 +57,33 @@ export async function frameWithProvider(
       apiKey: process.env.GROQ_API_KEY,
       fetch: framingFetch,
     })(GROQ_MODEL);
-    const result = streamText({
+    emit({ type: "status", message: "Mapping capabilities…" });
+    // Groq does not support streamed json_schema responses. Keep the HTTP UI
+    // status stream, but validate one complete structured model response.
+    const result = await generateText({
       model,
       system,
       prompt: JSON.stringify(input),
       output: Output.object({ schema: ObjectiveFrameSchema }),
       providerOptions: {
-        groq: { structuredOutputs: false, reasoningEffort: "low" },
+        groq: {
+          structuredOutputs: true,
+          strictJsonSchema: false,
+          reasoningEffort: "low",
+        },
       },
       maxOutputTokens: 2400,
       maxRetries: 0,
       temperature: 0,
       abortSignal: AbortSignal.any([signal, AbortSignal.timeout(12000)]),
-      onError: () => {},
-      onChunk: () => {},
       experimental_telemetry: { isEnabled: false },
     });
-    let stage = 0;
-    for await (const partial of result.partialOutputStream) {
-      if (partial.requiredCapabilities && stage < 1) {
-        emit({ type: "status", message: "Mapping capabilities…" });
-        stage = 1;
-      }
-      if (partial.constraints && stage < 2) {
-        emit({ type: "status", message: "Applying constraints…" });
-        stage = 2;
-      }
-      if (partial.routeRationale && stage < 3) {
-        emit({ type: "status", message: "Defining verification standard…" });
-        stage = 3;
-      }
-    }
+    emit({ type: "status", message: "Applying constraints…" });
     const frame = governObjectiveFrame(
       input,
-      ObjectiveFrameSchema.parse(await result.output),
+      ObjectiveFrameSchema.parse(result.output),
     );
-    emit({ type: "status", message: "Preparing route competition…" });
+    emit({ type: "status", message: "Defining verification standard…" });
     // Defense in depth: don't render source claims or citation-shaped model output.
     const content = JSON.stringify(frame);
     if (
@@ -101,6 +92,7 @@ export async function frameWithProvider(
       )
     )
       throw new Error("invalid frame");
+    emit({ type: "status", message: "Preparing route competition…" });
     return DecompositionResultSchema.parse({
       frame,
       source: "groq",

@@ -8,6 +8,7 @@ import {
   type ObjectiveInput,
 } from "./objective";
 import { serviceOffers, type ServiceOffer } from "./service-registry";
+import { ObservedCatalogOptionSchema } from "./observed-catalog";
 const rejectionReasons = [
   "over_budget",
   "unavailable",
@@ -89,19 +90,7 @@ export const ExecutionRouteContractSchema = z
     stopConditions: z.array(z.string()),
     unmetRequirements: z.array(z.string()),
     observedSupply: z
-      .array(
-        z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            freshness: z.string(),
-            observedAt: z.string(),
-            sourceUrl: z.string().url(),
-            selectionStatus: z.literal("discovery_only_not_selected"),
-            reason: z.string(),
-          })
-          .strict(),
-      )
+      .array(ObservedCatalogOptionSchema)
       .max(8)
       .default([]),
     monitoringSpec: z

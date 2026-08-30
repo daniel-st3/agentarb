@@ -1,5 +1,20 @@
 # SignalForge — Handoff
 
+## Runtime configuration verification (2026-08-30)
+
+- Groq now sends the ObjectiveFrame schema using AI SDK generateText. Groq does
+  not support streaming structured outputs; the UI still streams safe status
+  events and receives a final Zod-validated/governed frame. One real local response
+  succeeded. All missing/error/rate-limit/malformed-output fallbacks remain.
+- Observed Catalog Options now have explicit not-called/not-paid/disabled constants,
+  source/access/price-confidence metadata, and strict freshness/eligibility filtering.
+  REST and MCP share this contract. No catalog option becomes an execution provider.
+- `npm run verify:runtime` is an opt-in server-only real-config gate, separate from
+  hermetic tests. Never inspect `.env.local` or print SDK/configuration errors.
+- Configured local Upstash reads succeeded but writes/quota scripts were denied.
+  Durable mode fails closed. Correct token write permissions before pushing this
+  rollout; do not downgrade to memory or claim production protection is active.
+
 ## Active increment: Command Surface + product foundations (2026-08-30)
 
 - Open editorial command canvas: local capability preview shares deterministic

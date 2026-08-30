@@ -35,7 +35,7 @@ export class MemorySnapshotCache implements SnapshotCache {
     return true;
   }
 }
-class RedisSnapshotCache implements SnapshotCache {
+export class RedisSnapshotCache implements SnapshotCache {
   mode = "shared" as const;
   constructor(private redis: Redis) {}
   async get(key: string) {

@@ -94,7 +94,7 @@ Node >=22.13; production uses Node 24. Existing Python and legacy web tests rema
 
 Optional `apps/signalforge/.env.local` settings are documented in [.env.example](apps/signalforge/.env.example). Never commit that file or inspect/share secret values.
 
-- `GROQ_API_KEY`: server-only Goal Decomposition Agent, currently `openai/gpt-oss-20b` (checked against Groq docs 2026-08-30). Vercel AI SDK structured streaming, bounded timeout, no retries/tools. Failure/missing key → `local_demo_fallback`. It does not browse, invent facts, select providers or verify evidence.
+- `GROQ_API_KEY`: server-only Goal Decomposition Agent, currently `openai/gpt-oss-20b` (checked against Groq docs 2026-08-30). Vercel AI SDK schema-constrained generation, bounded timeout, no retries/tools. The UI streams status events, not unvalidated model fragments: Groq's structured-output API does not support streaming. Final output must pass Zod and deterministic constraints. Failure/missing key → `local_demo_fallback`. It does not browse, invent facts, select providers or verify evidence.
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `RATE_LIMIT_SALT` (32+ characters): configure together for shared cache and rate limits.
 - `CACHE_MODE=auto|durable|memory`: auto uses configured Redis, otherwise a visibly non-durable demo fallback. Partial shared config fails closed. Legacy redis remains a durable alias.
 - `KV_REST_API_URL`, `KV_REST_API_TOKEN`: alternative Vercel KV-compatible names. Same server-only adapter; no NEXT_PUBLIC_ secrets.
