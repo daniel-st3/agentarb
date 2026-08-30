@@ -6,9 +6,9 @@ Date: 2026-08-30. This record describes the tested source tree before its produc
 
 - ESLint: pass.
 - TypeScript / Next route type generation: pass.
-- SignalForge Vitest: **141 passed**, six files.
+- SignalForge Vitest: **146 passed**, seven files.
 - Production Next.js build: pass; 20 generated static pages/route artifacts.
-- Client boundary scan: **16 JavaScript chunks**, no server-only key identifiers or model endpoint code.
+- Client boundary scan: **19 static JavaScript files**, no server-only key identifiers or model endpoint code.
 - Playwright: **33 passed, 9 intentionally skipped**, desktop/mobile, 42 project cases.
   Skips avoid duplicate width/no-JavaScript checks and inapplicable pinned/mobile scenarios.
 - Dependency audit: **0 vulnerabilities**.
@@ -32,7 +32,12 @@ zero-budget routes, JSON export, archive/session reset, separate simulated repor
 network filters, task evaluation, capability handoff, API/MCP HTTP, no-JavaScript
 readability, reduced motion, pinned desktop GSAP and staged mobile layout.
 Viewport geometry passes at 390, 768, 1024 and 1440 pixels. A source/access-label
-wrapping defect at 390px was found and fixed before the final passing run.
+  wrapping defect at 390px was found and fixed before the final passing run.
+
+The first production build compiled successfully but the post-build safety scan
+expected the local .next chunk path. The scan now supports Next immutable/static
+and Vercel Build Output layouts without bypassing the check; five fixture tests
+cover relocated output, missing assets and server-identifier detection.
 
 Fresh screenshots include hero, decomposition, route competition/contract,
 mid-scroll route, simulated evidence, archive, network/evaluation, mobile and

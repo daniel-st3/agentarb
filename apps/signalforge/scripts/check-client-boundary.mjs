@@ -1,16 +1,29 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 const walk = (path) =>
   readdirSync(path, { withFileTypes: true }).flatMap((entry) =>
     entry.isDirectory()
       ? walk(join(path, entry.name))
       : [join(path, entry.name)],
   );
-const chunks = walk(".next/static/chunks").filter((file) =>
-  file.endsWith(".js"),
-);
+// Next's Vercel adapter may relocate/static-package assets before this script.
+// Scan static output, not functions, and never skip the boundary on Vercel.
+const candidates = new Set([resolve(".next/static")]);
+let directory = process.cwd();
+while (true) {
+  candidates.add(join(directory, ".vercel/output/static"));
+  if (process.env.VERCEL === "1")
+    candidates.add(join(directory, "output/static"));
+  const parent = dirname(directory);
+  if (parent === directory) break;
+  directory = parent;
+}
+const roots = [...candidates].filter(existsSync);
+const chunks = roots.flatMap(walk).filter((file) => file.endsWith(".js"));
 if (!chunks.length)
-  throw new Error("Build client chunks before checking the framing boundary.");
+  throw new Error(
+    "No browser JavaScript found in Next/Vercel static output; boundary check cannot pass.",
+  );
 for (const file of chunks) {
   // Check server-only identifiers, never read or compare any real secret value.
   if (
