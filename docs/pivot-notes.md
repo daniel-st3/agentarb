@@ -1,5 +1,25 @@
 # Agent Arbiter → SignalForge
 
+## Current direction: routing intelligence (2026-08-30)
+
+The research-only framing below describes the first prototype, not the active
+product. SignalForge now accepts an agent objective, decomposes required
+capabilities, and returns a budget-constrained ExecutionRouteContract. Research
+briefs are separately labeled simulated outputs. The premium visual system and
+original fixture tests remain.
+
+The new intelligence layer observes two fixed public catalog APIs, normalizes
+service metadata, and supplies discovery-fit context—not authorization to execute.
+Task marketplaces and Bazaar remain disabled pending current access/redistribution
+permission. Server-only Groq decomposition is optional; model failure falls back
+deterministically. Shared Upstash cache/quotas are optional and the memory fallback
+is visibly non-durable. REST, MCP and A2A-style discoverability share these boundaries.
+
+No payment, marketplace action, account, worker invocation or live task-service
+execution was added. No old Python connector is imported by the deployed app.
+
+## Initial research-demo pivot (historical)
+
 SignalForge lives in apps/signalforge and is the only intended new Vercel root.
 The Python src/arbiter, tests, scripts, fixtures, Streamlit app, and web/ prototype
 remain intact as archived/reference implementations, not production dependencies.

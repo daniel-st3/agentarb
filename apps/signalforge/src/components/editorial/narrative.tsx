@@ -1,162 +1,43 @@
 "use client";
 import { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowDown } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import type { Run } from "@/domain/schema";
+import { seedRoutes } from "@/domain/route-planner";
 import { money } from "../ui";
-import { SignalField, MagneticLink } from "./atmosphere";
 import { LivingEvidence } from "./living-evidence";
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-export function SignalLine() {
-  return (
-    <div
-      className="signal-line"
-      aria-label="Illustrative route: web, news, profile, verification, brief ready"
-    >
-      <svg
-        className="signal-trace"
-        viewBox="0 0 1000 60"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path
-          className="signal-rule"
-          pathLength="1"
-          d="M0 30 H190 Q210 30 220 20 L230 10 H430 Q450 10 460 20 L470 30 H690 Q710 30 720 40 L730 50 H820 Q840 50 850 40 L860 30 H1000"
-        />
-      </svg>
-      {["WEB", "NEWS", "PROFILE", "VERIFY"].map((name, i) => (
-        <span className={"signal-marker marker-" + i} key={name}>
-          <i />
-          {name}
-        </span>
-      ))}
-      <span className="signal-rejected">
-        <s>expensive</s>
-        <s>single-source</s>
-      </span>
-      <span className="signal-result">
-        <i />
-        BRIEF READY
-      </span>
-    </div>
-  );
-}
-export function OpeningScene() {
-  const ref = useRef<HTMLElement>(null);
-  useGSAP(
-    () => {
-      const media = gsap.matchMedia();
-      media.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap
-          .timeline({ defaults: { ease: "power3.out" } })
-          .from(".opening-label", { y: 8, opacity: 0, duration: 0.45 })
-          .from(
-            ".headline-line",
-            { yPercent: 105, opacity: 0, duration: 0.8, stagger: 0.12 },
-            0.12,
-          )
-          .from(".opening-support", { y: 10, opacity: 0, duration: 0.6 }, 0.5)
-          .from(".sample-question", { opacity: 0, y: 6, duration: 0.5 }, 0.8)
-          .from(
-            ".signal-rule",
-            { strokeDasharray: 1, strokeDashoffset: 1, duration: 0.7 },
-            0.9,
-          )
-          .from(
-            ".signal-marker",
-            { opacity: 0, y: 5, stagger: 0.1, duration: 0.35 },
-            1.15,
-          )
-          .from(".signal-rejected", { opacity: 0, duration: 0.3 }, 1.6)
-          .from(".signal-result", { opacity: 0, x: -6, duration: 0.4 }, 1.75);
-      });
-      return () => media.revert();
-    },
-    { scope: ref },
-  );
-  return (
-    <section className="opening container" ref={ref}>
-      <SignalField />
-      <aside
-        className="research-rail"
-        aria-label="Illustrative demo coordinates"
-      >
-        <span>DEMO / INTERFACE SIGNALS</span>
-        <span>BUDGET LOCK / $0.25</span>
-        <span>ACTUAL SPEND / $0.00</span>
-      </aside>
-      <p className="eyebrow opening-label">INTELLIGENCE ROUTING / 01</p>
-      <h1>
-        <span className="headline-mask">
-          <span className="headline-line">One question.</span>
-        </span>
-        <span className="headline-mask">
-          <span className="headline-line">A better route</span>
-        </span>
-        <span className="headline-mask">
-          <span className="headline-line">
-            to the <em>answer.</em>
-          </span>
-        </span>
-      </h1>
-      <div className="opening-support">
-        <p>
-          SignalForge plans a research route across specialized sources, works
-          within a defined budget, and shows the evidence behind every
-          conclusion.
-        </p>
-        <div className="hero-actions">
-          <MagneticLink href="/forge">
-            Forge a brief <ArrowRight size={21} />
-          </MagneticLink>
-          <a className="text-link" href="#how-it-works">
-            Watch the route <ArrowDown size={15} />
-          </a>
-        </div>
-      </div>
-      <div className="opening-bottom">
-        <p className="sample-question">
-          “Where does Northstar Search have an edge?”
-        </p>
-        <span className="eyebrow">FICTIONAL CASE / ILLUSTRATIVE ROUTE</span>
-      </div>
-      <SignalLine />
-    </section>
-  );
-}
-
 const chapters = [
   {
-    name: "FRAME",
+    name: "FRAME OBJECTIVE",
     title: "Start with the boundary.",
-    text: "A focused question. A hard budget. A need for evidence, not just an answer.",
+    text: "An objective, a hard budget, and explicit capability and verification requirements.",
   },
   {
-    name: "COMPARE",
+    name: "MAP CAPABILITIES",
     title: "Not every source belongs.",
     text: "Compare capability, reliability, cost, and independent support. Unconfigured and catalog-only options stay out.",
   },
   {
-    name: "COMPOSE",
+    name: "COMPETE ROUTES",
     title: "Select only what helps.",
-    text: "Research, independent review, then synthesis. Every selected step has a role and a modeled cost.",
+    text: "Compare service chains rather than isolated providers. Every selected capability has a role and modeled cost.",
   },
   {
-    name: "VERIFY",
+    name: "COMPILE CONTRACT",
     title: "Show what holds up.",
-    text: "Two modeled source families support two important claims. Commercial traction remains single-source.",
+    text: "Compile dependency order, fallbacks, verification requirements, and stop conditions. Execution remains disabled.",
   },
 ];
 export function ProviderRouteMap() {
   return (
     <div
       className="provider-route-map"
-      aria-label="Research library and independent review converge at the brief compiler"
+      aria-label="Capability services and a verification requirement converge at the route contract"
     >
       <svg viewBox="0 0 460 380" fill="none" aria-hidden="true">
         <path
@@ -187,20 +68,20 @@ export function ProviderRouteMap() {
           d="m416 204 10 6-10 6 M286 199 l6 11 6-11"
         />
       </svg>
-      <span className="map-origin">QUESTION</span>
+      <span className="map-origin">OBJECTIVE</span>
       <div className="map-node research-node">
-        <small>01 / RESEARCH</small>
-        <strong>Research library</strong>
-        <span>Mock · $0.00</span>
+        <small>01 / CAPABILITIES</small>
+        <strong>Profile + signals</strong>
+        <span>Modeled service chain</span>
       </div>
       <div className="map-node verify-node">
         <small>02 / CROSS-CHECK</small>
-        <strong>Independent review</strong>
-        <span>Mock · $0.08 modeled</span>
+        <strong>Proofline Verify</strong>
+        <span>Mock · $0.12 modeled</span>
       </div>
       <div className="map-node synthesis-node">
         <small>03 / SYNTHESIS</small>
-        <strong>Brief compiler</strong>
+        <strong>Route contract</strong>
         <span>Mock · $0.00</span>
       </div>
       <div className="map-alternatives">
@@ -211,14 +92,15 @@ export function ProviderRouteMap() {
           <s>Premium catalog</s> · metadata only
         </span>
       </div>
-      <span className="route-annotation">2 modeled source families →</span>
+      <span className="route-annotation">Independent sources required →</span>
     </div>
   );
 }
 export function RouteNarrative({ run }: { run: Run }) {
   const ref = useRef<HTMLElement>(null);
   const scene = useRef<HTMLDivElement>(null);
-  const receipt = run.receipt!;
+  const compiled = seedRoutes()[0];
+  const receipt = { estimatedSpendUsd: compiled.budget.estimatedRouteCostUsd };
   useGSAP(
     () => {
       const media = gsap.matchMedia();
@@ -248,7 +130,7 @@ export function RouteNarrative({ run }: { run: Run }) {
             scrollTrigger: {
               trigger: root,
               start: "top 72px",
-              end: () => "+=" + window.innerHeight * 3,
+              end: () => "+=" + window.innerHeight * 2.4,
               pin: scene.current,
               scrub: 0.45,
               invalidateOnRefresh: true,
@@ -367,9 +249,9 @@ export function RouteNarrative({ run }: { run: Run }) {
           <span className="demo-label">SIMULATED DEMO ROUTE</span>
         </div>
         <h2 id="route-title">
-          The answer is only as good
+          What happens after
           <br />
-          as <em>the route behind it.</em>
+          <em>I forge a route?</em>
         </h2>
         <div className="chapter-indexes" aria-hidden="true">
           {chapters.map((c, i) => (
@@ -380,9 +262,9 @@ export function RouteNarrative({ run }: { run: Run }) {
         </div>
         <div className="route-composition">
           <aside className="request-field">
-            <p className="eyebrow">THE QUESTION</p>
-            <h3>Where does Northstar Search have an edge?</h3>
-            <p>Fictional company · Most verified</p>
+            <p className="eyebrow">THE OBJECTIVE</p>
+            <h3>Build a verified competitive-intelligence route.</h3>
+            <p>Controlled service fixtures · Most verified</p>
             <dl>
               <div>
                 <dt>Hard budget cap</dt>
@@ -402,30 +284,29 @@ export function RouteNarrative({ run }: { run: Run }) {
           </aside>
           <ProviderRouteMap />
           <aside className="evidence-field">
-            <p className="eyebrow">THE EMERGING BRIEF</p>
+            <p className="eyebrow">THE AGENT-READY CONTRACT</p>
             <h3>
-              A clear wedge.
+              A clear sequence.
               <br />
-              An open question.
+              Explicit boundaries.
             </h3>
             <ol>
-              <li>Permission-aware retrieval</li>
-              <li>Focused integration strategy</li>
-              <li>Unproven commercial traction</li>
+              <li>Capability and dependency order</li>
+              <li>Provider choices and fallbacks</li>
+              <li>Verification and stop conditions</li>
             </ol>
             <div className="verification-note">
               <p className="verification-start">
-                Before cross-check: single-source.
+                Verification requirements mapped.
               </p>
               <p className="verification-final">
-                {receipt.verifiedClaimCount} claims corroborated{" "}
-                <strong>in simulation</strong>.
+                ROUTE COMPILED · <strong>execution_not_enabled</strong>
               </p>
             </div>
             <p className="mono">
-              {receipt.sourceCount} fixture documents
+              {compiled.route.length} planned capability steps
               <br />
-              {receipt.evidenceItemCount} evidence excerpts
+              No service calls or evidence claims
               <br />
               Within modeled budget
             </p>
@@ -443,8 +324,8 @@ export function RouteNarrative({ run }: { run: Run }) {
           ))}
         </div>
         <p className="route-footnote">
-          An explanatory replay of the seeded route. All sources are authored
-          fixtures. No external calls or live spending.
+          An explanatory replay of a controlled capability route. Costs are
+          modeled. No task services are called and no payments are made.
         </p>
       </div>
     </section>
@@ -527,7 +408,7 @@ export function ReportPreview({ run }: { run: Run }) {
             <hr />
             <p className="eyebrow">THE DECISION</p>
             <p className="memo-answer">{run.brief!.executiveSummary}</p>
-            <Link href="/forge/example-1" className="editorial-action">
+            <Link href="/forge/example-1/output" className="editorial-action">
               Read the example brief <ArrowRight size={20} />
             </Link>
           </article>

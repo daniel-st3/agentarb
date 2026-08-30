@@ -1,6 +1,34 @@
 # SignalForge — Handoff
 
-## Active product: SignalForge (2026-08-30)
+## Active increment: agent routing and live catalog intelligence (2026-08-30)
+
+- Production app remains `apps/signalforge`; existing production branch is
+  `claude/verify-bounty-api-facts-f6ccdu`. This increment is authorized for push
+  and the existing Vercel Git deployment, after verification.
+- Objective Console → optional server-only Groq decomposition → deterministic
+  capability/DAG route competition → ExecutionRouteContract. Every contract has
+  `executionStatus: execution_not_enabled`, zero actual task-service cost,
+  `servicesCalled:false`, and `paymentsMade:false`.
+- Groq is goal interpretation only, never provider selection, live research or
+  evidence verification. Missing/failing configuration falls back locally.
+- Two bounded public catalog GETs: Official MCP Registry and APIs.guru NYT catalog.
+  No listed provider is invoked. See current permission assessments in
+  `docs/live-sources.md`; Bazaar and task marketplaces remain disabled.
+- `/network` separates live, timestamped cached, and controlled demo data.
+  No task marketplace is live. Unknown/unstructured price never becomes an exact margin.
+- Versioned REST, real stateless Streamable HTTP MCP with four read-only tools,
+  and A2A-style discovery metadata (no A2A execution/message transport).
+- Upstash shared snapshot/lease and quota adapters are optional; absent config
+  means explicitly labeled non-durable/per-instance demo protection. Partial or
+  failing shared config fails closed. No store or account was created.
+- New routes live in tab memory, not a database; original fictional briefs remain
+  separate simulated output examples. Python and old `web/` stay regression/reference.
+- Preserve editorial/GSAP/reduced-motion/mobile behavior. The network page uses
+  accessible filters, plain-text descriptions, source age and disabled-action labels.
+- See README and `docs/api.md`, `docs/mcp.md`, `docs/security.md` for operations.
+  Never inspect/print a real secret or import an archived marketplace connector.
+
+## Superseded initial SignalForge snapshot (retained history)
 
 - Canonical Next.js/Vercel app: apps/signalforge (Next 16.3.3, strict TypeScript).
 - Fixture-only end-to-end request → plan → explicit Run → brief → receipt.

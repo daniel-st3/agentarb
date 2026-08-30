@@ -1,4 +1,9 @@
 import { test, expect } from "@playwright/test";
+test.beforeEach(async ({ page }, info) => {
+  await page.setExtraHTTPHeaders({
+    "x-forwarded-for": `192.0.${info.project.name === "mobile" ? 3 : 2}.${(info.testId.split("").reduce((n, c) => n + c.charCodeAt(0), 0) % 240) + 1}`,
+  });
+});
 
 test("V3 evidence arrives once, remains truthful, and has a static equivalent", async ({
   page,
@@ -7,9 +12,9 @@ test("V3 evidence arrives once, remains truthful, and has a static equivalent", 
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(page.locator(".signal-field")).toHaveCount(2);
-  await expect(page.locator(".signal-trace path")).toHaveCount(1);
-  await expect(page.locator(".opening")).toContainText(
-    "DEMO / INTERFACE SIGNALS",
+  await expect(page.locator(".research-command textarea")).toHaveCount(1);
+  await expect(page.locator(".research-command")).toContainText(
+    "Demo mode · no task services are called",
   );
   const evidence = page.locator(".living-evidence");
   await evidence.scrollIntoViewIfNeeded();
@@ -73,11 +78,11 @@ test("precision controls support keyboard selection without changing the workflo
   await expect(
     page.getByRole("heading", { name: "Archive", exact: true }),
   ).toBeVisible();
-  await page.locator(".history-row").first().click();
-  await expect(page.locator(".report-masthead")).toContainText(
-    "RESEARCH BRIEF",
-  );
-  await expect(page.locator(".receipt-total")).toContainText("$0.00");
+  await page.locator(".route-archive-row").first().click();
+  await expect(
+    page.getByRole("heading", { name: "Agent-ready execution route" }),
+  ).toBeVisible();
+  await expect(page.locator(".route-constraints")).toContainText("$0.00");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -99,7 +104,7 @@ test("no-JavaScript evidence is complete and ambient SVGs are decorative", async
   for (const field of await page.locator(".signal-field").all())
     await expect(field).toHaveAttribute("aria-hidden", "true");
   await expect(
-    page.getByRole("link", { name: "Forge a brief", exact: true }).first(),
+    page.getByRole("link", { name: "Forge route", exact: true }).first(),
   ).toBeVisible();
   await context.close();
 });

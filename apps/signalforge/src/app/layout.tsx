@@ -6,6 +6,8 @@ import { ResearchSession } from "@/components/session";
 import { seedRuns } from "@/domain/engine";
 import "./globals.css";
 import "./polish.css";
+import "./command.css";
+import "./network.css";
 import { PageChoreography } from "@/components/editorial/atmosphere";
 const geist = Geist({
   subsets: ["latin"],
@@ -25,11 +27,11 @@ const mono = Geist_Mono({
 });
 export const metadata: Metadata = {
   title: {
-    default: "SignalForge — Research, routed intelligently",
+    default: "SignalForge — Routing intelligence for the agent economy",
     template: "%s · SignalForge",
   },
   description:
-    "Plan a research route, compare service tradeoffs, and inspect a cited demo brief. Transparent evidence. Hard budget limits. No external spending.",
+    "Turn an agent objective into a budget-constrained route. Inspect public catalog metadata, capability tradeoffs and execution contracts. Discovery only.",
 };
 export default async function RootLayout({
   children,
@@ -56,7 +58,7 @@ export default async function RootLayout({
           <span>
             SignalForge<span className="brand-dot">.</span>
           </span>
-          <p>Research demo. Transparent provenance. Actual spend $0.</p>
+          <p>Discovery and planning only. Execution not enabled.</p>
           <Link
             href="https://github.com/daniel-st3/agentarb"
             target="_blank"

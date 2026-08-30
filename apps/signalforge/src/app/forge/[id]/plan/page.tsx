@@ -1,10 +1,10 @@
-import { PlanView } from "@/components/research-views";
-export const metadata = { title: "Your research route" };
+import { RouteCompetition } from "@/components/route-views";
+export const metadata = { title: "Capability route" };
 export default async function Page({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <PlanView id={id} />;
+  return <RouteCompetition id={id} />;
 }

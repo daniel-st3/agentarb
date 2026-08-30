@@ -9,7 +9,7 @@ const headers = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
 };
-async function readBounded(request: Request): Promise<unknown> {
+export async function readBounded(request: Request): Promise<unknown> {
   if (request.headers.get("content-type")?.split(";")[0] !== "application/json")
     throw new Error("invalid");
   const origin = request.headers.get("origin");
@@ -38,7 +38,7 @@ async function readBounded(request: Request): Promise<unknown> {
       const { done, value } = await reader.read();
       if (done) break;
       total += value.byteLength;
-      if (total > 16_384) throw new Error("invalid");
+      if (total > 16_384) throw new Error("body_too_large");
       chunks.push(value);
     }
   } finally {

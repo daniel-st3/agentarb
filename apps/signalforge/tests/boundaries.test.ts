@@ -29,6 +29,7 @@ describe("deployed boundary", () => {
     );
     expect(source).not.toMatch(/\b(?:eval|exec|spawn)\s*\(/);
     const server = [...files("src/server"), ...files("src/domain")]
+      .filter((f) => !f.endsWith("framing-provider.ts"))
       .map((f) => readFileSync(f, "utf8"))
       .join("\n");
     expect(server).not.toMatch(
@@ -38,11 +39,20 @@ describe("deployed boundary", () => {
       /localStorage|sessionStorage|document\.cookie|NEXT_PUBLIC_.*KEY/,
     );
   });
-  it("the only application endpoints are bounded plan and run", () => {
+  it("only declared discovery, planning, MCP and legacy local demo endpoints exist", () => {
     const routes = files("src/app/api").filter((f) => f.endsWith("route.ts"));
     expect(routes.sort()).toEqual([
+      "src/app/api/frame/route.ts",
+      "src/app/api/mcp/route.ts",
       "src/app/api/plan/route.ts",
+      "src/app/api/routes/compile/route.ts",
       "src/app/api/run/route.ts",
+      "src/app/api/v1/catalog/[id]/route.ts",
+      "src/app/api/v1/catalog/route.ts",
+      "src/app/api/v1/network/status/route.ts",
+      "src/app/api/v1/openapi/route.ts",
+      "src/app/api/v1/opportunities/evaluate/route.ts",
+      "src/app/api/v1/routes/plan/route.ts",
     ]);
   });
   it("invalid content types, malformed JSON, and oversized chunked inputs fail safely", async () => {

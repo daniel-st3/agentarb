@@ -1,43 +1,59 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import {
-  OpeningScene,
   RouteNarrative,
   ReportPreview,
 } from "@/components/editorial/narrative";
 import { seedRuns } from "@/domain/engine";
+import { ResearchCommand } from "@/components/research-command";
 import { SignalField, MagneticLink } from "@/components/editorial/atmosphere";
 export default async function Home() {
   const [example] = await seedRuns();
   return (
     <>
-      <OpeningScene />
+      <script
+        id="signalforge-software-metadata"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "SignalForge",
+            applicationCategory: "DeveloperApplication",
+            operatingSystem: "Web",
+            url: "https://signalforge-rose-two.vercel.app/",
+            description:
+              "Public catalog discovery and budget-constrained agent route planning. Demo routes do not execute services or make payments.",
+          }),
+        }}
+      />
+      <ResearchCommand landing />
       <RouteNarrative run={example} />
       <ReportPreview run={example} />
       <section
         className="use-cases container"
         aria-labelledby="use-cases-title"
       >
-        <p className="eyebrow">RESEARCH WITH A PURPOSE / 03</p>
+        <p className="eyebrow">CAPABILITIES, COMPOSED / 03</p>
         <h2 id="use-cases-title">
-          A question worth
+          An objective worth
           <br />
-          <em>looking into.</em>
+          <em>routing well.</em>
         </h2>
         {[
           [
             "Competitive intelligence",
-            "Compare a market without manually stitching sources together.",
+            "Compose company, market, and independent verification capabilities.",
             "MULTI-SOURCE",
           ],
           [
-            "Company research",
-            "Turn a focused question into an evidence-led decision memo.",
+            "Structured extraction",
+            "Find a reliable chain from a public website to structured data.",
             "BUDGET-CAPPED",
           ],
           [
             "Due diligence",
-            "Surface claims, corroboration, and uncertainty in one artifact.",
+            "Require independent verification before a material claim reaches an agent.",
             "AUDITABLE",
           ],
         ].map(([title, description, tag], i) => (
@@ -52,20 +68,20 @@ export default async function Home() {
           </Link>
         ))}
         <p className="field-help">
-          Explore these workflows with three fictional cases. The demo does not
-          perform live research.
+          Compare modeled service routes. Public catalog discovery is separate
+          from task execution; no task services are called.
         </p>
       </section>
       <section className="closing container">
         <SignalField variant="closing" />
-        <p className="eyebrow">LESS UNCERTAINTY. MORE CONTEXT.</p>
+        <p className="eyebrow">HUMAN OBJECTIVES. AGENT-READY CONTRACTS.</p>
         <h2>
           Make the route
           <br />
           <em>visible.</em>
         </h2>
         <MagneticLink href="/forge">
-          Forge your first brief <ArrowRight size={22} />
+          Forge route <ArrowRight size={22} />
         </MagneticLink>
       </section>
     </>

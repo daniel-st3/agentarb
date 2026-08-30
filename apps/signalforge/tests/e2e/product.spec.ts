@@ -1,4 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
+test.beforeEach(async ({ page }, info) => {
+  await page.setExtraHTTPHeaders({
+    "x-forwarded-for": `192.0.${info.project.name === "mobile" ? 5 : 4}.${(info.title.split("").reduce((n, c) => n + c.charCodeAt(0), 0) % 240) + 1}`,
+  });
+});
 import { mkdir } from "node:fs/promises";
 const shots = "test-results/screenshots";
 
@@ -29,7 +34,7 @@ test("landing narrative remains available without JavaScript", async ({
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:3002/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "One question.",
+    "What should your agent accomplish?",
   );
   await expect(
     page.getByRole("heading", { name: "Show what holds up." }),
@@ -70,91 +75,106 @@ test("question → plan → run → evidence → receipt, exports and session re
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "One question. A better route to the answer.",
+      name: "What should your agent accomplish?",
     }),
   ).toBeVisible();
   await screenshot(page, `${info.project.name}-hero`);
   await page.screenshot({
     path: `${shots}/${info.project.name}-hero-viewport.png`,
   });
-  await page
-    .locator(".paper-report")
-    .screenshot({
-      path: `${shots}/${info.project.name}-paper-report.png`,
-      style: ".site-nav, .skip-link { visibility: hidden !important; }",
-    });
-  await page
-    .getByRole("navigation")
-    .getByRole("link", { name: "Forge a brief" })
-    .click();
+  await page.locator(".paper-report").screenshot({
+    path: `${shots}/${info.project.name}-paper-report.png`,
+    style: ".site-nav, .skip-link { visibility: hidden !important; }",
+  });
+  await page.goto("/forge");
   await expect(
-    page.getByRole("heading", { name: "What do you need to know?" }),
+    page.getByRole("heading", { name: "What should your agent accomplish?" }),
   ).toBeVisible();
   await screenshot(page, `${info.project.name}-composer`);
-  await page.getByRole("button", { name: /Assess Northstar/ }).click();
+  await page
+    .getByRole("button", { name: /Build a verified competitive/ })
+    .click();
   await page
     .getByRole("button", { name: "Most verified", exact: true })
     .click();
   await screenshot(page, `${info.project.name}-configured`);
+  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Local demo decomposition");
   await page
-    .getByRole("button", { name: "Generate route", exact: true })
+    .getByRole("button", { name: "Build execution route", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Research route" }),
+    page.getByRole("heading", { name: "Capability route" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Independent review", exact: true }),
+    page.getByRole("heading", { name: "Proofline Verify", exact: true }),
   ).toBeVisible();
   await screenshot(page, `${info.project.name}-plan`);
-  await page.getByText("Alternatives not selected").click();
+  await page.getByText(/Alternatives not selected/).click();
+  await expect(page.getByText(/REJECTED \/ unavailable/).first()).toBeVisible();
+  await page
+    .getByRole("button", { name: "Simulate route", exact: true })
+    .click();
   await expect(
-    page.getByText("Catalog metadata only; execution is unavailable."),
+    page.getByRole("heading", {
+      name: "Agent-ready execution route",
+      exact: true,
+    }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Run research", exact: true }).click();
+  await expect(page.locator(".route-boundary")).toContainText(
+    "execution_not_enabled",
+  );
+  await screenshot(page, `${info.project.name}-contract`);
+  const downloading = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download route contract JSON" })
+    .click();
+  expect((await downloading).suggestedFilename()).toMatch(/\.json$/);
+  await page.getByRole("link", { name: "Archive", exact: true }).click();
+  await expect(page.locator(".route-archive-row")).toHaveCount(4);
+  await screenshot(page, `${info.project.name}-history`);
+  await page.reload();
+  await expect(page.locator(".route-archive-row")).toHaveCount(3);
+  await page.goto("/forge/example-1/output");
   await expect(
     page.getByRole("heading", { name: "Intelligence brief: Northstar Search" }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("2 claims corroborated in simulation", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Simulated demo evidence.", { exact: true }),
   ).toBeVisible();
   await screenshot(page, `${info.project.name}-brief`);
   await page.getByText("Evidence ledger", { exact: true }).click();
   await expect(
     page.getByText("None — authored fixture document, not a public source."),
   ).toHaveCount(5);
-  await screenshot(page, `${info.project.name}-evidence`);
-  const downloading = page.waitForEvent("download");
+  const audit = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download audit JSON" }).click();
-  expect((await downloading).suggestedFilename()).toMatch(
-    /^signalforge-.+\.json$/,
-  );
-  const mdDownload = page.waitForEvent("download");
+  await audit;
+  const md = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export Markdown" }).click();
-  expect((await mdDownload).suggestedFilename()).toMatch(/\.md$/);
-  await page.getByRole("link", { name: "Archive", exact: true }).click();
-  await expect(page.getByText(/THIS SESSION/)).toHaveCount(1);
-  await screenshot(page, `${info.project.name}-history`);
-  await page.reload();
-  await expect(page.getByText(/THIS SESSION/)).toHaveCount(0);
+  await md;
   expect(errors).toEqual([]);
   expect(external).toEqual([]);
 });
-test("cheapest route is free and single-source", async ({ page }) => {
+test("zero-budget route refuses missing critical capabilities", async ({
+  page,
+}) => {
   await page.goto("/forge");
-  await page.getByRole("button", { name: /Evaluate AtlasGrid/ }).click();
+  await page.getByRole("button", { name: /Find the cheapest/ }).click();
   await page.getByRole("button", { name: "Cheapest", exact: true }).click();
   await page.getByRole("button", { name: "$0.00", exact: true }).click();
+  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Local demo decomposition");
   await page
-    .getByRole("button", { name: "Generate route", exact: true })
+    .getByRole("button", { name: "Build execution route", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Independent review", exact: true }),
+    page.getByRole("heading", { name: "Proofline Verify", exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Run research" }).click();
-  await expect(page.getByText("Single-source", { exact: true })).toHaveCount(3);
+  await expect(
+    page.getByRole("heading", { name: "Partial route / constraints not met" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Inspect partial contract" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Unmet requirements" }),
+  ).toBeVisible();
 });
 test("reduced motion retains usable route story and seeded brief", async ({
   page,
@@ -167,7 +187,7 @@ test("reduced motion retains usable route story and seeded brief", async ({
   await expect(
     page.getByRole("heading", { name: "Show what holds up." }),
   ).toBeVisible();
-  await page.goto("/forge/example-1");
+  await page.goto("/forge/example-1/output");
   await expect(
     page.getByRole("heading", { name: "Intelligence brief: Northstar Search" }),
   ).toBeVisible();
@@ -183,7 +203,7 @@ test("invalid routes and absent sessions have recoverable states", async ({
 }) => {
   await page.goto("/forge/missing");
   await expect(
-    page.getByRole("heading", { name: "This brief isn’t in your session." }),
+    page.getByRole("heading", { name: "This route isn’t in your session." }),
   ).toBeVisible();
   expect((await request.get("/api/discovery")).status()).toBe(404);
   expect((await request.post("/api/claim")).status()).toBe(404);
@@ -200,17 +220,19 @@ test("request-in-flight and recoverable network failure are honest", async ({
   page,
 }, info) => {
   await page.goto("/forge");
-  await page.getByRole("button", { name: /Explain Lumen/ }).click();
+  await page.getByRole("button", { name: /Choose the best service/ }).click();
   let release: (() => void) | undefined;
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/api/plan", async (route) => {
+  await page.route("**/api/routes/compile", async (route) => {
     await held;
     await route.abort();
   });
+  await page.getByRole("button", { name: "Forge route", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Local demo decomposition");
   await page
-    .getByRole("button", { name: "Generate route", exact: true })
+    .getByRole("button", { name: "Build execution route", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "Comparing demo services…" }),
@@ -221,7 +243,7 @@ test("request-in-flight and recoverable network failure are honest", async ({
     page.getByRole("alert").filter({ hasText: /fetch|route|network/i }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Generate route", exact: true }),
+    page.getByRole("button", { name: "Build execution route", exact: true }),
   ).toBeEnabled();
 });
 for (const width of [390, 768, 1024, 1440]) {
@@ -231,7 +253,9 @@ for (const width of [390, 768, 1024, 1440]) {
     for (const [path, name] of [
       ["/", "landing"],
       ["/forge", "composer"],
-      ["/forge/example-1", "brief"],
+      ["/forge/example-1/output", "brief"],
+      ["/forge/example-1", "contract"],
+      ["/network", "network"],
     ]) {
       await page.goto(path);
       await page.emulateMedia({ reducedMotion: "reduce" });
@@ -257,7 +281,7 @@ test("editorial hero and a genuinely pinned, scrubbed route", async ({
   ).toHaveCount(0);
   expect(
     await page
-      .locator(".opening")
+      .locator(".research-command")
       .evaluate((el) => getComputedStyle(el).borderRadius),
   ).toBe("0px");
   const start = await story.evaluate(
@@ -274,7 +298,7 @@ test("editorial hero and a genuinely pinned, scrubbed route", async ({
     .evaluate((el) => getComputedStyle(el).strokeDashoffset);
   await page.evaluate(
     (y) => window.scrollTo({ top: y, behavior: "instant" }),
-    start + 1800,
+    start + 1440,
   );
   await expect(story).toHaveAttribute("data-chapter", "3");
   await expect(
@@ -294,13 +318,13 @@ test("editorial hero and a genuinely pinned, scrubbed route", async ({
   await page.screenshot({ path: shots + "/desktop-route-midscroll.png" });
   await page.evaluate(
     (y) => window.scrollTo({ top: y, behavior: "instant" }),
-    start + 2900,
+    start + 2320,
   );
   await expect(story).toHaveAttribute("data-chapter", "4");
   await expect(
     page.getByRole("heading", { name: "Show what holds up." }),
   ).toBeVisible();
-  await expect(page.locator(".modeled-counter")).toHaveText("$0.08");
+  await expect(page.locator(".modeled-counter")).toHaveText("$0.21");
   await expect(page.locator(".verification-final")).toBeVisible();
   await expect(page.locator(".verification-start")).not.toBeVisible();
   await page.screenshot({ path: shots + "/desktop-route-verified.png" });

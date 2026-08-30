@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "signalforge": {
+      "type": "http",
+      "url": "https://signalforge-rose-two.vercel.app/api/mcp"
+    }
+  }
+}

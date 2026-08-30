@@ -1,17 +1,9 @@
-# SignalForge web app
+# SignalForge deployed application
 
-This is the active Vercel root. The repository README covers the product,
-provenance, scoring, setup, deployment, and 90-second demo.
+Next.js App Router / TypeScript. See [root README](../../README.md), [source assessments](../../docs/live-sources.md), [API](../../docs/api.md), [MCP](../../docs/mcp.md) and [security](../../docs/security.md).
 
-```bash
-npm ci
-npm run dev
-npm run lint
-npm run typecheck
-npm test
-npm run build
-npm run test:e2e
-```
+`npm ci && npm run dev -- --port 3001`
 
-No keys. Only mock adapters execute. Actual spend is zero; prices and
-independent corroboration are explicitly simulated.
+`npm run lint && npm run typecheck && npm test && npm run build && npm run test:e2e`
+
+No keys are needed for deterministic planning. Optional server-only Groq decomposes objectives. Approved public catalog GETs are separate from task execution. All contracts: execution_not_enabled. Redis optional; absent means non-durable, per-instance demo limits/cache. Vercel root: apps/signalforge.

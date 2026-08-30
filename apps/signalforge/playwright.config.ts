@@ -4,6 +4,14 @@ export default defineConfig({
   fullyParallel: false,
   use: { baseURL: "http://127.0.0.1:3002", trace: "retain-on-failure" },
   webServer: {
+    env: {
+      GROQ_API_KEY: "",
+      OPENROUTER_API_KEY: "",
+      UPSTASH_REDIS_REST_URL: "",
+      UPSTASH_REDIS_REST_TOKEN: "",
+      CACHE_MODE: "memory",
+      DISCOVERY_MODE: "offline",
+    },
     command:
       "node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3002",
     url: "http://127.0.0.1:3002",

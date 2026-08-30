@@ -1,5 +1,5 @@
-import { HistoryView } from "@/components/research-views";
-export const metadata = { title: "Research history" };
+import { RouteArchive } from "@/components/route-views";
+export const metadata = { title: "Route archive" };
 export default function Page() {
-  return <HistoryView />;
+  return <RouteArchive />;
 }

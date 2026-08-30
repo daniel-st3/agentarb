@@ -59,13 +59,13 @@ export function EmptyRun() {
   return (
     <div className="empty-state">
       <Eyebrow>THIS SESSION HAS ENDED</Eyebrow>
-      <h1>This brief isn’t in your session.</h1>
+      <h1>This route isn’t in your session.</h1>
       <p>
         New runs stay in memory in this tab. A full reload clears them; example
-        briefs are always available.
+        routes are always available.
       </p>
       <ActionLink href="/forge">Forge another</ActionLink>
-      <Link href="/history">Explore example briefs</Link>
+      <Link href="/history">Explore example routes</Link>
     </div>
   );
 }
