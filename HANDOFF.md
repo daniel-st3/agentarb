@@ -11,9 +11,11 @@
   REST and MCP share this contract. No catalog option becomes an execution provider.
 - `npm run verify:runtime` is an opt-in server-only real-config gate, separate from
   hermetic tests. Never inspect `.env.local` or print SDK/configuration errors.
-- Configured local Upstash reads succeeded but writes/quota scripts were denied.
-  Durable mode fails closed. Correct token write permissions before pushing this
-  rollout; do not downgrade to memory or claim production protection is active.
+- The operator replaced the read-only token. The real durable preflight now passes:
+  isolated expiring cache write/read/delete, shared counters across independent
+  Redis clients, durable snapshot/health/refresh metadata, and both API/MCP quotas.
+  Groq returned a valid structured ObjectiveFrame. No credentials were inspected.
+  Durable failure remains fail-closed; never downgrade to bypass a failed gate.
 
 ## Active increment: Command Surface + product foundations (2026-08-30)
 

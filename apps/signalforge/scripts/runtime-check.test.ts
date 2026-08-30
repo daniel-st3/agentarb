@@ -32,6 +32,59 @@ it("configured server adapters pass real runtime gates with status-only output",
     status.cacheWrite = "available";
     const configured = storeConfig();
     if (!configured) throw new Error("shared_store_required");
+    const { randomUUID, createHmac } = await import("node:crypto");
+    const { Ratelimit } = await import("@upstash/ratelimit");
+    const redis = new Redis({
+      ...configured,
+      retry: false,
+      signal: () => AbortSignal.timeout(2500),
+    });
+    const reader = new Redis({
+      ...configured,
+      retry: false,
+      signal: () => AbortSignal.timeout(2500),
+    });
+    const probeId = randomUUID();
+    const probeKey = `sf:verify:v1:cache:${probeId}`;
+    try {
+      await redis.set(probeKey, { probe: "cache-roundtrip" }, { ex: 30 });
+      status.cacheRoundTrip =
+        (await reader.get<{ probe: string }>(probeKey))?.probe ===
+        "cache-roundtrip";
+      status.cacheDelete =
+        (await redis.del(probeKey)) === 1 &&
+        (await reader.get(probeKey)) === null;
+    } finally {
+      // Delete this exact probe only; never source snapshots or visitor counters.
+      await redis.del(probeKey);
+    }
+    if (!process.env.RATE_LIMIT_SALT) throw new Error("shared_salt_required");
+    const caller = createHmac("sha256", process.env.RATE_LIMIT_SALT)
+      .update(probeId)
+      .digest("hex");
+    const options = {
+      limiter: Ratelimit.slidingWindow(2, "10 s"),
+      prefix: `sf:verify:v1:limit:${probeId}`,
+      analytics: false,
+      timeout: 2000,
+    };
+    const first = new Ratelimit({ ...options, redis, ephemeralCache: false });
+    const second = new Ratelimit({
+      ...options,
+      redis: reader,
+      ephemeralCache: false,
+    });
+    const decisions = [
+      await first.limit(caller),
+      await second.limit(caller),
+      await first.limit(caller),
+    ];
+    await Promise.all(decisions.map((d) => d.pending));
+    status.sharedCounter =
+      decisions[0].success &&
+      decisions[1].success &&
+      !decisions[2].success &&
+      decisions.every((d) => d.reason !== "timeout");
     const independent = new RedisSnapshotCache(
       new Redis({
         ...configured,
@@ -110,6 +163,9 @@ it("configured server adapters pass real runtime gates with status-only output",
   if (
     status.storeConfiguration !== "durable" ||
     status.cache !== "shared" ||
+    status.cacheRoundTrip !== true ||
+    status.cacheDelete !== true ||
+    status.sharedCounter !== true ||
     status.sharedSnapshotMetadata !== true ||
     status.decomposition !== "groq" ||
     status.frameValid !== true ||

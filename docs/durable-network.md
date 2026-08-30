@@ -39,6 +39,10 @@ verifier never prints or inspects credential values. It returns fixed status
 categories only, validates a real ObjectiveFrame, probes expiring cache leases,
 reads normalized snapshots/health/refresh metadata through an independent Redis
 client, and checks both shared quota categories. No task provider is executed.
+It also writes, reads and deletes one UUID-scoped, expiring probe key, and verifies
+that two independent Redis-backed limiters share a small counter and deny the
+third request. Probe counters expire automatically; no source snapshots or real
+visitor counters are deleted. Only fixed status categories are reported.
 
 The gate exits non-zero if Groq falls back or durable storage/counters cannot be
 verified. Do not push a configuration rollout until it succeeds. If reads succeed
