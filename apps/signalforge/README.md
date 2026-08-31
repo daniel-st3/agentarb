@@ -1,5 +1,9 @@
 # SignalForge deployed application
 
+The focused interaction layer adds Cmd/Ctrl+K objective launching, keyboard-safe
+inline disclosure and contract-based provenance inspection. See
+[interaction ownership and accessibility](../../docs/interaction-system.md).
+
 Next.js App Router / TypeScript. See [root README](../../README.md), [source assessments](../../docs/live-sources.md), [API](../../docs/api.md), [MCP](../../docs/mcp.md) and [security](../../docs/security.md).
 
 `npm ci && npm run dev -- --port 3001`

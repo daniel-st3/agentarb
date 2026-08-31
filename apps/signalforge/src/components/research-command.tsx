@@ -6,6 +6,9 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { m } from "motion/react";
+import { useInteractionTiming } from "./interactions/provider";
+import { InteractionError } from "./interactions/primitives";
 import {
   DecompositionEventSchema,
   ObjectiveInputSchema,
@@ -46,6 +49,7 @@ export function ResearchCommand({
     abort = useRef<AbortController | null>(null),
     title = useRef<HTMLHeadingElement>(null);
   const router = useRouter();
+  const { reduced, transition } = useInteractionTiming();
   const { saveRoute } = useResearchSession();
   const [question, setQuestion] = useState(initialObjective),
     [targetUrl, setTargetUrl] = useState(""),
@@ -278,14 +282,33 @@ export function ResearchCommand({
               >
                 <div className="canvas-rule" />
                 <span className="canvas-rail">01 / OBJECTIVE</span>
-                <div className="command-writing">
+                <m.div
+                  className="command-writing"
+                  data-motion-owner="motion"
+                  data-active={focused || !!question}
+                  layout={reduced ? false : "position"}
+                  transition={transition}
+                >
                   <span className="command-marker" aria-hidden="true">
-                    ›
+                    <m.span
+                      className="input-marker"
+                      data-motion-owner="motion"
+                      animate={{
+                        opacity: focused ? 1 : 0.45,
+                        x: reduced ? 0 : focused ? 2 : 0,
+                      }}
+                      transition={transition}
+                    >
+                      ›
+                    </m.span>
                   </span>
                   <label className="sr-only" htmlFor="research-question">
                     Agent objective
                   </label>
-                  <textarea
+                  <m.textarea
+                    layout={reduced ? false : "position"}
+                    transition={transition}
+                    data-motion-owner="motion"
                     id="research-question"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
@@ -307,7 +330,13 @@ export function ResearchCommand({
                       {placeholders[placeholderIndex]}
                     </span>
                   )}
-                </div>
+                  <m.span
+                    className="input-focus-rule"
+                    aria-hidden="true"
+                    animate={{ scaleX: focused || question ? 1 : 0 }}
+                    transition={transition}
+                  />
+                </m.div>
                 <span className="canvas-rail">02 / CONSTRAINTS</span>
                 <div className="command-controls">
                   <label>
@@ -328,6 +357,14 @@ export function ResearchCommand({
                       ))}
                       <option value="custom">Custom</option>
                     </select>
+                    <m.span
+                      key={budget + String(custom)}
+                      className="control-indicator"
+                      aria-hidden="true"
+                      initial={reduced ? false : { scaleX: 0.3, opacity: 0.4 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={transition}
+                    />
                   </label>
                   <label>
                     POLICY
@@ -344,6 +381,14 @@ export function ResearchCommand({
                         </option>
                       ))}
                     </select>
+                    <m.span
+                      key={policy}
+                      className="control-indicator"
+                      aria-hidden="true"
+                      initial={reduced ? false : { scaleX: 0.3, opacity: 0.4 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={transition}
+                    />
                   </label>
                   <span className="command-mode">
                     MODE<strong>DEMO</strong>
@@ -567,11 +612,7 @@ export function ResearchCommand({
           )}
         </div>
       )}
-      {error && (
-        <p role="alert" className="error-message">
-          {error}
-        </p>
-      )}
+      <InteractionError message={error} />
     </section>
   );
 }

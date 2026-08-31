@@ -7,6 +7,7 @@ import { useResearchSession } from "./session";
 import { Reveal } from "./motion";
 import { EmptyRun, money } from "./ui";
 import { policyLabels } from "@/domain/engine";
+import { RouteFlow } from "./interactions/route-flow";
 import {
   ExecutionRouteContractSchema,
   type ExecutionRouteContract,
@@ -336,6 +337,7 @@ export function ExecutionRouteView({ id }: { id: string }) {
           {route.status.toUpperCase()} · DEMO · execution_not_enabled
         </p>
       </header>
+      <RouteFlow route={route} />
       <div className="execution-layout">
         <article>
           <Sequence route={route} />

@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { AnimatePresence } from "motion/react";
+import { ResultTransition, TechnicalLabel } from "./interactions/primitives";
 import Link from "next/link";
 import {
   NetworkResponseSchema,
@@ -25,6 +27,8 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
     price = service ? l.pricing : l.payout,
     caps = service ? l.capabilities : l.requiredCapabilities;
   const [evaluation, setEvaluation] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const [shellOpen, setShellOpen] = useState(false);
   async function evaluate() {
     setEvaluation("Evaluating structured assumptions…");
     try {
@@ -50,8 +54,15 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
     }
   }
   return (
-    <details className="catalog-row">
-      <summary>
+    <details className="catalog-row" open={shellOpen}>
+      <summary
+        aria-expanded={expanded}
+        onClick={(event) => {
+          event.preventDefault();
+          if (!expanded) setShellOpen(true);
+          setExpanded(!expanded);
+        }}
+      >
         <div>
           <h3>{service ? l.name : l.title}</h3>
           <p>
@@ -72,92 +83,109 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
           {service ? l.access.actionability : l.actionability}
         </span>
       </summary>
-      <div className="catalog-description">
-        <p>{l.description}</p>
-        <dl>
-          <dt>Observed / catalog updated</dt>
-          <dd>
-            {l.observedAt} / {l.sourceUpdatedAt ?? "not supplied"}
-          </dd>
-          <dt>Price interpretation</dt>
-          <dd>
-            {price.parseConfidence} ·{" "}
-            {service
-              ? (l.pricing.rawPriceText ?? "No structured live price supplied.")
-              : (l.payout.rawPayoutText ?? "No structured payout supplied.")}
-          </dd>
-          {service ? (
-            <>
-              <dt>Access requirements</dt>
-              <dd>
-                {l.access.requirementsKnown
-                  ? "Modeled demo requirements only."
-                  : "Unknown: do not infer that credentials, reputation, or other access gates are unnecessary."}
-              </dd>
-            </>
-          ) : (
-            <>
-              <dt>Claim / settlement / reputation</dt>
-              <dd>
-                {l.claimModel} / {l.settlement} /{" "}
-                {l.reputationRequirement ?? "unknown"}
-              </dd>
-            </>
-          )}
-          <dt>Source / reference</dt>
-          <dd>
-            <a
-              href={l.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-link"
-            >
-              Inspect source metadata ↗
-            </a>{" "}
-            · {l.rawReference ?? l.id}
-          </dd>
-          {l.termsUrl && (
-            <>
-              <dt>Access / reuse assessment</dt>
-              <dd>
-                <a
+      <AnimatePresence
+        onExitComplete={() => {
+          if (!expanded) setShellOpen(false);
+        }}
+      >
+        {expanded && (
+          <ResultTransition key="detail">
+            <div className="catalog-description">
+              <p>{l.description}</p>
+              {service && l.access.actionability === "catalog_only" && (
+                <p>
+                  <TechnicalLabel term="catalog_only" />
+                </p>
+              )}
+              <dl>
+                <dt>Observed / catalog updated</dt>
+                <dd>
+                  {l.observedAt} / {l.sourceUpdatedAt ?? "not supplied"}
+                </dd>
+                <dt>Price interpretation</dt>
+                <dd>
+                  {price.parseConfidence} ·{" "}
+                  {service
+                    ? (l.pricing.rawPriceText ??
+                      "No structured live price supplied.")
+                    : (l.payout.rawPayoutText ??
+                      "No structured payout supplied.")}
+                </dd>
+                {service ? (
+                  <>
+                    <dt>Access requirements</dt>
+                    <dd>
+                      {l.access.requirementsKnown
+                        ? "Modeled demo requirements only."
+                        : "Unknown: do not infer that credentials, reputation, or other access gates are unnecessary."}
+                    </dd>
+                  </>
+                ) : (
+                  <>
+                    <dt>Claim / settlement / reputation</dt>
+                    <dd>
+                      {l.claimModel} / {l.settlement} /{" "}
+                      {l.reputationRequirement ?? "unknown"}
+                    </dd>
+                  </>
+                )}
+                <dt>Source / reference</dt>
+                <dd>
+                  <a
+                    href={l.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-link"
+                  >
+                    Inspect source metadata ↗
+                  </a>{" "}
+                  · {l.rawReference ?? l.id}
+                </dd>
+                {l.termsUrl && (
+                  <>
+                    <dt>Access / reuse assessment</dt>
+                    <dd>
+                      <a
+                        className="text-link"
+                        href={l.termsUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Source terms or license ↗
+                      </a>
+                    </dd>
+                  </>
+                )}
+              </dl>
+              {l.dataQuality.warnings.map((w) => (
+                <p key={w} className="field-help">
+                  {w}
+                </p>
+              ))}
+              <p className="catalog-boundary">
+                <TechnicalLabel term="execution_not_enabled" /> ·{" "}
+                {service
+                  ? "Catalog fit is not execution eligibility."
+                  : "Evaluation only. SignalForge cannot bid, claim, accept, submit, or settle this opportunity."}
+              </p>
+              <div className="network-actions">
+                <Link
                   className="text-link"
-                  href={l.termsUrl}
-                  rel="noreferrer"
-                  target="_blank"
+                  href={`/forge?capability=${encodeURIComponent(caps[0] ?? "web_research")}&listing=${encodeURIComponent(l.id)}`}
                 >
-                  Source terms or license ↗
-                </a>
-              </dd>
-            </>
-          )}
-        </dl>
-        {l.dataQuality.warnings.map((w) => (
-          <p key={w} className="field-help">
-            {w}
-          </p>
-        ))}
-        <p className="catalog-boundary">
-          execution_not_enabled ·{" "}
-          {service
-            ? "Catalog fit is not execution eligibility."
-            : "Evaluation only. SignalForge cannot bid, claim, accept, submit, or settle this opportunity."}
-        </p>
-        <div className="network-actions">
-          <Link
-            className="text-link"
-            href={`/forge?capability=${encodeURIComponent(caps[0] ?? "web_research")}&listing=${encodeURIComponent(l.id)}`}
-          >
-            Forge a route for this capability →
-          </Link>
-          {!service && (
-            <button className="text-link" onClick={evaluate}>
-              Evaluate as opportunity
-            </button>
-          )}
-        </div>
-        {evaluation && <p role="status">{evaluation}</p>}
-      </div>
+                  Forge a route for this capability →
+                </Link>
+                {!service && (
+                  <button className="text-link" onClick={evaluate}>
+                    Evaluate as opportunity
+                  </button>
+                )}
+              </div>
+              {evaluation && <p role="status">{evaluation}</p>}
+            </div>
+          </ResultTransition>
+        )}
+      </AnimatePresence>
     </details>
   );
 }
@@ -284,9 +312,16 @@ export function NetworkExplorer() {
       {error && <p role="alert">{error}</p>}
       {network && (
         <>
-          <div className="source-rail">
+          <div
+            className="source-rail"
+            aria-label="Source health and observation timestamps"
+          >
             {network.sources.map((s) => (
-              <div className="source-row" key={s.connectorId}>
+              <div
+                className="source-row"
+                data-freshness={s.freshness}
+                key={s.connectorId}
+              >
                 <div>
                   <h2>{s.name}</h2>
                   <p>{s.accessMode.replaceAll("_", " ")}</p>
@@ -301,12 +336,22 @@ export function NetworkExplorer() {
                   <p>
                     LAST OBSERVED
                     <br />
-                    {s.lastSuccessAt ?? "No successful observation"}
+                    {s.lastSuccessAt ? (
+                      <time dateTime={s.lastSuccessAt}>{s.lastSuccessAt}</time>
+                    ) : (
+                      "No successful observation"
+                    )}
                   </p>
                   <p>
                     NEXT ELIGIBLE REFRESH
                     <br />
-                    {s.nextRefreshAfter ?? "Unavailable"}
+                    {s.nextRefreshAfter ? (
+                      <time dateTime={s.nextRefreshAfter}>
+                        {s.nextRefreshAfter}
+                      </time>
+                    ) : (
+                      "Unavailable"
+                    )}
                   </p>
                 </div>
               </div>
@@ -371,7 +416,7 @@ export function NetworkExplorer() {
               "unknown",
             ])}
           </div>
-          <p className="eyebrow">
+          <p className="eyebrow" aria-live="polite">
             {records.length} MATCHES / EXECUTION NOT ENABLED
           </p>
           <p className="field-help">
@@ -379,30 +424,49 @@ export function NetworkExplorer() {
             per-call quotes only; missing prices and measured reliability sort
             last. “Newest” uses source update dates when supplied.
           </p>
-          {["live", "cached_live", "seeded_catalog", "simulated_demo"].map(
-            (state) => {
-              const rows = records.filter((r) => r.freshness === state);
-              return rows.length ? (
-                <section key={state} aria-label={labels[state]}>
-                  <p
-                    className={`catalog-freshness fresh-${state}`}
-                    style={{ margin: "32px 0 16px" }}
-                  >
-                    {labels[state]}
+          <div
+            className="catalog-results"
+            aria-label="Catalog results"
+            aria-busy={loading}
+          >
+            <AnimatePresence initial={false} mode="wait">
+              <ResultTransition key={records.map((r) => r.id).join("|")}>
+                {[
+                  "live",
+                  "cached_live",
+                  "seeded_catalog",
+                  "simulated_demo",
+                ].map((state) => {
+                  const rows = records.filter((r) => r.freshness === state);
+                  return rows.length ? (
+                    <section key={state} aria-label={labels[state]}>
+                      <div
+                        className={`catalog-freshness fresh-${state}`}
+                        style={{ margin: "32px 0 16px" }}
+                      >
+                        {labels[state]}
+                        {state === "cached_live" && (
+                          <>
+                            {" "}
+                            / <TechnicalLabel term="cached_live" />
+                          </>
+                        )}
+                      </div>
+                      {rows.map((l) => (
+                        <ListingDetail listing={l} key={l.id} />
+                      ))}
+                    </section>
+                  ) : null;
+                })}
+                {!records.length && (
+                  <p>
+                    No matching records in this sample. Unknown capabilities and
+                    prices are not inferred as eligible.
                   </p>
-                  {rows.map((l) => (
-                    <ListingDetail listing={l} key={l.id} />
-                  ))}
-                </section>
-              ) : null;
-            },
-          )}
-          {!records.length && (
-            <p>
-              No matching records in this sample. Unknown capabilities and
-              prices are not inferred as eligible.
-            </p>
-          )}
+                )}
+              </ResultTransition>
+            </AnimatePresence>
+          </div>
           <p className="field-help">{network.warnings.join(" ")}</p>
         </>
       )}

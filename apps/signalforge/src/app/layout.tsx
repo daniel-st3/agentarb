@@ -10,6 +10,8 @@ import "./polish.css";
 import "./command.css";
 import "./network.css";
 import "./command-canvas.css";
+import "./interactions.css";
+import { InteractionProvider } from "@/components/interactions/provider";
 import { PageChoreography } from "@/components/editorial/atmosphere";
 const geist = Geist({
   subsets: ["latin"],
@@ -47,36 +49,38 @@ export default async function RootLayout({
       className={`${geist.variable} ${display.variable} ${mono.variable}`}
     >
       <body>
-        <a className="skip-link" href="#main">
-          Skip to content
-        </a>
-        <ResearchSession seeds={seeds}>
-          <NetworkState>
-            <Navigation />
-            <main id="main">
-              <PageChoreography>{children}</PageChoreography>
-            </main>
-          </NetworkState>
-        </ResearchSession>
-        <footer className="site-footer container">
-          <span>
-            SignalForge<span className="brand-dot">.</span>
-          </span>
-          <p>Discovery and planning only. Execution not enabled.</p>
-          <Link
-            href="https://github.com/daniel-st3/agentarb"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Source on GitHub ↗
-          </Link>
-          <p className="maker-credit">
-            <Link href="https://github.com/daniel-st3/agentarb">
-              Designed and built by Daniel Rodríguez · AI systems, data, and
-              product
+        <InteractionProvider>
+          <a className="skip-link" href="#main">
+            Skip to content
+          </a>
+          <ResearchSession seeds={seeds}>
+            <NetworkState>
+              <Navigation />
+              <main id="main">
+                <PageChoreography>{children}</PageChoreography>
+              </main>
+            </NetworkState>
+          </ResearchSession>
+          <footer className="site-footer container">
+            <span>
+              SignalForge<span className="brand-dot">.</span>
+            </span>
+            <p>Discovery and planning only. Execution not enabled.</p>
+            <Link
+              href="https://github.com/daniel-st3/agentarb"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Source on GitHub ↗
             </Link>
-          </p>
-        </footer>
+            <p className="maker-credit">
+              <Link href="https://github.com/daniel-st3/agentarb">
+                Designed and built by Daniel Rodríguez · AI systems, data, and
+                product
+              </Link>
+            </p>
+          </footer>
+        </InteractionProvider>
       </body>
     </html>
   );

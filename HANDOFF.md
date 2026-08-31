@@ -1,5 +1,19 @@
 # SignalForge — Handoff
 
+## Focused interaction upgrade (2026-08-30)
+
+- Added Motion with async LazyMotion features and a code-split Cmd/Ctrl+K launcher.
+  Objective forwarding remains schema-validated; native modal focus isolation,
+  Escape, focus restoration and reduced-motion behavior are covered by browser tests.
+- Motion owns input response, preview labels, result/disclosure transitions and a
+  new contract-derived route inspector. GSAP retains hero/narrative/SVG ownership.
+  No Kokonut/Bklit code or heavy visualization library is used.
+- Observed options remain separate from simulated selected providers. All route
+  inspection retains execution_not_enabled; no backend or public contract changes.
+- The real Groq/durable Redis preflight passed again after the token replacement,
+  including cache write/read/delete and independent-client shared quota checks.
+- See `docs/interaction-system.md` for ownership, accessibility, privacy and limits.
+
 ## Runtime configuration verification (2026-08-30)
 
 - Groq now sends the ObjectiveFrame schema using AI SDK generateText. Groq does
