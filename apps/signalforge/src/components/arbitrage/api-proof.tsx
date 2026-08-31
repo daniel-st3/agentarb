@@ -2,12 +2,9 @@
 import { useState } from "react";
 import { useCopy } from "@/i18n/copy";
 import { ArbitrageEvaluationSchema } from "@/domain/arbitrage";
-const input = {
-  opportunityId: "lab:spread",
-  responseVersion: "2.0",
-  policy: { minimumMarginBps: 2500, requireIndependentVerification: true },
-};
-export function ArbitrageApiProof() {
+export function ArbitrageApiProof({initialId=""}:{initialId?:string}) {
+  const [opportunityId,setId]=useState(initialId);
+  const input={opportunityId,responseVersion:"2.0",policy:{minimumMarginBps:2500,requireIndependentVerification:true}};
   const t = useCopy(),
     [result, setResult] = useState<unknown>(null),
     [error, setError] = useState(false),
@@ -39,8 +36,9 @@ export function ArbitrageApiProof() {
       <div className="arb-thesis-columns">
         <div>
           <h3>POST /api/v1/opportunities/evaluate</h3>
+          <label>{t("Opportunity ID")}<input maxLength={240} value={opportunityId} onChange={e=>setId(e.target.value)}/></label>
           <pre>{JSON.stringify(input, null, 2)}</pre>
-          <button onClick={send} disabled={pending}>
+          <button onClick={send} disabled={pending||!opportunityId}>
             {t("Compile underwriting receipt")} ↗
           </button>
         </div>

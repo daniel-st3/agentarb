@@ -1,6 +1,8 @@
 import { ArbitrageWorkbench } from "@/components/arbitrage/workbench";
 import { cachedNetworkView } from "@/server/intelligence/cached-view";
 import { pageMetadata } from "@/i18n/metadata";
+import { RealMarket } from "@/components/arbitrage/real-market";
+import { demoDataEnabled } from "@/server/demo-mode";
 export const generateMetadata = ({
   params,
 }: {
@@ -13,6 +15,7 @@ export default async function Opportunities({
 }) {
   const query = await searchParams,
     network = await cachedNetworkView();
+  if (!demoDataEnabled()) return <RealMarket initialTasks={network?.records.filter(r=>r.listingType==="task_opportunity").slice(0,20)??[]}/>;
   return (
     <ArbitrageWorkbench
       network={network ?? { records: [] }}

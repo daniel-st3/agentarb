@@ -58,10 +58,14 @@ export function createPlanningLimiter(now = () => Date.now(), maximum = 10) {
   };
 }
 const localPlanning = createPlanningLimiter(),
-  localCatalog = createPlanningLimiter(undefined, 60);
+  localCatalog = createPlanningLimiter(undefined, 60),
+  localUnderwriting = createPlanningLimiter(undefined, 20);
+const responseQuota = new WeakMap<Request, Record<string, string>>();
+export const quotaHeaders = (request: Request) =>
+  responseQuota.get(request) ?? {};
 export async function checkPlanningLimit(
   request: Request,
-  category: "planning" | "catalog" = "planning",
+  category: "planning" | "catalog" | "underwriting" = "planning",
 ): Promise<Response | null> {
   const origin = request.headers.get("origin");
   if (
@@ -72,14 +76,25 @@ export async function checkPlanningLimit(
     return Response.json({ error: "Origin not allowed." }, { status: 403 });
   try {
     const configured = storeConfig();
-    if (!configured)
-      return (category === "planning" ? localPlanning : localCatalog)(request);
+    if (!configured) {
+      // Local hermetic demos may use bounded per-instance limits. Hosted live APIs may not.
+      if (process.env.VERCEL) throw new Error("configuration");
+      return (
+        category === "planning"
+          ? localPlanning
+          : category === "underwriting"
+            ? localUnderwriting
+            : localCatalog
+      )(request);
+    }
     if (!process.env.RATE_LIMIT_SALT || process.env.RATE_LIMIT_SALT.length < 32)
       throw new Error("configuration");
     const header =
         request.headers.get("x-vercel-forwarded-for") ??
         request.headers.get("x-forwarded-for"),
       address = header?.split(",")[0]?.trim().toLowerCase();
+    if (process.env.VERCEL && !request.headers.get("x-vercel-forwarded-for"))
+      throw new Error("caller_metadata");
     if (header && (header.length > 512 || !address || !isIP(address)))
       return Response.json({ error: "Invalid request." }, { status: 400 });
     const normalized =
@@ -96,10 +111,10 @@ export async function checkPlanningLimit(
         signal: () => AbortSignal.timeout(2500),
       }),
       limiter: Ratelimit.slidingWindow(
-        category === "planning" ? 10 : 60,
+        category === "planning" ? 10 : category === "underwriting" ? 20 : 60,
         "10 m",
       ),
-      prefix: `sf:limit:v1:${category}`,
+      prefix: `sf:limit:v2:${category}`,
       analytics: false,
       timeout: 2000,
     });
@@ -110,6 +125,16 @@ export async function checkPlanningLimit(
       !Number.isFinite(result.reset)
     )
       throw new Error("unavailable");
+    const quota = {
+      "RateLimit-Limit": String(
+        category === "planning" ? 10 : category === "underwriting" ? 20 : 60,
+      ),
+      "RateLimit-Remaining": String(Math.max(0, result.remaining)),
+      "RateLimit-Reset": String(
+        Math.max(1, Math.ceil((result.reset - Date.now()) / 1000)),
+      ),
+    };
+    responseQuota.set(request, quota);
     return result.success
       ? null
       : Response.json(
@@ -120,6 +145,7 @@ export async function checkPlanningLimit(
           {
             status: 429,
             headers: {
+              ...quota,
               "Retry-After": String(
                 Math.max(1, Math.ceil((result.reset - Date.now()) / 1000)),
               ),

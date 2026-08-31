@@ -121,7 +121,7 @@ it("configured server adapters pass real runtime gates with status-only output",
   try {
     const { checkPlanningLimit } = await import("../src/server/planning-limit");
     // Both REST and MCP use these shared categories. Only HMAC keys reach Redis.
-    for (const category of ["planning", "catalog"] as const) {
+    for (const category of ["planning", "catalog", "underwriting"] as const) {
       const limited = await checkPlanningLimit(
         new Request("http://localhost/api/v1/catalog", {
           headers: { "x-forwarded-for": "192.0.2.240" },

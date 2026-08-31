@@ -19,6 +19,11 @@ import { apisGuruDefinition, parseApisGuru } from "./connectors/apis-guru";
 import { modelsDevDefinition, parseModelsDev } from "./connectors/models-dev";
 import { litellmDefinition, parseLiteLlm } from "./connectors/litellm";
 import { snapshotCache, type SnapshotCache } from "./cache";
+import { demoDataEnabled } from "../demo-mode";
+import {
+  agentBountiesDefinition,
+  parseAgentBounties,
+} from "./connectors/agent-bounties";
 export interface MarketplaceIntelligenceConnector {
   id: string;
   name: string;
@@ -32,12 +37,14 @@ export interface MarketplaceIntelligenceConnector {
   discover(input: { limit: number }): Promise<DiscoverySnapshot>;
 }
 export const definitions = [
+  agentBountiesDefinition,
   mcpDefinition,
   apisGuruDefinition,
   modelsDevDefinition,
   litellmDefinition,
 ];
 const parsers = {
+  agentbounties: parseAgentBounties,
   mcp: parseMcpRegistry,
   apisguru: parseApisGuru,
   modelsdev: parseModelsDev,
@@ -149,10 +156,30 @@ export function createConnector(
       const attempt = new Date(time).toISOString();
       const refresh = async (): Promise<DiscoverySnapshot> => {
         try {
+          const metadata: {
+            etag?: string;
+            lastModified?: string;
+            notModified?: boolean;
+          } = {};
           const raw = await publicDiscoveryGet(
             def.id as keyof typeof parsers,
             fetcher,
+            entry ?? undefined,
+            metadata,
           );
+          if (metadata.notModified) {
+            if (!entry?.snapshot) throw new Error("invalid_payload");
+            entry = {
+              ...entry,
+              failures: 0,
+              error: false,
+              lastAttempt: attempt,
+              lastValidatedAt: attempt,
+              nextAttempt: time + def.refreshTtlSeconds * 1000,
+            };
+            await cache.set(def.id, entry);
+            return view();
+          }
           const records = parsers[def.id as keyof typeof parsers](raw, attempt);
           const snapshot = DiscoverySnapshotSchema.parse({
             connectorId: def.id,
@@ -171,6 +198,11 @@ export function createConnector(
             },
           });
           await cache.set(def.id, {
+            ...(metadata.etag ? { etag: metadata.etag } : {}),
+            ...(metadata.lastModified
+              ? { lastModified: metadata.lastModified }
+              : {}),
+            lastValidatedAt: attempt,
             snapshot,
             failures: 0,
             nextAttempt: time + def.refreshTtlSeconds * 1000,
@@ -304,7 +336,10 @@ export async function networkSnapshot() {
   );
   return NetworkResponseSchema.parse({
     version: "1.0",
-    records: [...snapshots.flatMap((s) => s.records), ...demoListings()],
+    records: [
+      ...snapshots.flatMap((s) => s.records),
+      ...(demoDataEnabled() ? demoListings() : []),
+    ],
     sources: snapshots.map((s) => s.health),
     cacheMode: cache.mode,
     warnings: [

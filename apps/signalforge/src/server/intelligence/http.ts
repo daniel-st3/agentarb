@@ -13,7 +13,7 @@ import {
   evaluateOpportunity,
 } from "./service";
 import { readBounded } from "../http";
-import { checkPlanningLimit } from "../planning-limit";
+import { checkPlanningLimit, quotaHeaders } from "../planning-limit";
 import { ArbitrageInputSchema } from "@/domain/arbitrage";
 import {
   underwriteOpportunity,
@@ -116,7 +116,7 @@ export async function handleCatalog(
   kind: "search" | "listing" | "status" | "evaluate" | "opportunities",
   id?: string,
 ) {
-  const limited = await checkPlanningLimit(request, "catalog");
+  const limited = await checkPlanningLimit(request, kind === "evaluate" ? "underwriting" : "catalog");
   if (limited) return limited;
   let input: unknown;
   try {
@@ -145,7 +145,7 @@ export async function handleCatalog(
     );
   }
   try {
-    return Response.json(await catalogOperation(kind, input), { headers });
+    return Response.json(await catalogOperation(kind, input), { headers: {...headers,...quotaHeaders(request)} });
   } catch (error) {
     return Response.json(
       {

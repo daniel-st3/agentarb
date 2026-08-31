@@ -3,7 +3,10 @@ import Link from "@/i18n/navigation";
 import { ArbitrageHero } from "@/components/arbitrage/hero";
 import { RouteNarrative } from "@/components/editorial/narrative";
 import { SignalField } from "@/components/editorial/atmosphere";
+import { LiveHome } from "@/components/arbitrage/live-home";
+import { demoDataEnabled } from "@/server/demo-mode";
 export default async function Home() {
+  if (!demoDataEnabled()) return <LiveHome/>;
   const t = await getCopy();
   return (
     <>

@@ -790,6 +790,8 @@ af91a41  Week 2: execution sub-agents, LangGraph claim gate, RiskGuard
 ```
 # Preview increment: Arbitrage Intelligence (2026-08-31)
 
+**Superseded by real-data v1 on the same Preview-only branch.** Read docs/real-data-v1.md first. Agent Bounties is now enabled through fixed conditional public GETs; default UI/network no longer include Lab fixtures. Exact USDC amounts, optional first-party priced workload ceilings and explicit unknowns replace fake public economics. No source text reaches the LLM classifier. Shared quotas and model admission fail closed on hosted configuration/storage failure. Production c117f844 remains untouched; no history rewrite.
+
 Branch `codex/agent-arbitrage-underwriter`, based on c117f844. **Preview only; do not promote production.** New primary surface: localized Opportunity Radar with explicitly simulated Lab and honest empty Observed demand. Existing Route Forge, protocol contracts and client consumer remain available.
 
 Pure integer underwriter: `apps/signalforge/src/domain/arbitrage.ts`; authored fixtures: `arbitrage-lab.ts`. REST evaluation opts into `responseVersion: "2.0"`; legacy response remains intact. MCP adds demand search and the same versioned evaluation. All nested contracts remain execution disabled, zero actual spend.

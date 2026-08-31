@@ -1,5 +1,6 @@
 import "server-only";
 import { generateText, Output } from "ai";
+import { admitModelCall } from "./model-capacity";
 import { createGroq } from "@ai-sdk/groq";
 import { localizeObjectiveFrame, type DisplayLocale } from "@/i18n/objective";
 import {
@@ -54,6 +55,7 @@ export async function frameWithProvider(
   });
   // Keys are consumed here only. Never inspect, serialize or log configuration.
   if (!process.env.GROQ_API_KEY) return local(false);
+  if (!(await admitModelCall())) return local(true);
   try {
     const model = createGroq({
       apiKey: process.env.GROQ_API_KEY,

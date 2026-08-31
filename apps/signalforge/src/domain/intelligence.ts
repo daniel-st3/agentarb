@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { capabilityIds } from "./objective";
+import { DemandStateSchema } from "./real-economics";
 export const FreshnessSchema = z.enum([
   "live",
   "cached_live",
@@ -108,6 +109,7 @@ export const CatalogServiceSchema = z
   .strict();
 export const TaskOpportunitySchema = z
   .object({
+    demandState: DemandStateSchema.optional(),
     ...common,
     listingType: z.literal("task_opportunity"),
     title: z.string().max(160),
@@ -214,7 +216,7 @@ export type CatalogQuery = z.infer<typeof CatalogQuerySchema>;
 export const NetworkResponseSchema = z
   .object({
     version: z.literal("1.0"),
-    records: z.array(ListingSchema).max(100),
+    records: z.array(ListingSchema).max(200),
     sources: z.array(ConnectorHealthSchema),
     cacheMode: z.enum(["shared", "non_durable_demo"]),
     warnings: z.array(z.string()),

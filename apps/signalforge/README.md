@@ -2,9 +2,9 @@
 
 Arbitrage intelligence: paid opportunity → capability routes → deterministic economic decision. This branch is preview-only; production is not promoted.
 
-Start with `/en/opportunities?mode=lab` for seven controlled scenarios or `?mode=observed` for honest demand-feed availability. EN/ES/FR are supported. The advanced `/forge` workflow and original route APIs remain compatible.
+Start with `/en/opportunities` for observed Agent Bounties records and exact source economics. EN/ES/FR are supported. Empty or ineligible demand is never replaced with fixtures. Historical Lab examples require explicit `ENABLE_DEMO_DATA=true` outside Vercel Production.
 
-Versioned underwriting: `POST /api/v1/opportunities/evaluate` with `{"opportunityId":"lab:spread","responseVersion":"2.0"}`. Omitting the version preserves the old conservative response. New demand discovery: `GET /api/v1/opportunities?mode=observed`. [Formulas, schema, API/MCP and caveats](../../docs/arbitrage-intelligence.md).
+Versioned underwriting: `POST /api/v1/opportunities/evaluate` with a real returned opportunity ID and `responseVersion:"2.0"`. Omitting the version preserves the old conservative response. Discovery: `GET /api/v1/opportunities?mode=observed`. [Real-data economics, security and limitations](../../docs/real-data-v1.md).
 
 [Production](https://signalforge-rose-two.vercel.app/en) · [Root guide](../../README.md).
 

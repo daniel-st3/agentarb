@@ -5,6 +5,7 @@ export default defineConfig({
   use: { baseURL: "http://127.0.0.1:3002", trace: "retain-on-failure" },
   webServer: {
     env: {
+      ENABLE_DEMO_DATA: "true",
       GROQ_API_KEY: "",
       OPENROUTER_API_KEY: "",
       UPSTASH_REDIS_REST_URL: "",

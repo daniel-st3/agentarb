@@ -27,9 +27,9 @@ export async function GET(request: Request) {
         title: "SignalForge discovery, planning and arbitrage underwriting",
         version: "1.1.0",
         description:
-          "execution_not_enabled. No external task service execution or marketplace actions.",
+          "SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. Observed economics preserve unknowns. execution_not_enabled; no marketplace actions.",
       },
-      servers: [{ url: "https://signalforge-rose-two.vercel.app" }],
+      // Relative paths intentionally target the deployment serving this schema.
       components: {
         schemas: {
           PlanningResponse: z.toJSONSchema(PlanningResponseSchema),
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
         "/api/v1/opportunities": {
           get: {
             summary:
-              "Bounded demand search; observed by default, Lab only by explicit mode",
+              "Bounded observed demand search; Lab requires explicit non-production configuration",
             parameters: Object.entries(OpportunityQuerySchema.shape).map(
               ([name, schema]) => ({
                 name,

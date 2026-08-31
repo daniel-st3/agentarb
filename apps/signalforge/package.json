@@ -7,6 +7,7 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "test:real-ui": "playwright test --config playwright.real.config.ts",
     "verify:secrets": "node scripts/check-changed-secrets.mjs",
     "demo:client-agent": "tsx examples/client-agent/index.ts",
     "dev": "next dev --hostname 127.0.0.1",

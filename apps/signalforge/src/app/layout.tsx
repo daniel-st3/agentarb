@@ -1,6 +1,7 @@
 import { getLocale } from "next-intl/server";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import { ResearchSession } from "@/components/session";
+import { demoDataEnabled } from "@/server/demo-mode";
 import "./globals.css";
 import "./polish.css";
 import "./command.css";
@@ -9,6 +10,7 @@ import "./command-canvas.css";
 import "./interactions.css";
 import "./locales.css";
 import "./arbitrage.css";
+import "./live-market.css";
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
@@ -38,7 +40,7 @@ export default async function RootLayout({
       className={`${geist.variable} ${display.variable} ${mono.variable}`}
     >
       <body>
-        <ResearchSession seeds={[]}>{children}</ResearchSession>
+        <ResearchSession seeds={[]} demoEnabled={demoDataEnabled()}>{children}</ResearchSession>
       </body>
     </html>
   );

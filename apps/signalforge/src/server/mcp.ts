@@ -145,6 +145,10 @@ export async function handleMcp(request: Request) {
     const quota = await checkPlanningLimit(request);
     if (quota) return quota;
   }
+  if (rpc.data.method === "tools/call" && rpc.data.params?.name === "signalforge_evaluate_opportunity") {
+    const quota = await checkPlanningLimit(request,"underwriting");
+    if (quota) return quota;
+  }
   const server = new McpServer(
     { name: "SignalForge", version: "1.1.0" },
     {

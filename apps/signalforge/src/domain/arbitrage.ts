@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RealEnvelopeSchema, WorkloadSchema } from "./real-economics";
 import {
   FreshnessSchema,
   TaskOpportunitySchema,
@@ -55,6 +56,7 @@ export const ArbitragePolicySchema = z
 export type ArbitragePolicy = z.infer<typeof ArbitragePolicySchema>;
 export const ScenarioSchema = z
   .object({
+    workload: WorkloadSchema.optional(),
     payoutCents: Cents.optional(),
     successProbabilityBps: Bps.optional(),
   })
@@ -252,6 +254,7 @@ const CandidateSchema = z
   .strict();
 export const ArbitrageEvaluationSchema = z
   .object({
+    realEconomics: RealEnvelopeSchema.optional(),
     version: z.literal("2.0"),
     deterministicVersion: z.literal("underwriter-1"),
     opportunityId: z.string(),

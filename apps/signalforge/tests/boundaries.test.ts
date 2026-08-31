@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
+vi.mock("server-only",()=>({}));
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { handlePlan, handleRun } from "../src/server/http";

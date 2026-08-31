@@ -5,6 +5,9 @@ import { storeConfig } from "../store-config";
 import { DiscoverySnapshotSchema } from "@/domain/intelligence";
 export const CacheEntrySchema = z
   .object({
+    etag: z.string().max(200).optional(),
+    lastModified: z.string().max(100).optional(),
+    lastValidatedAt: z.string().datetime().optional(),
     snapshot: DiscoverySnapshotSchema.optional(),
     nextAttempt: z.number(),
     failures: z.number().int().nonnegative(),
@@ -39,17 +42,17 @@ export class RedisSnapshotCache implements SnapshotCache {
   mode = "shared" as const;
   constructor(private redis: Redis) {}
   async get(key: string) {
-    const v = await this.redis.get(`sf:catalog:v1:${key}`);
+    const v = await this.redis.get(`sf:catalog:v2:${key}`);
     return v ? CacheEntrySchema.parse(v) : null;
   }
   async set(key: string, v: CacheEntry) {
-    await this.redis.set(`sf:catalog:v1:${key}`, CacheEntrySchema.parse(v), {
+    await this.redis.set(`sf:catalog:v2:${key}`, CacheEntrySchema.parse(v), {
       ex: 172800,
     });
   }
   async lease(key: string, seconds: number) {
     return (
-      (await this.redis.set(`sf:catalog:v1:lease:${key}`, "1", {
+      (await this.redis.set(`sf:catalog:v2:lease:${key}`, "1", {
         nx: true,
         ex: seconds,
       })) === "OK"

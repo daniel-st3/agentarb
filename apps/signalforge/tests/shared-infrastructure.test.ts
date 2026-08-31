@@ -150,11 +150,11 @@ it("shared cache stores only validated source snapshots with expiry and atomic r
     error: false,
   };
   await cache.set("mcp", entry);
-  expect(fake.set).toHaveBeenCalledWith("sf:catalog:v1:mcp", entry, {
+  expect(fake.set).toHaveBeenCalledWith("sf:catalog:v2:mcp", entry, {
     ex: 172800,
   });
   expect(await cache.lease("mcp", 3600)).toBe(true);
-  expect(fake.set).toHaveBeenCalledWith("sf:catalog:v1:lease:mcp", "1", {
+  expect(fake.set).toHaveBeenCalledWith("sf:catalog:v2:lease:mcp", "1", {
     nx: true,
     ex: 3600,
   });

@@ -12,6 +12,7 @@ import { frameWithProvider } from "./framing-provider";
 import { readBounded } from "./http";
 import { checkPlanningLimit } from "./planning-limit";
 import { PlanningResponseSchema } from "@/domain/planning-response";
+import { demoDataEnabled } from "./demo-mode";
 const headers = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
@@ -28,9 +29,11 @@ export async function planRouteService(
     ? null
     : await frameWithProvider(input, () => {}, signal);
   const route = buildExecutionRoute(input, frame ?? result!.frame, {
+    ...(demoDataEnabled() ? {} : {offers:[]}),
     id: `route_${randomUUID()}`,
     createdAt: new Date().toISOString(),
   });
+  if (!demoDataEnabled()) { route.executionMode = "planning_only"; route.provenance.isSimulated = false; route.provenance.note = "Observed catalog context only. No executable task quotes or provider authorization. Execution is disabled."; }
   const network = await networkSnapshot();
   const required = route.objectiveFrame.requiredCapabilities.map((c) => c.id);
   route.observedSupply = observedCatalogOptions(network.records, required);
@@ -39,7 +42,7 @@ export async function planRouteService(
     route: ExecutionRouteContractSchema.parse(route),
     ...(result ? { decompositionSource: result.source } : {}),
     freshnessSummary: network.sources,
-    warnings: [warnings[0], ...network.warnings],
+    warnings: [demoDataEnabled() ? warnings[0] : "Planning only. No service execution, task quotes or payments.", ...network.warnings],
     executionStatus: "execution_not_enabled" as const,
   });
 }

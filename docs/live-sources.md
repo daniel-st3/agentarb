@@ -1,6 +1,19 @@
 # Live source assessments
 
-Verified 2026-08-30. These are engineering access assessments, not a legal opinion or a claim of endorsement. Only the four fixed catalog GETs below are enabled. No HTML scraping, target-service requests, account access, SDK wallet code, or marketplace participation.
+Catalogs verified 2026-08-30; Agent Bounties verified 2026-08-31. These are engineering access assessments, not a legal opinion or endorsement. Four fixed catalog sources and one fixed opportunity source are enabled. No HTML scraping, target-service requests, account access, wallet code or marketplace participation.
+
+## Agent Bounties — enabled, public opportunity projection
+
+- Official discovery: https://agentbounties.app/llms.txt and https://agentbounties.app/.well-known/agent-bounties.json
+- Typed API: https://api.agentbounties.app/api-docs/openapi.json
+- Official feed documentation: https://github.com/NSPG13/agent-bounties/blob/main/docs/opportunity-feeds.md
+- Terms: https://agentbounties.app/terms.html (effective 2026-08-23). Robots: https://agentbounties.app/robots.txt. The official documentation expressly offers unauthenticated read-only REST/A2A/feed distribution; terms distinguish the hosted projection from canonical confirmed events. We use these interfaces, not HTML scraping. Reassess if terms/access change.
+- Exact GET paths: /v1/opportunities/feed.json and /v1/opportunities on https://api.agentbounties.app, both with network=base-mainnet&view=ready_to_earn&source_type=canonical_base&work_state=claimable&payment_state=escrowed&limit=30.
+- Conditional JSON Feed polling at ten minutes uses ETag/Last-Modified. Only a changed feed triggers the richer REST projection because the feed omits competition/deadline fields. No REST validators were observed. A distributed lease and bounded stale cache prevent per-visitor polling.
+- Initial verification observed 22 records. Inventory varies. Many records describe standing funding competitions or closed scoring windows, not simple currently fulfillable AI tasks. We reject those economic eligibility states; ready_to_earn is not a profitability decision.
+- Source fields retained: canonical source ID, title/goal, work/payment states, payment commitment, structured reward/bond/external spend, competition mode, deadline/kind, verifier/readiness, evidence requirements/boundary, created/updated/generated times.
+- Exact monetary units are USDC base units with six decimals. Gross-margin and bonus displays are not underwriting inputs. Skill mapping is exact enum matching; unsupported text remains unknown.
+- Source-provided versus inferred: funding/amounts/deadlines are hosted source assertions; eligibility is deterministic SignalForge filtering. No on-chain query independently verifies the assertions. Display URLs are metadata only. The code never follows next_action, invokes tools, claims, submits, funds or signs.
 
 ## Official MCP Registry — enabled
 

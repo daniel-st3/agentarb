@@ -9,6 +9,8 @@ import {
 import { arbitrageLab, findLab } from "@/domain/arbitrage-lab";
 import { networkSnapshot } from "../intelligence/service";
 import { ListingSchema } from "@/domain/intelligence";
+import { demoDataEnabled } from "../demo-mode";
+import { realEnvelope } from "@/domain/real-economics";
 
 export const OpportunityQuerySchema = z
   .object({
@@ -23,6 +25,8 @@ export const OpportunitiesResponseSchema = z
     mode: z.enum(["observed", "lab"]),
     records: z.array(ListingSchema).max(20),
     observedSupplyCount: z.number().int().nonnegative(),
+    matchedCount: z.number().int().nonnegative().optional(),
+    truncated: z.boolean().optional(),
     executionStatus: z.literal("execution_not_enabled"),
   })
   .strict();
@@ -50,8 +54,9 @@ export const ArbitrageReceiptSchema = z
   })
   .strict();
 export async function searchOpportunities(raw: unknown) {
-  const q = OpportunityQuerySchema.parse(raw),
-    network = await networkSnapshot();
+  const q = OpportunityQuerySchema.parse(raw);
+  if (q.mode === "lab" && !demoDataEnabled()) throw new Error("not_found");
+  const network = await networkSnapshot();
   const records =
     q.mode === "lab"
       ? arbitrageLab.map((f) => f.opportunity)
@@ -63,6 +68,17 @@ export async function searchOpportunities(raw: unknown) {
   return OpportunitiesResponseSchema.parse({
     version: "2.0",
     mode: q.mode,
+    matchedCount: records.filter(
+      (l) =>
+        !q.query ||
+        JSON.stringify(l).toLowerCase().includes(q.query.toLowerCase()),
+    ).length,
+    truncated:
+      records.filter(
+        (l) =>
+          !q.query ||
+          JSON.stringify(l).toLowerCase().includes(q.query.toLowerCase()),
+      ).length > q.limit,
     records: records
       .filter(
         (l) =>
@@ -81,7 +97,7 @@ export async function searchOpportunities(raw: unknown) {
 export async function underwriteOpportunity(raw: unknown) {
   const input = ArbitrageInputSchema.parse(raw),
     network = await networkSnapshot(),
-    lab = findLab(input.opportunityId);
+    lab = demoDataEnabled() ? findLab(input.opportunityId) : undefined;
   const task =
     lab?.opportunity ??
     network.records.find(
@@ -101,6 +117,35 @@ export async function underwriteOpportunity(raw: unknown) {
     now: new Date().toISOString(),
     snapshotVersion,
   });
+  if (task.listingType === "task_opportunity" && task.demandState) {
+    const state = task.demandState;
+    const supported =
+      state.capabilityStatus === "source_mapped" &&
+      task.requiredCapabilities.length > 0 &&
+      task.requiredCapabilities.every((c) =>
+        ["data_extract", "synthesis"].includes(c),
+      );
+    evaluation.realEconomics = realEnvelope(
+      state,
+      input.scenario?.workload,
+      input.scenario?.successProbabilityBps,
+      supported,
+    );
+    evaluation.decision =
+      state.eligibility === "not_eligible" ? "unroutable" : "insufficient_data";
+    const expired = task.deadline && Date.parse(task.deadline) <= Date.now();
+    if (expired) evaluation.decision = "unroutable";
+    evaluation.reasons = [
+      ...new Set([
+        ...evaluation.reasons,
+        ...state.eligibilityReasons,
+        ...(expired ? ["deadline_expired"] : []),
+        ...(supported ? [] : ["requirements_not_supported"]),
+        ...evaluation.realEconomics.missingInputs,
+      ]),
+    ];
+    evaluation.missingInputs = evaluation.realEconomics.missingInputs;
+  }
   return ArbitrageReceiptSchema.parse({
     evaluation,
     receiptHash: hashReceipt(evaluation),

@@ -178,6 +178,8 @@ it.each(["modelsdev", "litellm"] as const)(
     );
     expect(fetcher.mock.calls[0][1]).not.toHaveProperty("body");
     expect(Object.keys(discoveryEndpoints)).toEqual([
+      "agentbounties",
+      "agentbountiesState",
       "mcp",
       "apisguru",
       "modelsdev",

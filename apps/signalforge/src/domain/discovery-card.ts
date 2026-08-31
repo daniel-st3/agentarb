@@ -35,18 +35,18 @@ export const agentCardSchema = z.object({
 export const agentCard = agentCardSchema.parse({
   name: "SignalForge",
   description:
-    "A discovery and routing intelligence layer for the agent economy. Converts objectives into budget-constrained route contracts; no external execution.",
+    "SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. Source-reported paid opportunities, exact economic provenance and explicit unknowns; execution_not_enabled.",
   version: "1.1.0",
   capabilities: { streaming: false, pushNotifications: false },
   defaultInputModes: ["application/json"],
   defaultOutputModes: ["application/json"],
   skills: [
-    {id:"arbitrage-underwriting",name:"Arbitrage intelligence",description:"Compare deterministic Lab fulfillment routes using integer economics. Observed unknowns stay null. Inspection only.",tags:["underwriting","arbitrage-lab","execution_not_enabled"]},
+    {id:"arbitrage-underwriting",name:"Arbitrage underwriting",description:"Underwrite observed paid opportunities. Preserve USDC base units, published provider pricing, bounded user assumptions and unknown costs. Inspection only.",tags:["underwriting","observed-opportunities","execution_not_enabled"]},
     {
       id: "route-planning",
       name: "Capability route planning",
       description:
-        "Decompose objectives and compare deterministic budget-constrained demo routes.",
+        "Decompose objectives and inspect capability-matched observed catalog options. No provider execution or task quote is implied.",
       tags: ["planning", "discovery", "execution_not_enabled"],
     },
     {

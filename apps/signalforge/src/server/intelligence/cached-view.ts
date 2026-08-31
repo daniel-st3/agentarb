@@ -6,6 +6,7 @@ import {
 } from "@/domain/intelligence";
 import { snapshotCache } from "./cache";
 import { definitions, demoListings } from "./service";
+import { demoDataEnabled } from "../demo-mode";
 /** Server first paint reads existing snapshots only. No unmetered connector refresh. */
 export const cachedNetworkView = cache(
   async (): Promise<NetworkResponse | null> => {
@@ -13,7 +14,7 @@ export const cachedNetworkView = cache(
       if (process.env.DISCOVERY_MODE === "offline")
         return {
           version: "1.0",
-          records: demoListings(),
+          records: demoDataEnabled() ? demoListings() : [],
           sources: [],
           cacheMode: "non_durable_demo",
           warnings: ["Offline controlled demonstration."],
@@ -44,7 +45,7 @@ export const cachedNetworkView = cache(
               },
             })),
           ),
-          ...demoListings(),
+          ...(demoDataEnabled() ? demoListings() : []),
         ],
         sources: definitions.map((d, i) => {
           const entry = entries[i],

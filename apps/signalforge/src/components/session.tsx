@@ -15,14 +15,16 @@ const SessionContext = createContext<{
 } | null>(null);
 export function ResearchSession({
   seeds,
+  demoEnabled = false,
   children,
 }: {
   seeds: Run[];
+  demoEnabled?: boolean;
   children: ReactNode;
 }) {
   const [repository] = useState(() => new DemoRepository(seeds));
   const [runs, setRuns] = useState(seeds);
-  const [routes, setRoutes] = useState(seedRoutes);
+  const [routes, setRoutes] = useState(() => demoEnabled ? seedRoutes() : []);
   function saveRoute(value: ExecutionRouteContract) {
     const route = ExecutionRouteContractSchema.parse(value);
     setRoutes((current) =>

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { requestInputSchema, ResearchRequestSchema } from "@/domain/schema";
 import { createPlan, executeRun } from "@/domain/engine";
+import { demoDataEnabled } from "./demo-mode";
 
 const runInput = z
   .object({ request: ResearchRequestSchema, consent: z.literal(true) })
@@ -33,15 +34,22 @@ export async function readBounded(request: Request): Promise<unknown> {
   if (!reader) throw new Error("invalid");
   const chunks: Uint8Array[] = [];
   let total = 0;
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    void reader.cancel("request_timeout");
+  }, 5000);
   try {
     while (true) {
       const { done, value } = await reader.read();
+      if (timedOut) throw new Error("request_timeout");
       if (done) break;
       total += value.byteLength;
       if (total > 16_384) throw new Error("body_too_large");
       chunks.push(value);
     }
   } finally {
+    clearTimeout(timer);
     await reader.cancel();
   }
   const bytes = new Uint8Array(total);
@@ -53,6 +61,11 @@ export async function readBounded(request: Request): Promise<unknown> {
   return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }
 export async function handlePlan(request: Request) {
+  if (!demoDataEnabled())
+    return Response.json(
+      { error: "Example simulation is unavailable." },
+      { status: 404, headers },
+    );
   try {
     const input = requestInputSchema.parse(await readBounded(request));
     return Response.json(await createPlan(input, crypto.randomUUID()), {
@@ -69,6 +82,11 @@ export async function handlePlan(request: Request) {
   }
 }
 export async function handleRun(request: Request) {
+  if (!demoDataEnabled())
+    return Response.json(
+      { error: "Example simulation is unavailable." },
+      { status: 404, headers },
+    );
   try {
     const input = runInput.parse(await readBounded(request));
     return Response.json(await executeRun(input.request, input.consent), {

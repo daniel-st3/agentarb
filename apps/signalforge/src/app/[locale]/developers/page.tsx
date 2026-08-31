@@ -14,13 +14,13 @@ export default function Page() {
     <article className="developers network-page container">
       <p className="eyebrow">{t("SIGNALFORGE / DEVELOPER INTERFACE")}</p>
       <h1>
-        {t("Give your agent")}
+        {t("Underwrite agent work.")}
         <br />
-        {t("a better route.")}
+        {t("Keep the evidence.")}
       </h1>
       <p className="network-intro">
         {t(
-          "A public discovery and demo planning API. No marketplace writes, service execution, or payments. Every contract states execution_not_enabled.",
+          "Observed opportunities, explicit economic gaps, and auditable receipts. No marketplace actions. Every contract states execution_not_enabled.",
         )}
       </p>
       <section>
@@ -31,7 +31,7 @@ export default function Page() {
         <pre>{curl}</pre>
         <p>
           {t(
-            "Returns ObjectiveFrame, ExecutionRouteContract, decompositionSource, observed supply, freshnessSummary, warnings, and executionStatus. Groq may decompose the objective; deterministic code selects the demo route.",
+            "Returns a capability contract and observed supply. Optional Groq interprets objectives; deterministic code preserves unknown costs and incomplete coverage.",
           )}
         </p>
         <p>
