@@ -1,7 +1,10 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+import { useLocale } from "next-intl";
+
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -45,6 +48,9 @@ export function ResearchCommand({
   landing?: boolean;
   initialObjective?: string;
 }) {
+  const t = useCopy();
+  const locale = useLocale();
+
   const root = useRef<HTMLElement>(null),
     abort = useRef<AbortController | null>(null),
     title = useRef<HTMLHeadingElement>(null);
@@ -167,7 +173,7 @@ export function ResearchCommand({
       const response = await fetch("/api/frame", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify({ ...parsed.data, locale }),
         signal: controller.signal,
       });
       if (response.status === 429) {
@@ -250,10 +256,14 @@ export function ResearchCommand({
       {phase === "input" ? (
         <>
           <header className="command-heading">
-            <p className="eyebrow">AGENT ROUTING LAYER / DEMO CONTROL PLANE</p>
-            <h1>What should your agent accomplish?</h1>
+            <p className="eyebrow">
+              {t("AGENT ROUTING LAYER / DEMO CONTROL PLANE")}
+            </p>
+            <h1>{t("What should your agent accomplish?")}</h1>
             <p>
-              Describe an objective. Set the constraints. Compile the route.
+              {t(
+                "Describe an objective. Set the constraints. Compile the route.",
+              )}
             </p>
           </header>
           <div className="command-canvas">
@@ -281,7 +291,7 @@ export function ResearchCommand({
                 }}
               >
                 <div className="canvas-rule" />
-                <span className="canvas-rail">01 / OBJECTIVE</span>
+                <span className="canvas-rail">{t("01 / OBJECTIVE")}</span>
                 <m.div
                   className="command-writing"
                   data-motion-owner="motion"
@@ -303,7 +313,7 @@ export function ResearchCommand({
                     </m.span>
                   </span>
                   <label className="sr-only" htmlFor="research-question">
-                    Agent objective
+                    {t("Agent objective")}
                   </label>
                   <m.textarea
                     layout={reduced ? false : "position"}
@@ -315,7 +325,7 @@ export function ResearchCommand({
                     required
                     minLength={12}
                     maxLength={2000}
-                    placeholder={placeholders[placeholderIndex]}
+                    placeholder={t(placeholders[placeholderIndex])}
                     data-placeholder-overlay={!question && !focused}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
@@ -327,7 +337,7 @@ export function ResearchCommand({
                       className="placeholder-echo"
                       aria-hidden="true"
                     >
-                      {placeholders[placeholderIndex]}
+                      {t(placeholders[placeholderIndex])}
                     </span>
                   )}
                   <m.span
@@ -337,12 +347,12 @@ export function ResearchCommand({
                     transition={transition}
                   />
                 </m.div>
-                <span className="canvas-rail">02 / CONSTRAINTS</span>
+                <span className="canvas-rail">{t("02 / CONSTRAINTS")}</span>
                 <div className="command-controls">
                   <label>
-                    BUDGET
+                    {t("BUDGET")}
                     <select
-                      aria-label="Hard route budget"
+                      aria-label={t("Hard route budget")}
                       value={custom ? "custom" : budget}
                       onChange={(e) => {
                         setCustom(e.target.value === "custom");
@@ -355,7 +365,7 @@ export function ResearchCommand({
                           {money(n)}
                         </option>
                       ))}
-                      <option value="custom">Custom</option>
+                      <option value="custom">{t("Custom")}</option>
                     </select>
                     <m.span
                       key={budget + String(custom)}
@@ -367,9 +377,9 @@ export function ResearchCommand({
                     />
                   </label>
                   <label>
-                    POLICY
+                    {t("POLICY")}
                     <select
-                      aria-label="Routing policy"
+                      aria-label={t("Routing policy")}
                       value={policy}
                       onChange={(e) =>
                         setPolicy(e.target.value as typeof policy)
@@ -377,7 +387,7 @@ export function ResearchCommand({
                     >
                       {policies.map((p) => (
                         <option value={p} key={p}>
-                          {policyLabels[p]}
+                          {t(policyLabels[p])}
                         </option>
                       ))}
                     </select>
@@ -391,17 +401,19 @@ export function ResearchCommand({
                     />
                   </label>
                   <span className="command-mode">
-                    MODE<strong>DEMO</strong>
+                    {t("MODE")}
+                    <strong>{t("DEMO")}</strong>
                   </span>
                   <button type="submit" className="button command-submit">
-                    Compile route <ArrowUpRight size={19} />
+                    {t("Compile route")}
+                    <ArrowUpRight size={19} />
                   </button>
                 </div>
                 {custom && (
                   <label className="custom-budget">
-                    Custom budget ($0–$10)
+                    {t("Custom budget ($0–$10)")}
                     <input
-                      aria-label="Custom route budget"
+                      aria-label={t("Custom route budget")}
                       type="number"
                       min="0"
                       max="10"
@@ -413,13 +425,13 @@ export function ResearchCommand({
                   </label>
                 )}
                 <p className="command-shortcut">
-                  ⌘ / CTRL + ENTER TO COMPILE · MODELED USD
+                  {t("⌘ / CTRL + ENTER TO COMPILE · MODELED USD")}
                 </p>
                 <details className="command-options">
-                  <summary>Optional context & custom budget</summary>
+                  <summary>{t("Optional context & custom budget")}</summary>
                   <div>
                     <label htmlFor="command-url">
-                      Target URL · context only, not fetched
+                      {t("Target URL · context only, not fetched")}
                     </label>
                     <input
                       id="command-url"
@@ -430,7 +442,7 @@ export function ResearchCommand({
                       placeholder="https://…"
                     />
                     <label htmlFor="command-budget">
-                      Custom budget ($0–$10)
+                      {t("Custom budget ($0–$10)")}
                     </label>
                     <input
                       id="command-budget"
@@ -448,23 +460,23 @@ export function ResearchCommand({
                 </details>
               </form>
               <div className="command-examples">
-                <span className="eyebrow">START WITH AN OBJECTIVE</span>
+                <span className="eyebrow">{t("START WITH AN OBJECTIVE")}</span>
                 {objectiveExamples.slice(0, 3).map((topic, i) => (
                   <button
                     key={topic.name}
                     type="button"
-                    aria-label={topic.question}
+                    aria-label={t(topic.question)}
                     title={topic.question}
-                    onClick={() => setQuestion(topic.question)}
+                    onClick={() => setQuestion(t(topic.question))}
                   >
                     <span>0{i + 1}</span>
-                    {
+                    {t(
                       [
                         "Competitive intelligence",
                         "Structured extraction",
                         "Pricing monitor",
-                      ][i]
-                    }
+                      ][i],
+                    )}
                     <ArrowUpRight size={13} />
                   </button>
                 ))}
@@ -474,42 +486,46 @@ export function ResearchCommand({
           </div>
           <ObservedSupply />
           <p className="command-provenance" id="command-privacy">
-            Demo mode · no task services are called · no payments are made.{" "}
+            {t(
+              "Demo mode · no task services are called · no payments are made.",
+            )}{" "}
             <span>
-              Objective decomposition may send your objective and optional URL
-              to the configured model provider. Don’t include private
-              information.
+              {t(
+                "Objective decomposition may send your objective and optional URL to the configured model provider. Don’t include private information.",
+              )}
             </span>
           </p>
           <Link
             href="/forge/example-1"
             className="text-link command-example-link"
           >
-            Inspect a compiled route <ArrowRight size={14} />
+            {t("Inspect a compiled route")}
+            <ArrowRight size={14} />
           </Link>
         </>
       ) : (
         <div className="framing-surface">
-          <p className="eyebrow">OBJECTIVE → CAPABILITIES → ROUTE</p>
+          <p className="eyebrow">{t("OBJECTIVE → CAPABILITIES → ROUTE")}</p>
           <p className="question-anchor">{question}</p>
           <div className="command-signal" aria-hidden="true">
             <i className="command-signal-dot" />
           </div>
           <h1 ref={title} tabIndex={-1}>
-            Decomposing objective
+            {t("Decomposing objective")}
           </h1>
           <div role="status" className="framing-status">
-            {frame ? frame.label : progress}
+            {t(frame ? frame.label : progress)}
           </div>
           {!frame && (
             <p className="field-help">
-              Mapping capabilities only. No task services are called, no
-              evidence is verified, and the model does not select providers.
+              {t(
+                "Mapping capabilities only. No task services are called, no evidence is verified, and the model does not select providers.",
+              )}
             </p>
           )}
           {frame && (
             <>
-              <p className="frame-title">{frame.frame.title}</p>
+              <p className="frame-title">{t(frame.frame.title)}</p>
               <p className="normalized-question">
                 {frame.frame.normalizedObjective}
               </p>
@@ -529,59 +545,69 @@ export function ResearchCommand({
                   >
                     <span>0{i + 1}</span>
                     <div>
-                      <h2>{dimension.label}</h2>
-                      <p>{dimension.purpose}</p>
+                      <h2>{t(dimension.label)}</h2>
+                      <p>{t(dimension.purpose)}</p>
                       <small>
-                        requires:{" "}
+                        {t("requires:")}{" "}
                         {dimension.dependencies.join(" → ") ||
                           "objective input"}
                       </small>
                     </div>
-                    <small>{dimension.priority} priority</small>
+                    <small>
+                      {t(dimension.priority)} {t("priority")}
+                    </small>
                   </article>
                 ))}
               </div>
               <p className="frame-boundary">
-                Hard cap {money(frame.frame.constraints.budgetUsd)}
-                {frame.frame.constraints.requiresRecurringExecution
-                  ? " / month"
-                  : " / route"}{" "}
-                · {policyLabels[frame.frame.constraints.optimizationPolicy]} ·{" "}
+                {t("Hard cap")}
+                {money(frame.frame.constraints.budgetUsd)}
+                {t(
+                  frame.frame.constraints.requiresRecurringExecution
+                    ? " / month"
+                    : " / route",
+                )}{" "}
+                · {t(policyLabels[frame.frame.constraints.optimizationPolicy])}{" "}
+                ·{" "}
                 {frame.frame.constraints.verificationStandard.replaceAll(
                   "_",
                   " ",
                 )}
-                {frame.frame.constraints.maxLatencySeconds
-                  ? ` · ${frame.frame.constraints.maxLatencySeconds}s maximum`
-                  : ""}
+                {t(
+                  frame.frame.constraints.maxLatencySeconds
+                    ? ` · ${frame.frame.constraints.maxLatencySeconds}s maximum`
+                    : "",
+                )}
               </p>
               <div className="frame-conclusion">
                 <div>
-                  <p className="eyebrow">EXPECTED OUTPUT CONTRACT</p>
-                  <p>{frame.frame.expectedOutput.description}</p>
+                  <p className="eyebrow">{t("EXPECTED OUTPUT CONTRACT")}</p>
+                  <p>{t(frame.frame.expectedOutput.description)}</p>
                 </div>
                 <div>
-                  <p className="eyebrow">ROUTE RATIONALE</p>
-                  <p>{frame.frame.routeRationale}</p>
+                  <p className="eyebrow">{t("ROUTE RATIONALE")}</p>
+                  <p>{t(frame.frame.routeRationale)}</p>
                 </div>
               </div>
               {frame.frame.ambiguities.length > 0 && (
                 <div className="frame-ambiguities">
-                  <p className="eyebrow">CONTEXT TO CLARIFY</p>
+                  <p className="eyebrow">{t("CONTEXT TO CLARIFY")}</p>
                   <ul>
                     {frame.frame.ambiguities.map((a, i) => (
-                      <li key={i}>{a}</li>
+                      <li key={i}>{t(a)}</li>
                     ))}
                   </ul>
                 </div>
               )}
               <p className="frame-boundary">
-                Objective decomposition, not execution. The deterministic
-                planner retains all provider and budget decisions. Task services
-                are never called in this demo.
-                {frame.fallback
-                  ? " The model was unavailable; local decomposition kept the route usable."
-                  : ""}
+                {t(
+                  "Objective decomposition, not execution. The deterministic planner retains all provider and budget decisions. Task services are never called in this demo.",
+                )}
+                {t(
+                  frame.fallback
+                    ? " The model was unavailable; local decomposition kept the route usable."
+                    : "",
+                )}
               </p>
               <div className="frame-actions">
                 <button
@@ -589,9 +615,11 @@ export function ResearchCommand({
                   disabled={phase === "planning"}
                   onClick={continueToRoute}
                 >
-                  {phase === "planning"
-                    ? "Comparing demo services…"
-                    : "Build execution route"}
+                  {t(
+                    phase === "planning"
+                      ? "Comparing demo services…"
+                      : "Build execution route",
+                  )}
                   <ArrowRight size={18} />
                 </button>
                 <button
@@ -600,14 +628,14 @@ export function ResearchCommand({
                   disabled={phase === "planning"}
                   onClick={edit}
                 >
-                  Edit objective
+                  {t("Edit objective")}
                 </button>
               </div>
             </>
           )}
           {!frame && (
             <button type="button" className="text-link" onClick={edit}>
-              Edit objective
+              {t("Edit objective")}
             </button>
           )}
         </div>

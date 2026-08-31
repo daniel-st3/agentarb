@@ -1,5 +1,27 @@
 # SignalForge — Handoff
 
+## Final completion pass — client proof and three languages
+
+- Human routes use next-intl `/en`, `/es`, `/fr`; legacy paths redirect to English.
+  APIs, MCP, Agent Card, OpenAPI, robots and llms paths are unchanged. A shared
+  root session provider preserves in-memory routes during locale navigation;
+  no cookies, localStorage, database or objective persistence were added.
+- UI copy, validation/provenance labels and deterministic decomposition display
+  text are localized. Optional UI locale guides Groq human text only. Machine IDs,
+  enums, source quotations and JSON contracts remain canonical/verbatim.
+- `npm run demo:client-agent -- ...` is a separate Node consumer. REST/MCP transport,
+  bounded response validation, hard-budget/critical-coverage gates and explicit
+  execution boundaries precede local receipt creation. `wx` receipts cannot overwrite.
+  Unsafe fixture intentionally exits 2. Acceptance is inspection, not authorization.
+- The real configured Groq and durable Redis preflight passed: valid frame,
+  safe expiring SET/GET/DEL probe, independent-client counters and snapshot metadata.
+  Deployed REST and MCP client runs were accepted; unsafe fixture was refused.
+- README, app/client guides, i18n notes, a 55-second demo script and an original
+  `public/architecture.svg` explain the product in minutes. No repository rename.
+- No task execution, payment, marketplace write, account or wallet surface added.
+  Preserve all existing safety tests, archived regressions and no-secret logging.
+
+
 ## Focused interaction upgrade (2026-08-30)
 
 - Added Motion with async LazyMotion features and a code-split Cmd/Ctrl+K launcher.

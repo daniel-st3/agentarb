@@ -146,25 +146,32 @@ export function decomposeObjective(raw: ObjectiveInput): ObjectiveFrame {
   const input = ObjectiveInputSchema.parse(raw),
     q = input.objective;
   const type: ObjectiveFrame["objectiveType"] =
-    /monitor|recurr|pricing change|per month|\/month/i.test(q)
+    /monitor|recurr|récurr|seguimiento|vigilancia|veille|surveillance|pricing change|per month|\/month|por mes|par mois/i.test(
+      q,
+    )
       ? "monitoring"
-      : /due.diligence|material claims|high.impact|evaluating a startup/i.test(
+      : /due.diligence|diligencia|diligence|material claims|high.impact|alto impacto|impact élevé|evaluating a startup/i.test(
             q,
           )
         ? "due_diligence"
         : /document|pdf|long public/i.test(q)
           ? "document_extraction"
-          : /structured (?:company )?data|enrich|website into/i.test(q)
+          : /structured (?:company )?data|enrich|enriquec|datos estructurados|données structurées|website into/i.test(
+                q,
+              )
             ? "data_enrichment"
-            : /compet|market/i.test(q)
+            : /compet|compét|concurr|market|mercado|marché/i.test(q)
               ? "competitive_intelligence"
-              : /company|startup|business/i.test(q) || input.contextUrl
+              : /company|startup|business|empresa|entreprise/i.test(q) ||
+                  input.contextUrl
                 ? "company_analysis"
                 : "general_agent_task";
   const independent =
     type === "due_diligence" ||
     input.optimizationPolicy === "most_verified" ||
-    /independent|verified|corroborat/i.test(q);
+    /independent|independiente|indépendant|verified|verificad|vérifi|corroborat/i.test(
+      q,
+    );
   const base: Record<ObjectiveFrame["objectiveType"], CapabilityId[]> = {
     competitive_intelligence: [
       "structured_profile",

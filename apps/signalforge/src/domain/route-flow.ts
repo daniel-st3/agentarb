@@ -7,7 +7,10 @@ export type FlowNode = {
   detail: string;
 };
 /** Presentation-only projection. Catalog matches never become execution edges. */
-export function routeFlow(route: ExecutionRouteContract) {
+export function routeFlow(
+  route: ExecutionRouteContract,
+  t: (text: string) => string = (text) => text,
+) {
   const objective: FlowNode = {
     id: "objective",
     label: route.objectiveFrame.title,
@@ -19,19 +22,19 @@ export function routeFlow(route: ExecutionRouteContract) {
       id: `cap:${c.id}`,
       label: c.label,
       kind: "required",
-      detail: `${c.priority} priority. ${c.purpose} Dependencies: ${c.dependencies.join(", ") || "objective"}.`,
+      detail: `${t(c.priority)} ${t("priority")}. ${t(c.purpose)} ${t("Dependencies:")} ${c.dependencies.join(", ") || t("objective")}.`,
     }));
   const selected: FlowNode[] = route.route.map((s) => ({
     id: `step:${s.step}`,
     label: s.selectedProvider.name,
     kind: "simulated",
-    detail: `${s.capability}: ${s.rationale} Simulated selected demo provider. NOT CALLED / NOT PAID / EXECUTION DISABLED. Fallback: ${s.fallbackProvider?.name ?? "none"}.`,
+    detail: `${s.capability}: ${t(s.rationale)} ${t("Simulated selected demo provider")}. ${t("NOT CALLED / NOT PAID / EXECUTION DISABLED")}. ${t("Fallback:")} ${s.fallbackProvider?.name ?? t("none")}.`,
   }));
   const observed: FlowNode[] = route.observedSupply.map((s) => ({
     id: `observed:${s.id}`,
     label: s.name,
     kind: "observed",
-    detail: `${s.sourceName} / ${s.freshness} / ${s.observedAt}. ${s.reason} ${s.boundaryLabel}.`,
+    detail: `${s.sourceName} / ${s.freshness} / ${s.observedAt}. ${t(s.reason)} ${t(s.boundaryLabel)}.`,
   }));
   const rejected: FlowNode[] = route.rejectedAlternatives
     .filter((s) => s.reason !== "capability_mismatch")
@@ -40,7 +43,7 @@ export function routeFlow(route: ExecutionRouteContract) {
       id: `rejected:${i}`,
       label: s.providerId,
       kind: "rejected",
-      detail: `${s.capability} / ${s.reason}: ${s.explanation}`,
+      detail: `${s.capability} / ${s.reason}: ${t(s.explanation)}`,
     }));
   return {
     objective,

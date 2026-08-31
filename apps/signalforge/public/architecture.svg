@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+ <title id="title">SignalForge — intelligence before execution</title>
+ <desc id="desc">Human objectives and REST or MCP callers enter objective decomposition, catalog intelligence and a deterministic planner. A route contract is inspected by a separate local client. No payments, marketplace writes or service execution occur.</desc>
+ <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 8 5 1 9" fill="none" stroke="#a4a7bf"/></marker></defs>
+ <rect width="1280" height="760" fill="#161719"/>
+ <g stroke="#303238" stroke-width="1"><path d="M64 150H1216M64 644H1216"/><path d="M640 176V614" stroke-dasharray="2 8" opacity=".5"/></g>
+ <g fill="#f1eee6" font-family="Georgia,serif"><text x="64" y="75" font-size="42">SignalForge</text><text x="64" y="122" font-size="24">Intelligence before execution.</text></g>
+ <g fill="#aeb0bb" font-family="ui-monospace,monospace" font-size="12" letter-spacing="1.6"><text x="904" y="75">OBJECTIVES → ROUTE CONTRACTS</text><text x="904" y="101">ARCHITECTURE / 01</text></g>
+ <g fill="none" stroke="#a4a7bf" stroke-width="1.3" marker-end="url(#arrow)"><path d="M90 211H408"/><path d="M444 211H746"/><path d="M995 325V365"/><path d="M868 388H446"/><path d="M406 388H92"/></g>
+ <g fill="#9298e7"><circle cx="72" cy="211" r="4"/><circle cx="428" cy="211" r="4"/><circle cx="766" cy="211" r="4"/><circle cx="886" cy="388" r="4"/><circle cx="424" cy="388" r="4"/><circle cx="72" cy="388" r="4"/></g>
+ <g font-family="Arial,sans-serif" fill="#f1eee6" font-size="23">
+  <text x="64" y="252">Objective Console</text><text x="420" y="252">Objective Decomposition</text><text x="758" y="252">Catalog Intelligence</text>
+  <text x="878" y="431">Deterministic Planner</text><text x="416" y="431">ExecutionRouteContract</text><text x="64" y="431">External Client Agent</text>
+ </g>
+ <g fill="#aeb0bb" font-family="Arial,sans-serif" font-size="16">
+  <text x="64" y="281">Human or calling agent</text><text x="64" y="307">Objective · hard budget · policy</text>
+  <text x="420" y="281">Groq or local fallback</text><text x="420" y="307">Capabilities · dependencies · constraints</text>
+  <text x="758" y="281">Public metadata only</text><text x="758" y="307">Live / cached / seeded provenance</text>
+  <text x="878" y="462">Budget · coverage · verification</text><text x="878" y="488">Ordered route · explicit rejections</text>
+  <text x="416" y="462">REST + MCP planning interface</text><text x="416" y="488">A2A-style discovery metadata</text>
+  <text x="64" y="462">Validate → accept or refuse</text><text x="64" y="488">Local append-only receipt only</text>
+ </g>
+ <path d="M70 520V545H1210" stroke="#646b72" fill="none"/><circle cx="70" cy="545" r="3" fill="#a8b8ae"/>
+ <g fill="#c9cbc5" font-family="ui-monospace,monospace" font-size="13"><text x="91" y="570">STOP / execution_not_enabled</text><text x="678" y="570">Observed options ≠ executed services</text></g>
+ <g fill="#e3e0d9" font-family="ui-monospace,monospace" font-size="14" letter-spacing="1.2"><text x="64" y="691">NO PAYMENTS</text><text x="340" y="691">NO MARKETPLACE WRITES</text><text x="768" y="691">NO EXECUTION</text></g>
+ <text x="64" y="729" font-family="Arial,sans-serif" font-size="13" fill="#aeb0bb">A planning artifact—not authorization to act. Selected providers are simulated; catalog observations are informational.</text>
+</svg>

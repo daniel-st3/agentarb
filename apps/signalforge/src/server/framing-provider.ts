@@ -1,6 +1,7 @@
 import "server-only";
 import { generateText, Output } from "ai";
 import { createGroq } from "@ai-sdk/groq";
+import { localizeObjectiveFrame, type DisplayLocale } from "@/i18n/objective";
 import {
   ObjectiveFrameSchema,
   DecompositionResultSchema,
@@ -41,9 +42,10 @@ export async function frameWithProvider(
   input: ObjectiveInput,
   emit: (event: DecompositionEvent) => void,
   signal: AbortSignal,
+  locale: DisplayLocale = "en",
 ): Promise<DecompositionResult> {
   const local = (failed: boolean): DecompositionResult => ({
-    frame: decomposeObjective(input),
+    frame: localizeObjectiveFrame(decomposeObjective(input), locale),
     source: "local_demo_fallback",
     label: "Local demo decomposition",
     fallback: failed,
@@ -62,7 +64,9 @@ export async function frameWithProvider(
     // status stream, but validate one complete structured model response.
     const result = await generateText({
       model,
-      system,
+      system:
+        system +
+        ` Write human-readable titles, labels, purposes, rationale and ambiguity notes in ${locale === "es" ? "Spanish" : locale === "fr" ? "French" : "English"}. Keep all IDs, enums and schema keys canonical English.`,
       prompt: JSON.stringify(input),
       output: Output.object({ schema: ObjectiveFrameSchema }),
       providerOptions: {

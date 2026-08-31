@@ -1,4 +1,6 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { z } from "zod";
 import { NetworkStatusSchema } from "@/domain/intelligence";
@@ -27,6 +29,8 @@ export function NetworkState({ children }: { children: React.ReactNode }) {
 }
 export const useNetworkState = () => useContext(Context);
 export function NetworkIndicator() {
+  const t = useCopy();
+
   const { status, loading } = useNetworkState();
   return (
     <span
@@ -34,12 +38,14 @@ export function NetworkIndicator() {
       data-available={Boolean(status?.observedCount)}
     >
       <i aria-hidden="true" />
-      NETWORK /{" "}
-      {loading
-        ? "LOADING"
-        : status?.observedCount
-          ? `${status.observedCount} OBSERVED`
-          : "UNAVAILABLE"}
+      {t("NETWORK /")}{" "}
+      {t(
+        loading
+          ? "LOADING"
+          : status?.observedCount
+            ? `${status.observedCount} ${t("OBSERVED")}`
+            : "UNAVAILABLE",
+      )}
     </span>
   );
 }

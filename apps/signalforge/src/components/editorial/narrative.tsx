@@ -1,6 +1,8 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { useRef } from "react";
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -34,10 +36,14 @@ const chapters = [
   },
 ];
 export function ProviderRouteMap() {
+  const t = useCopy();
+
   return (
     <div
       className="provider-route-map"
-      aria-label="Capability services and a verification requirement converge at the route contract"
+      aria-label={t(
+        "Capability services and a verification requirement converge at the route contract",
+      )}
     >
       <svg viewBox="0 0 460 380" fill="none" aria-hidden="true">
         <path
@@ -68,35 +74,39 @@ export function ProviderRouteMap() {
           d="m416 204 10 6-10 6 M286 199 l6 11 6-11"
         />
       </svg>
-      <span className="map-origin">OBJECTIVE</span>
+      <span className="map-origin">{t("OBJECTIVE")}</span>
       <div className="map-node research-node">
-        <small>01 / CAPABILITIES</small>
-        <strong>Profile + signals</strong>
-        <span>Modeled service chain</span>
+        <small>{t("01 / CAPABILITIES")}</small>
+        <strong>{t("Profile + signals")}</strong>
+        <span>{t("Modeled service chain")}</span>
       </div>
       <div className="map-node verify-node">
-        <small>02 / CROSS-CHECK</small>
-        <strong>Proofline Verify</strong>
-        <span>Mock · $0.12 modeled</span>
+        <small>{t("02 / CROSS-CHECK")}</small>
+        <strong>{t("Proofline Verify")}</strong>
+        <span>{t("Mock · $0.12 modeled")}</span>
       </div>
       <div className="map-node synthesis-node">
-        <small>03 / SYNTHESIS</small>
-        <strong>Route contract</strong>
-        <span>Mock · $0.00</span>
+        <small>{t("03 / SYNTHESIS")}</small>
+        <strong>{t("Route contract")}</strong>
+        <span>{t("Mock · $0.00")}</span>
       </div>
       <div className="map-alternatives">
         <span>
-          <s>Live research</s> · unavailable
+          <s>{t("Live research")}</s> {t("· unavailable")}
         </span>
         <span>
-          <s>Premium catalog</s> · metadata only
+          <s>{t("Premium catalog")}</s> {t("· metadata only")}
         </span>
       </div>
-      <span className="route-annotation">Independent sources required →</span>
+      <span className="route-annotation">
+        {t("Independent sources required →")}
+      </span>
     </div>
   );
 }
 export function RouteNarrative({ run }: { run: Run }) {
+  const t = useCopy();
+
   const ref = useRef<HTMLElement>(null);
   const scene = useRef<HTMLDivElement>(null);
   const compiled = seedRoutes()[0];
@@ -245,70 +255,71 @@ export function RouteNarrative({ run }: { run: Run }) {
     >
       <div className="route-scene container" ref={scene}>
         <div className="narrative-top">
-          <p className="eyebrow">THE ROUTE, EXPLAINED / 02</p>
-          <span className="demo-label">SIMULATED DEMO ROUTE</span>
+          <p className="eyebrow">{t("THE ROUTE, EXPLAINED / 02")}</p>
+          <span className="demo-label">{t("SIMULATED DEMO ROUTE")}</span>
         </div>
         <h2 id="route-title">
-          What happens after
+          {t("What happens after")}
           <br />
-          <em>I forge a route?</em>
+          <em>{t("I forge a route?")}</em>
         </h2>
         <div className="chapter-indexes" aria-hidden="true">
           {chapters.map((c, i) => (
             <span className="chapter-index" key={c.name}>
-              0{i + 1} / {c.name}
+              0{i + 1} / {t(c.name)}
             </span>
           ))}
         </div>
         <div className="route-composition">
           <aside className="request-field">
-            <p className="eyebrow">THE OBJECTIVE</p>
-            <h3>Build a verified competitive-intelligence route.</h3>
-            <p>Controlled service fixtures · Most verified</p>
+            <p className="eyebrow">{t("THE OBJECTIVE")}</p>
+            <h3>{t("Build a verified competitive-intelligence route.")}</h3>
+            <p>{t("Controlled service fixtures · Most verified")}</p>
             <dl>
               <div>
-                <dt>Hard budget cap</dt>
+                <dt>{t("Hard budget cap")}</dt>
                 <dd>{money(run.request.budgetUsd)}</dd>
               </div>
               <div>
-                <dt>Modeled route estimate</dt>
+                <dt>{t("Modeled route estimate")}</dt>
                 <dd className="modeled-counter">
                   {money(receipt.estimatedSpendUsd)}
                 </dd>
               </div>
               <div>
-                <dt>Actual spend</dt>
+                <dt>{t("Actual spend")}</dt>
                 <dd>$0.00</dd>
               </div>
             </dl>
           </aside>
           <ProviderRouteMap />
           <aside className="evidence-field">
-            <p className="eyebrow">THE AGENT-READY CONTRACT</p>
+            <p className="eyebrow">{t("THE AGENT-READY CONTRACT")}</p>
             <h3>
-              A clear sequence.
+              {t("A clear sequence.")}
               <br />
-              Explicit boundaries.
+              {t("Explicit boundaries.")}
             </h3>
             <ol>
-              <li>Capability and dependency order</li>
-              <li>Provider choices and fallbacks</li>
-              <li>Verification and stop conditions</li>
+              <li>{t("Capability and dependency order")}</li>
+              <li>{t("Provider choices and fallbacks")}</li>
+              <li>{t("Verification and stop conditions")}</li>
             </ol>
             <div className="verification-note">
               <p className="verification-start">
-                Verification requirements mapped.
+                {t("Verification requirements mapped.")}
               </p>
               <p className="verification-final">
-                ROUTE COMPILED · <strong>execution_not_enabled</strong>
+                {t("ROUTE COMPILED ·")}
+                <strong>execution_not_enabled</strong>
               </p>
             </div>
             <p className="mono">
-              {compiled.route.length} planned capability steps
+              {t(compiled.route.length)} {t("planned capability steps")}
               <br />
-              No service calls or evidence claims
+              {t("No service calls or evidence claims")}
               <br />
-              Within modeled budget
+              {t("Within modeled budget")}
             </p>
           </aside>
         </div>
@@ -316,48 +327,58 @@ export function RouteNarrative({ run }: { run: Run }) {
           {chapters.map((c, i) => (
             <article className="chapter" key={c.name}>
               <span className="eyebrow">
-                0{i + 1} / {c.name}
+                0{i + 1} / {t(c.name)}
               </span>
-              <h3>{c.title}</h3>
-              <p>{c.text}</p>
+              <h3>{t(c.title)}</h3>
+              <p>{t(c.text)}</p>
             </article>
           ))}
         </div>
         <p className="route-footnote">
-          An explanatory replay of a controlled capability route. Costs are
-          modeled. No task services are called and no payments are made.
+          {t(
+            "An explanatory replay of a controlled capability route. Costs are modeled. No task services are called and no payments are made.",
+          )}
         </p>
       </div>
     </section>
   );
 }
 export function EvidenceMargin({ run }: { run: Run }) {
+  const t = useCopy();
+
   return (
     <aside className="evidence-margin">
-      <p className="eyebrow">MARGIN NOTES</p>
+      <p className="eyebrow">{t("MARGIN NOTES")}</p>
       <div>
-        <span>01 / SUPPORT</span>
+        <span>{t("01 / SUPPORT")}</span>
         <p>
-          Two independently modeled source families. Not real-world
-          verification.
+          {t(
+            "Two independently modeled source families. Not real-world verification.",
+          )}
         </p>
       </div>
       <div>
-        <span>02 / LIMIT</span>
-        <p>Commercial traction is not established by the supplied material.</p>
+        <span>{t("02 / LIMIT")}</span>
+        <p>
+          {t(
+            "Commercial traction is not established by the supplied material.",
+          )}
+        </p>
       </div>
       <div>
-        <span>03 / RECEIPT</span>
+        <span>{t("03 / RECEIPT")}</span>
         <p>
-          {money(run.receipt!.estimatedSpendUsd)} modeled route.
+          {money(run.receipt!.estimatedSpendUsd)} {t("modeled route.")}
           <br />
-          $0.00 actual spend.
+          {t("$0.00 actual spend.")}
         </p>
       </div>
     </aside>
   );
 }
 export function ReportPreview({ run }: { run: Run }) {
+  const t = useCopy();
+
   const ref = useRef<HTMLElement>(null);
   useGSAP(
     () => {
@@ -388,28 +409,30 @@ export function ReportPreview({ run }: { run: Run }) {
     <section className="paper-report" ref={ref}>
       <div className="container">
         <div className="paper-top">
-          <span>SIGNALFORGE / RESEARCH MEMO 001</span>
-          <span>DEMO OUTPUT — SIMULATED EVIDENCE</span>
+          <span>{t("SIGNALFORGE / RESEARCH MEMO 001")}</span>
+          <span>{t("DEMO OUTPUT — SIMULATED EVIDENCE")}</span>
         </div>
         <div className="paper-layout">
           <article>
             <p className="eyebrow">
-              COMPETITIVE INTELLIGENCE / NORTHSTAR SEARCH
+              {t("COMPETITIVE INTELLIGENCE / NORTHSTAR SEARCH")}
             </p>
             <h2 className="memo-title">
-              A clear wedge.
+              {t("A clear wedge.")}
               <br />
-              <em>Not yet a business case.</em>
+              <em>{t("Not yet a business case.")}</em>
             </h2>
             <p className="memo-deck">
-              Permission-aware search is the differentiator. Commercial traction
-              remains uncertain.
+              {t(
+                "Permission-aware search is the differentiator. Commercial traction remains uncertain.",
+              )}
             </p>
             <hr />
-            <p className="eyebrow">THE DECISION</p>
-            <p className="memo-answer">{run.brief!.executiveSummary}</p>
+            <p className="eyebrow">{t("THE DECISION")}</p>
+            <p className="memo-answer">{t(run.brief!.executiveSummary)}</p>
             <Link href="/forge/example-1/output" className="editorial-action">
-              Read the example brief <ArrowRight size={20} />
+              {t("Read the example brief")}
+              <ArrowRight size={20} />
             </Link>
           </article>
           <EvidenceMargin run={run} />
@@ -417,10 +440,10 @@ export function ReportPreview({ run }: { run: Run }) {
         <LivingEvidence run={run} />
         <div className="paper-bottom">
           <span>
-            {run.receipt!.sourceCount} FICTIONAL DOCUMENTS /{" "}
-            {run.receipt!.verifiedClaimCount} SIMULATED CORROBORATIONS
+            {t(run.receipt!.sourceCount)} {t("FICTIONAL DOCUMENTS /")}{" "}
+            {t(run.receipt!.verifiedClaimCount)} {t("SIMULATED CORROBORATIONS")}
           </span>
-          <span>NO LIVE RESEARCH PERFORMED</span>
+          <span>{t("NO LIVE RESEARCH PERFORMED")}</span>
         </div>
       </div>
     </section>

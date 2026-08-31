@@ -39,6 +39,25 @@ function mockStream(output: unknown) {
   vi.mocked(generateText).mockResolvedValue({ output } as never);
 }
 describe("objective decomposition boundary", () => {
+  it("locale affects fallback display only and is supplied privately to the model instruction", async () => {
+    const local = await frameWithProvider(
+      input,
+      () => {},
+      new AbortController().signal,
+      "es",
+    );
+    expect(local.frame.title).toBe("Ruta de diligencia debida");
+    expect(local.frame.requiredCapabilities[0].id).toBe("structured_profile");
+    vi.stubEnv("GROQ_API_KEY", "unit-test-placeholder-not-a-credential");
+    mockStream(decomposeObjective(input));
+    await frameWithProvider(
+      input,
+      () => {},
+      new AbortController().signal,
+      "fr",
+    );
+    expect(vi.mocked(generateText).mock.calls[0][0].system).toContain("French");
+  });
   it.each([
     [
       "Build a competitive intelligence route for a company",

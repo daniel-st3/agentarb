@@ -1,0 +1,67 @@
+export const detailCopy: [string, string, string][] = [
+  [
+    "10 planning requests per client per 10 minutes. MCP shares that quota. Optional Groq decomposition may receive the objective; use public, non-sensitive context only.",
+    "10 solicitudes de planificación por cliente cada 10 minutos. MCP comparte esa cuota. La descomposición opcional con Groq puede recibir el objetivo; usa solo contexto público y no sensible.",
+    "10 demandes de planification par client toutes les 10 minutes. MCP partage ce quota. La décomposition facultative avec Groq peut recevoir l’objectif ; utilisez uniquement un contexte public et non sensible.",
+  ],
+  [
+    "execution_not_enabled · Simulated providers · $0 actual service spend · No payments",
+    "execution_not_enabled · Proveedores simulados · $0 de gasto real · Sin pagos",
+    "execution_not_enabled · Fournisseurs simulés · 0 $ de dépense réelle · Aucun paiement",
+  ],
+  [
+    "0 EXECUTION ACTIONS ↗",
+    "0 ACCIONES DE EJECUCIÓN ↗",
+    "0 ACTION D’EXÉCUTION ↗",
+  ],
+  ["01 / SUPPORT", "01 / RESPALDO", "01 / APPUI"],
+  ["02 / LIMIT", "02 / LÍMITE", "02 / LIMITE"],
+  ["03 / RECEIPT", "03 / REGISTRO", "03 / RELEVÉ"],
+  ["01 / Objective", "01 / Objetivo", "01 / Objectif"],
+  ["02 / Capabilities", "02 / Capacidades", "02 / Capacités"],
+  [
+    "03 / Observed options",
+    "03 / Opciones observadas",
+    "03 / Options observées",
+  ],
+  ["04 / Compiled route", "04 / Ruta compilada", "04 / Itinéraire compilé"],
+  [
+    "No observed options attached. This contract contains no live catalog evidence.",
+    "No hay opciones observadas adjuntas. Este contrato no contiene evidencia de catálogo en vivo.",
+    "Aucune option observée jointe. Ce contrat ne contient aucun élément de catalogue en direct.",
+  ],
+  [
+    "No feasible selected steps. Inspect unmet requirements.",
+    "No hay pasos viables seleccionados. Revisa los requisitos incumplidos.",
+    "Aucune étape réalisable sélectionnée. Examinez les exigences non satisfaites.",
+  ],
+  ["Access requirements", "Requisitos de acceso", "Conditions d’accès"],
+  [
+    "Claim / settlement / reputation",
+    "Asignación / liquidación / reputación",
+    "Attribution / règlement / réputation",
+  ],
+  ["/ DISABLED", "/ DESHABILITADO", "/ DÉSACTIVÉ"],
+  ["01 / OBJECTIVE", "01 / OBJETIVO", "01 / OBJECTIF"],
+  ["02 / CONSTRAINTS", "02 / RESTRICCIONES", "02 / CONTRAINTES"],
+  ["requires:", "requiere:", "nécessite :"],
+  ["/ DEMO MODE", "/ MODO DEMOSTRACIÓN", "/ MODE DÉMONSTRATION"],
+  ["Dependencies:", "Dependencias:", "Dépendances :"],
+  ["Fallback:", "Alternativa:", "Solution de repli :"],
+  [
+    "Tool: signalforge_plan_route. Inputs: objective, budget_usd, optimization_policy. Planning only, not execution permission.",
+    "Herramienta: signalforge_plan_route. Entradas: objective, budget_usd, optimization_policy. Solo planificación, sin autorización para ejecutar.",
+    "Outil : signalforge_plan_route. Entrées : objective, budget_usd, optimization_policy. Planification uniquement, sans autorisation d’exécution.",
+  ],
+  [
+    ". Stateless JSON responses, no standalone SSE, no resumable tasks, no authentication or action tools.",
+    ". Respuestas JSON sin estado; sin SSE independiente, tareas reanudables, autenticación ni herramientas de acción.",
+    ". Réponses JSON sans état ; sans SSE autonome, tâches reprenables, authentification ni outils d’action.",
+  ],
+  [
+    "Planning: 10 requests per client key per 10 minutes. Catalog and MCP protocol requests: 60 per 10 minutes. MCP planning also consumes planning quota. HTTP 429 includes Retry-After.",
+    "Planificación: 10 solicitudes por clave de cliente cada 10 minutos. Catálogo y protocolo MCP: 60 cada 10 minutos. La planificación MCP también consume cuota de planificación. HTTP 429 incluye Retry-After.",
+    "Planification : 10 demandes par clé client toutes les 10 minutes. Catalogue et protocole MCP : 60 toutes les 10 minutes. La planification MCP consomme aussi le quota de planification. HTTP 429 inclut Retry-After.",
+  ],
+  ["404 / OFF THE ROUTE", "404 / FUERA DE LA RUTA", "404 / HORS ITINÉRAIRE"],
+];

@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { ObjectiveInputSchema } from "@/domain/objective";
 import { checkPlanningLimit } from "./planning-limit";
 import { readBounded } from "./http";
@@ -12,8 +13,15 @@ export async function handleFrame(request: Request) {
   const limited = await checkPlanningLimit(request);
   if (limited) return limited;
   let input;
+  let locale: "en" | "es" | "fr" = "en";
   try {
-    input = ObjectiveInputSchema.parse(await readBounded(request));
+    const payload = ObjectiveInputSchema.extend({
+      locale: z.enum(["en", "es", "fr"]).optional(),
+    }).parse(await readBounded(request));
+    locale = payload.locale ?? "en";
+    const { locale: _locale, ...canonical } = payload;
+    void _locale;
+    input = ObjectiveInputSchema.parse(canonical);
   } catch {
     return Response.json(
       { error: "Check the objective, URL and budget, then try again." },
@@ -34,7 +42,7 @@ export async function handleFrame(request: Request) {
       };
       try {
         emit({ type: "status", message: "Parsing objective…" });
-        const result = await frameWithProvider(input, emit, signal);
+        const result = await frameWithProvider(input, emit, signal, locale);
         emit({ type: "result", result });
         if (!signal.aborted) stream.close();
       } catch {

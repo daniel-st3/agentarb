@@ -1,8 +1,10 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { useEffect, useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { ResultTransition, TechnicalLabel } from "./interactions/primitives";
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import {
   NetworkResponseSchema,
   matchListing,
@@ -23,6 +25,8 @@ const labels: Record<string, string> = {
   error: "SOURCE ERROR",
 };
 function ListingDetail({ listing: l }: { listing: Listing }) {
+  const t = useCopy();
+
   const service = l.listingType === "service_offer",
     price = service ? l.pricing : l.payout,
     caps = service ? l.capabilities : l.requiredCapabilities;
@@ -64,23 +68,28 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
         }}
       >
         <div>
-          <h3>{service ? l.name : l.title}</h3>
+          <h3>{t(service ? l.name : l.title)}</h3>
           <p>
-            {l.sourceName} / {service ? "SERVICE CATALOG" : "TASK OPPORTUNITY"}
+            {t(l.sourceName)} /{" "}
+            {t(service ? "SERVICE CATALOG" : "TASK OPPORTUNITY")}
           </p>
           <p>{caps.join(" · ") || "Capability not established"}</p>
         </div>
         <div>
-          <span className="eyebrow">{service ? "PRICE" : "PAYOUT"}</span>
+          <span className="eyebrow">{t(service ? "PRICE" : "PAYOUT")}</span>
           <p>
-            {price.amountUsd !== undefined ? money(price.amountUsd) : "Unknown"}{" "}
-            · {price.parseConfidence}
+            {t(
+              price.amountUsd !== undefined
+                ? money(price.amountUsd)
+                : "Unknown",
+            )}{" "}
+            · {t(price.parseConfidence)}
           </p>
         </div>
         <span className={`catalog-freshness fresh-${l.freshness}`}>
-          {labels[l.freshness]}
+          {t(labels[l.freshness])}
           <br />
-          {service ? l.access.actionability : l.actionability}
+          {t(service ? l.access.actionability : l.actionability)}
         </span>
       </summary>
       <AnimatePresence
@@ -91,45 +100,51 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
         {expanded && (
           <ResultTransition key="detail">
             <div className="catalog-description">
-              <p>{l.description}</p>
+              <p>{t(l.description)}</p>
               {service && l.access.actionability === "catalog_only" && (
                 <p>
                   <TechnicalLabel term="catalog_only" />
                 </p>
               )}
               <dl>
-                <dt>Observed / catalog updated</dt>
+                <dt>{t("Observed / catalog updated")}</dt>
                 <dd>
-                  {l.observedAt} / {l.sourceUpdatedAt ?? "not supplied"}
+                  {l.observedAt} / {l.sourceUpdatedAt ?? t("not supplied")}
                 </dd>
-                <dt>Price interpretation</dt>
+                <dt>{t("Price interpretation")}</dt>
                 <dd>
-                  {price.parseConfidence} ·{" "}
-                  {service
-                    ? (l.pricing.rawPriceText ??
-                      "No structured live price supplied.")
-                    : (l.payout.rawPayoutText ??
-                      "No structured payout supplied.")}
+                  {t(price.parseConfidence)} ·{" "}
+                  {t(
+                    service
+                      ? (l.pricing.rawPriceText ??
+                          "No structured live price supplied.")
+                      : (l.payout.rawPayoutText ??
+                          "No structured payout supplied."),
+                  )}
                 </dd>
-                {service ? (
-                  <>
-                    <dt>Access requirements</dt>
-                    <dd>
-                      {l.access.requirementsKnown
-                        ? "Modeled demo requirements only."
-                        : "Unknown: do not infer that credentials, reputation, or other access gates are unnecessary."}
-                    </dd>
-                  </>
-                ) : (
-                  <>
-                    <dt>Claim / settlement / reputation</dt>
-                    <dd>
-                      {l.claimModel} / {l.settlement} /{" "}
-                      {l.reputationRequirement ?? "unknown"}
-                    </dd>
-                  </>
+                {t(
+                  service ? (
+                    <>
+                      <dt>{t("Access requirements")}</dt>
+                      <dd>
+                        {t(
+                          l.access.requirementsKnown
+                            ? "Modeled demo requirements only."
+                            : "Unknown: do not infer that credentials, reputation, or other access gates are unnecessary.",
+                        )}
+                      </dd>
+                    </>
+                  ) : (
+                    <>
+                      <dt>{t("Claim / settlement / reputation")}</dt>
+                      <dd>
+                        {l.claimModel} / {l.settlement} /{" "}
+                        {l.reputationRequirement ?? "unknown"}
+                      </dd>
+                    </>
+                  ),
                 )}
-                <dt>Source / reference</dt>
+                <dt>{t("Source / reference")}</dt>
                 <dd>
                   <a
                     href={l.sourceUrl}
@@ -137,13 +152,13 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
                     rel="noreferrer"
                     className="text-link"
                   >
-                    Inspect source metadata ↗
+                    {t("Inspect source metadata ↗")}
                   </a>{" "}
                   · {l.rawReference ?? l.id}
                 </dd>
                 {l.termsUrl && (
                   <>
-                    <dt>Access / reuse assessment</dt>
+                    <dt>{t("Access / reuse assessment")}</dt>
                     <dd>
                       <a
                         className="text-link"
@@ -151,7 +166,7 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
                         rel="noreferrer"
                         target="_blank"
                       >
-                        Source terms or license ↗
+                        {t("Source terms or license ↗")}
                       </a>
                     </dd>
                   </>
@@ -159,29 +174,31 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
               </dl>
               {l.dataQuality.warnings.map((w) => (
                 <p key={w} className="field-help">
-                  {w}
+                  {t(w)}
                 </p>
               ))}
               <p className="catalog-boundary">
                 <TechnicalLabel term="execution_not_enabled" /> ·{" "}
-                {service
-                  ? "Catalog fit is not execution eligibility."
-                  : "Evaluation only. SignalForge cannot bid, claim, accept, submit, or settle this opportunity."}
+                {t(
+                  service
+                    ? "Catalog fit is not execution eligibility."
+                    : "Evaluation only. SignalForge cannot bid, claim, accept, submit, or settle this opportunity.",
+                )}
               </p>
               <div className="network-actions">
                 <Link
                   className="text-link"
                   href={`/forge?capability=${encodeURIComponent(caps[0] ?? "web_research")}&listing=${encodeURIComponent(l.id)}`}
                 >
-                  Forge a route for this capability →
+                  {t("Forge a route for this capability →")}
                 </Link>
                 {!service && (
                   <button className="text-link" onClick={evaluate}>
-                    Evaluate as opportunity
+                    {t("Evaluate as opportunity")}
                   </button>
                 )}
               </div>
-              {evaluation && <p role="status">{evaluation}</p>}
+              {evaluation && <p role="status">{t(evaluation)}</p>}
             </div>
           </ResultTransition>
         )}
@@ -190,6 +207,8 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
   );
 }
 export function NetworkExplorer() {
+  const t = useCopy();
+
   const [network, setNetwork] = useState<NetworkResponse | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
@@ -225,7 +244,7 @@ export function NetworkExplorer() {
     window.history.replaceState(
       null,
       "",
-      "/network" + (filterQuery ? "?" + filterQuery : ""),
+      window.location.pathname + (filterQuery ? "?" + filterQuery : ""),
     );
     const timer = setTimeout(() => {
       setLoading(true);
@@ -275,16 +294,16 @@ export function NetworkExplorer() {
         .sort((a, b) => compareListings(a, b, query)) ?? [];
   const select = (key: string, label: string, values: string[]) => (
     <label>
-      {label}
+      {t(label)}
       <select
-        aria-label={label}
+        aria-label={t(label)}
         value={filters[key] ?? ""}
         onChange={(e) => setFilters({ ...filters, [key]: e.target.value })}
       >
-        <option value="">All</option>
+        <option value="">{t("All")}</option>
         {values.map((v) => (
           <option key={v} value={v}>
-            {v.replaceAll("_", " ")}
+            {t(v.replaceAll("_", " "))}
           </option>
         ))}
       </select>
@@ -293,28 +312,32 @@ export function NetworkExplorer() {
   return (
     <section className="network-page container">
       <header>
-        <p className="eyebrow">SIGNALFORGE / LIVE AGENT NETWORK</p>
+        <p className="eyebrow">{t("SIGNALFORGE / LIVE AGENT NETWORK")}</p>
         <h1>
-          Observe the supply side
+          {t("Observe the supply side")}
           <br />
-          of the agent web.
+          {t("of the agent web.")}
         </h1>
         <p className="network-intro">
-          Inspect public catalog metadata, capability matches, freshness, and
-          access constraints before planning a route.
+          {t(
+            "Inspect public catalog metadata, capability matches, freshness, and access constraints before planning a route.",
+          )}
         </p>
         <p className="route-boundary">
-          Discovery only. SignalForge does not bid, claim, pay, or execute
-          marketplace actions.
+          {t(
+            "Discovery only. SignalForge does not bid, claim, pay, or execute marketplace actions.",
+          )}
         </p>
       </header>
-      {loading && <p role="status">Reading bounded catalog snapshots…</p>}
-      {error && <p role="alert">{error}</p>}
+      {loading && (
+        <p role="status">{t("Reading bounded catalog snapshots…")}</p>
+      )}
+      {error && <p role="alert">{t(error)}</p>}
       {network && (
         <>
           <div
             className="source-rail"
-            aria-label="Source health and observation timestamps"
+            aria-label={t("Source health and observation timestamps")}
           >
             {network.sources.map((s) => (
               <div
@@ -323,34 +346,42 @@ export function NetworkExplorer() {
                 key={s.connectorId}
               >
                 <div>
-                  <h2>{s.name}</h2>
-                  <p>{s.accessMode.replaceAll("_", " ")}</p>
+                  <h2>{t(s.name)}</h2>
+                  <p>{t(s.accessMode.replaceAll("_", " "))}</p>
                 </div>
                 <div>
                   <p>
-                    {s.status.toUpperCase()} / {labels[s.freshness]}
+                    {t(s.status.toUpperCase())} / {t(labels[s.freshness])}
                   </p>
-                  <p>{s.cachedRecordCount} records in bounded sample</p>
+                  <p>
+                    {t(s.cachedRecordCount)} {t("records in bounded sample")}
+                  </p>
                 </div>
                 <div>
                   <p>
-                    LAST OBSERVED
+                    {t("LAST OBSERVED")}
                     <br />
-                    {s.lastSuccessAt ? (
-                      <time dateTime={s.lastSuccessAt}>{s.lastSuccessAt}</time>
-                    ) : (
-                      "No successful observation"
+                    {t(
+                      s.lastSuccessAt ? (
+                        <time dateTime={s.lastSuccessAt}>
+                          {s.lastSuccessAt}
+                        </time>
+                      ) : (
+                        "No successful observation"
+                      ),
                     )}
                   </p>
                   <p>
-                    NEXT ELIGIBLE REFRESH
+                    {t("NEXT ELIGIBLE REFRESH")}
                     <br />
-                    {s.nextRefreshAfter ? (
-                      <time dateTime={s.nextRefreshAfter}>
-                        {s.nextRefreshAfter}
-                      </time>
-                    ) : (
-                      "Unavailable"
+                    {t(
+                      s.nextRefreshAfter ? (
+                        <time dateTime={s.nextRefreshAfter}>
+                          {s.nextRefreshAfter}
+                        </time>
+                      ) : (
+                        "Unavailable"
+                      ),
                     )}
                   </p>
                 </div>
@@ -358,15 +389,17 @@ export function NetworkExplorer() {
             ))}
           </div>
           <p className="field-help">
-            {network.cacheMode === "shared"
-              ? "Shared cache / server-enforced refresh leases."
-              : "NON-DURABLE DEMO CACHE · Best-effort per-instance rate limits and hourly refresh control. Production hardening requires a shared store."}
+            {t(
+              network.cacheMode === "shared"
+                ? "Shared cache / server-enforced refresh leases."
+                : "NON-DURABLE DEMO CACHE · Best-effort per-instance rate limits and hourly refresh control. Production hardening requires a shared store.",
+            )}
           </p>
           <div className="network-filters">
             <label className="network-search">
-              Search this bounded sample
+              {t("Search this bounded sample")}
               <input
-                placeholder="Search names, capabilities, sources"
+                placeholder={t("Search names, capabilities, sources")}
                 maxLength={120}
                 value={filters.query ?? ""}
                 onChange={(e) =>
@@ -417,16 +450,16 @@ export function NetworkExplorer() {
             ])}
           </div>
           <p className="eyebrow" aria-live="polite">
-            {records.length} MATCHES / EXECUTION NOT ENABLED
+            {t(records.length)} {t("MATCHES / EXECUTION NOT ENABLED")}
           </p>
           <p className="field-help">
-            At most 50 matches per query. Price sorting compares exact USD
-            per-call quotes only; missing prices and measured reliability sort
-            last. “Newest” uses source update dates when supplied.
+            {t(
+              "At most 50 matches per query. Price sorting compares exact USD per-call quotes only; missing prices and measured reliability sort last. “Newest” uses source update dates when supplied.",
+            )}
           </p>
           <div
             className="catalog-results"
-            aria-label="Catalog results"
+            aria-label={t("Catalog results")}
             aria-busy={loading}
           >
             <AnimatePresence initial={false} mode="wait">
@@ -439,12 +472,12 @@ export function NetworkExplorer() {
                 ].map((state) => {
                   const rows = records.filter((r) => r.freshness === state);
                   return rows.length ? (
-                    <section key={state} aria-label={labels[state]}>
+                    <section key={state} aria-label={t(labels[state])}>
                       <div
                         className={`catalog-freshness fresh-${state}`}
                         style={{ margin: "32px 0 16px" }}
                       >
-                        {labels[state]}
+                        {t(labels[state])}
                         {state === "cached_live" && (
                           <>
                             {" "}
@@ -460,8 +493,9 @@ export function NetworkExplorer() {
                 })}
                 {!records.length && (
                   <p>
-                    No matching records in this sample. Unknown capabilities and
-                    prices are not inferred as eligible.
+                    {t(
+                      "No matching records in this sample. Unknown capabilities and prices are not inferred as eligible.",
+                    )}
                   </p>
                 )}
               </ResultTransition>
@@ -471,30 +505,33 @@ export function NetworkExplorer() {
         </>
       )}
       <details className="route-ledger">
-        <summary>Sources not enabled</summary>
+        <summary>{t("Sources not enabled")}</summary>
         {candidateSources.map((s) => (
           <p key={s.id}>
-            <strong>{s.name} / DISABLED</strong> — {s.reason}
+            <strong>
+              {t(s.name)} {t("/ DISABLED")}
+            </strong>{" "}
+            — {t(s.reason)}
           </p>
         ))}
         <p>
-          Task marketplaces, Bazaar, and external Agent Cards remain disabled
-          where public redistribution or access requirements have not been
-          verified. No disabled source is represented as live.
+          {t(
+            "Task marketplaces, Bazaar, and external Agent Cards remain disabled where public redistribution or access requirements have not been verified. No disabled source is represented as live.",
+          )}
         </p>
         <Link
           href="https://github.com/daniel-st3/agentarb/blob/claude/verify-bounty-api-facts-f6ccdu/docs/live-sources.md"
           className="text-link"
         >
-          Source assessments and limitations ↗
+          {t("Source assessments and limitations ↗")}
         </Link>
       </details>
       <div className="network-actions">
         <Link href="/forge" className="text-link">
-          Use this supply data to forge a route →
+          {t("Use this supply data to forge a route →")}
         </Link>
         <Link href="/developers" className="text-link">
-          Demo API & MCP tools →
+          {t("Demo API & MCP tools →")}
         </Link>
       </div>
     </section>

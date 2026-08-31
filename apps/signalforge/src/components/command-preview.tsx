@@ -1,6 +1,8 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { useRef } from "react";
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { AnimatePresence, m } from "motion/react";
@@ -14,6 +16,8 @@ export function CommandPreview({
   objective: string;
   contextUrl: string;
 }) {
+  const t = useCopy();
+
   const root = useRef<HTMLElement>(null);
   const { reduced, transition } = useInteractionTiming();
   const preview = commandPreview(objective, contextUrl);
@@ -39,10 +43,10 @@ export function CommandPreview({
     <aside
       className="command-preview"
       ref={root}
-      aria-label="Local route preview"
+      aria-label={t("Local route preview")}
     >
-      <p className="eyebrow">PREVIEW / LOCAL HEURISTIC</p>
-      <span className="preview-coordinate">R / 01 — DETECTED</span>
+      <p className="eyebrow">{t("PREVIEW / LOCAL HEURISTIC")}</p>
+      <span className="preview-coordinate">{t("R / 01 — DETECTED")}</span>
       <div className="preview-type-slot" aria-live="polite" aria-atomic="true">
         <AnimatePresence initial={false}>
           <m.h2
@@ -54,7 +58,7 @@ export function CommandPreview({
             exit={{ opacity: 0 }}
             transition={transition}
           >
-            {preview.type}
+            {t(preview.type)}
           </m.h2>
         </AnimatePresence>
       </div>
@@ -82,28 +86,33 @@ export function CommandPreview({
             >
               <i aria-hidden="true" />
               <span>0{i + 1}</span>
-              {n.label}
+              {t(n.label)}
             </m.div>
           ))}
         </AnimatePresence>
       </div>
       <p className="preview-fit">
-        NETWORK FIT
+        {t("NETWORK FIT")}
         <br />
         <strong>
-          {status?.observedCount
-            ? `${fit} capability classes observed`
-            : "Observation unavailable"}
+          {t(
+            status?.observedCount
+              ? `${fit} ${t("capability classes observed")}`
+              : "Observation unavailable",
+          )}
         </strong>
       </p>
       <p className="field-help">
-        A local hint, not a compiled route. Catalog fit does not establish
-        execution eligibility.
+        {t(
+          "A local hint, not a compiled route. Catalog fit does not establish execution eligibility.",
+        )}
       </p>
     </aside>
   );
 }
 export function ObservedSupply() {
+  const t = useCopy();
+
   const { status, loading } = useNetworkState();
   const sources =
     status?.sources.filter(
@@ -113,21 +122,25 @@ export function ObservedSupply() {
     ) ?? [];
   return (
     <Link href="/network" className="observed-supply">
-      <span>OBSERVED SUPPLY</span>
+      <span>{t("OBSERVED SUPPLY")}</span>
       <strong>
-        {loading
-          ? "READING CATALOG SNAPSHOT"
-          : sources.length
-            ? sources
-                .map(
-                  (s) =>
-                    `${s.cachedRecordCount} ${s.connectorId === "mcp" ? "MCP ENTRIES" : s.connectorId === "apisguru" ? "API SPECS" : "MODEL ENTRIES"} · ${s.freshness === "live" ? "OBSERVED" : "CACHED"}`,
-                )
-                .join(" / ")
-            : "LIVE CATALOG UNAVAILABLE · DEMO ROUTES AVAILABLE"}
+        {t(
+          loading
+            ? "READING CATALOG SNAPSHOT"
+            : sources.length
+              ? sources
+                  .map(
+                    (s) =>
+                      `${s.cachedRecordCount} ${t(s.connectorId === "mcp" ? "MCP ENTRIES" : s.connectorId === "apisguru" ? "API SPECS" : "MODEL ENTRIES")} · ${t(s.freshness === "live" ? "OBSERVED" : "CACHED")}`,
+                  )
+                  .join(" / ")
+              : "LIVE CATALOG UNAVAILABLE · DEMO ROUTES AVAILABLE",
+        )}
       </strong>
-      <span>0 EXECUTION ACTIONS ↗</span>
-      <small>DISCOVERY ONLY / NO PAYMENT · NO CLAIM · NO EXECUTION</small>
+      <span>{t("0 EXECUTION ACTIONS ↗")}</span>
+      <small>
+        {t("DISCOVERY ONLY / NO PAYMENT · NO CLAIM · NO EXECUTION")}
+      </small>
     </Link>
   );
 }

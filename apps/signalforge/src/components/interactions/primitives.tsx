@@ -1,4 +1,6 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { useId, useState, type ReactNode } from "react";
 import { AnimatePresence, m, useIsPresent } from "motion/react";
 import { useInteractionTiming } from "./provider";
@@ -11,6 +13,8 @@ const definitions = {
     "Planning and inspection only. No service calls, marketplace actions or payments.",
 };
 export function TechnicalLabel({ term }: { term: keyof typeof definitions }) {
+  const t = useCopy();
+
   const [open, setOpen] = useState(false);
   const id = useId();
   const { transition } = useInteractionTiming();
@@ -33,10 +37,10 @@ export function TechnicalLabel({ term }: { term: keyof typeof definitions }) {
           }
         }}
       >
-        {term}
+        {t(term)}
       </button>
       <span id={id} className="sr-only">
-        {definitions[term]}
+        {t(definitions[term])}
       </span>
       <AnimatePresence>
         {open && (
@@ -48,7 +52,7 @@ export function TechnicalLabel({ term }: { term: keyof typeof definitions }) {
             exit={{ opacity: 0 }}
             transition={transition}
           >
-            {definitions[term]}
+            {t(definitions[term])}
           </m.span>
         )}
       </AnimatePresence>
@@ -56,6 +60,8 @@ export function TechnicalLabel({ term }: { term: keyof typeof definitions }) {
   );
 }
 export function InteractionError({ message }: { message: string }) {
+  const t = useCopy();
+
   const { reduced, transition } = useInteractionTiming();
   return (
     <AnimatePresence>
@@ -70,7 +76,7 @@ export function InteractionError({ message }: { message: string }) {
           exit={{ opacity: 0 }}
           transition={transition}
         >
-          {message}
+          {t(message)}
         </m.p>
       )}
     </AnimatePresence>

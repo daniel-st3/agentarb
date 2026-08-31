@@ -1,7 +1,9 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { m } from "motion/react";
 import { ArrowUpRight, X } from "lucide-react";
 import { ObjectiveInputSchema } from "@/domain/objective";
@@ -13,6 +15,8 @@ const examples = [
   "Create a recurring competitor-monitoring route",
 ];
 export default function CommandPalette({ close }: { close: () => void }) {
+  const t = useCopy();
+
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const [objective, setObjective] = useState("");
@@ -95,25 +99,27 @@ export default function CommandPalette({ close }: { close: () => void }) {
           transition={transition}
         >
           <div className="launcher-heading">
-            <span className="eyebrow">SIGNALFORGE / OBJECTIVE LAUNCHER</span>
+            <span className="eyebrow">
+              {t("SIGNALFORGE / OBJECTIVE LAUNCHER")}
+            </span>
             <button
               type="button"
               className="launcher-close"
-              aria-label="Close command palette"
+              aria-label={t("Close command palette")}
               onClick={close}
             >
               <X size={18} />
             </button>
           </div>
-          <h2 id="launcher-title">Forge a route</h2>
+          <h2 id="launcher-title">{t("Forge a route")}</h2>
           <form onSubmit={submit}>
             <label className="sr-only" htmlFor="launcher-objective">
-              Describe an objective
+              {t("Describe an objective")}
             </label>
             <input
               ref={input}
               id="launcher-objective"
-              placeholder="Describe an objective…"
+              placeholder={t("Describe an objective…")}
               maxLength={2000}
               value={objective}
               onChange={(event) => {
@@ -125,14 +131,18 @@ export default function CommandPalette({ close }: { close: () => void }) {
             />
             {error && (
               <p id="launcher-error" role="alert" className="error-message">
-                {error}
+                {t(error)}
               </p>
             )}
             <button className="text-link launcher-submit" type="submit">
-              Forge this objective <ArrowUpRight size={17} aria-hidden="true" />
+              {t("Forge this objective")}
+              <ArrowUpRight size={17} aria-hidden="true" />
             </button>
           </form>
-          <ul className="launcher-examples" aria-label="Example objectives">
+          <ul
+            className="launcher-examples"
+            aria-label={t("Example objectives")}
+          >
             {examples.map((example, index) => (
               <m.li
                 key={example}
@@ -148,34 +158,36 @@ export default function CommandPalette({ close }: { close: () => void }) {
                   whileTap={{ opacity: reduced ? 1 : 0.8 }}
                   transition={transition}
                   onClick={() => {
-                    setObjective(example);
+                    setObjective(t(example));
                     setError("");
                     input.current?.focus();
                   }}
                 >
                   <span aria-hidden="true">0{index + 1}</span>
-                  {example}
+                  {t(example)}
                 </m.button>
               </m.li>
             ))}
           </ul>
           <div className="launcher-destinations">
             <button className="text-link" onClick={() => navigate("/network")}>
-              Explore Live Network ↗
+              {t("Explore Live Network ↗")}
             </button>
             <button
               className="text-link"
               onClick={() => navigate("/developers/try")}
             >
-              Inspect API / MCP ↗
+              {t("Inspect API / MCP ↗")}
             </button>
           </div>
           <p id="launcher-note" className="field-help">
-            Planning only. No services called. Objectives open in the route
-            console; do not include private information.
+            {t(
+              "Planning only. No services called. Objectives open in the route console; do not include private information.",
+            )}
           </p>
           <p className="launcher-shortcuts">
-            TAB / NAVIGATE <span>ESC / CLOSE</span>
+            {t("TAB / NAVIGATE")}
+            <span>{t("ESC / CLOSE")}</span>
           </p>
         </m.section>
       </m.div>

@@ -1,0 +1,8 @@
+.locale-selector { display: flex; gap: 9px; margin-left: 18px; }
+.locale-selector button { color: var(--muted); font: 10px var(--font-mono); background: transparent; border: 0; border-bottom: 1px solid transparent; padding: 8px 0; cursor: pointer; }
+.locale-selector button[aria-current] { color: var(--ink); border-bottom-color: var(--accent); }
+html:not([lang="en"]) .command-heading h1 { font-size: clamp(42px, 5vw, 72px); }
+html:not([lang="en"]) .command-controls { gap: 14px; }
+html:not([lang="en"]) .command-submit { font-size: 14px; }
+@media(max-width: 900px) { .nav-inner { flex-wrap: wrap; gap: 12px; } .locale-selector { margin-left: auto; } .site-nav .network-indicator { display: none; } }
+@media(max-width: 600px) { .locale-selector { gap: 8px; } .site-nav .nav-inner > nav:not(.locale-selector) { order: 3; width: 100%; justify-content: space-between; } html:not([lang="en"]) .command-heading h1 { font-size: 40px; } }

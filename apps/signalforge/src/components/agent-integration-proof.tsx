@@ -1,6 +1,8 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/i18n/navigation";
 import { z } from "zod";
 import { ObjectiveInputSchema, optimizationPolicies } from "@/domain/objective";
 import { PlanningResponseSchema } from "@/domain/planning-response";
@@ -13,7 +15,9 @@ const examples = [
   "Design a daily monitoring route for competitor pricing changes.",
 ];
 export function AgentIntegrationProof() {
-  const [objective, setObjective] = useState(examples[0]);
+  const t = useCopy();
+
+  const [objective, setObjective] = useState(() => t(examples[0]));
   const [budget, setBudget] = useState("0.25");
   const [policy, setPolicy] =
     useState<(typeof optimizationPolicies)[number]>("most_verified");
@@ -125,17 +129,19 @@ export function AgentIntegrationProof() {
   }
   return (
     <article className="agent-proof container">
-      <p className="eyebrow">DEVELOPER WORKBENCH / REAL HTTP · DEMO PLANNING</p>
-      <h1>Call the control plane.</h1>
-      <p>A real request. A typed route. No service execution.</p>
+      <p className="eyebrow">
+        {t("DEVELOPER WORKBENCH / REAL HTTP · DEMO PLANNING")}
+      </p>
+      <h1>{t("Call the control plane.")}</h1>
+      <p>{t("A real request. A typed route. No service execution.")}</p>
       <p className="field-help">
-        10 planning requests per client per 10 minutes. MCP shares that quota.
-        Optional Groq decomposition may receive the objective; use public,
-        non-sensitive context only.
+        {t(
+          "10 planning requests per client per 10 minutes. MCP shares that quota. Optional Groq decomposition may receive the objective; use public, non-sensitive context only.",
+        )}
       </p>
       <div className="agent-proof-grid">
         <section>
-          <label htmlFor="proof-objective">Agent objective</label>
+          <label htmlFor="proof-objective">{t("Agent objective")}</label>
           <textarea
             id="proof-objective"
             value={objective}
@@ -145,9 +151,9 @@ export function AgentIntegrationProof() {
           />
           <div className="command-controls">
             <label>
-              BUDGET
+              {t("BUDGET")}
               <input
-                aria-label="API budget"
+                aria-label={t("API budget")}
                 type="number"
                 min="0"
                 max="10"
@@ -157,15 +163,15 @@ export function AgentIntegrationProof() {
               />
             </label>
             <label>
-              POLICY
+              {t("POLICY")}
               <select
-                aria-label="API policy"
+                aria-label={t("API policy")}
                 value={policy}
                 onChange={(e) => setPolicy(e.target.value as typeof policy)}
               >
                 {optimizationPolicies.map((p) => (
                   <option value={p} key={p}>
-                    {policyLabels[p]}
+                    {t(policyLabels[p])}
                   </option>
                 ))}
               </select>
@@ -177,112 +183,121 @@ export function AgentIntegrationProof() {
               disabled={pending}
               onClick={() => send("REST")}
             >
-              Send REST request ↗
+              {t("Send REST request ↗")}
             </button>
             <button
               className="text-link"
               disabled={pending}
               onClick={() => send("MCP")}
             >
-              Call MCP planning tool ↗
+              {t("Call MCP planning tool ↗")}
             </button>
           </div>
           <details>
-            <summary>Safe example objectives</summary>
+            <summary>{t("Safe example objectives")}</summary>
             {examples.map((s, i) => (
               <p key={s}>
                 <button
                   className="text-link"
                   onClick={() => {
-                    setObjective(s);
+                    setObjective(t(s));
                     setPolicy(i === 1 ? "cheapest" : "most_verified");
                     setBudget(i === 2 ? "3" : ".25");
                   }}
                 >
-                  {s}
+                  {t(s)}
                 </button>
               </p>
             ))}
           </details>
-          <h2>Exact REST payload</h2>
+          <h2>{t("Exact REST payload")}</h2>
           <pre>{JSON.stringify(payload, null, 2)}</pre>
           <button
             className="text-link"
             onClick={() => copy(payload, "Payload")}
           >
-            Copy API payload
+            {t("Copy API payload")}
           </button>
           <details>
-            <summary>MCP tool-call JSON</summary>
+            <summary>{t("MCP tool-call JSON")}</summary>
             <pre>{JSON.stringify(tool, null, 2)}</pre>
             <button
               className="text-link"
               onClick={() => copy(tool, "Tool call")}
             >
-              Copy MCP call
+              {t("Copy MCP call")}
             </button>
           </details>
         </section>
-        <section aria-label="Agent integration response">
+        <section aria-label={t("Agent integration response")}>
           <p className="eyebrow">
-            {pending
-              ? "AWAITING SERVER RESPONSE"
-              : result
-                ? transport + " / CONTRACT RECEIVED"
-                : "RESPONSE / NOT CALLED YET"}
+            {t(
+              pending
+                ? "AWAITING SERVER RESPONSE"
+                : result
+                  ? transport + " / CONTRACT RECEIVED"
+                  : "RESPONSE / NOT CALLED YET",
+            )}
           </p>
           {pending && (
             <p role="status">
-              The server is decomposing the objective and compiling a bounded
-              route. No task service is executed.
+              {t(
+                "The server is decomposing the objective and compiling a bounded route. No task service is executed.",
+              )}
             </p>
           )}
-          {error && <p role="alert">{error}</p>}
+          {error && <p role="alert">{t(error)}</p>}
           {result ? (
             <>
               <h2>{result.route.objectiveFrame.title}</h2>
               <ol className="proof-trace">
-                <li>Objective received</li>
+                <li>{t("Objective received")}</li>
                 <li>
-                  {result.decompositionSource === "groq"
-                    ? "Groq"
-                    : "Local demo"}{" "}
-                  decomposition returned
+                  {t(
+                    result.decompositionSource === "groq"
+                      ? "Groq"
+                      : "Local demo",
+                  )}{" "}
+                  {t("decomposition returned")}
                 </li>
                 <li>
-                  Catalog snapshot selected /{" "}
-                  {
+                  {t("Catalog snapshot selected /")}{" "}
+                  {t(
                     result.freshnessSummary.filter(
                       (s) => s.cachedRecordCount > 0,
-                    ).length
-                  }{" "}
-                  observed sources
+                    ).length,
+                  )}{" "}
+                  {t("observed sources")}
                 </li>
                 <li>
-                  Capability coverage checked /{" "}
-                  {result.route.unmetRequirements.length} unmet requirements
+                  {t("Capability coverage checked /")}{" "}
+                  {t(result.route.unmetRequirements.length)}{" "}
+                  {t("unmet requirements")}
                 </li>
-                <li>Route contract compiled / {result.route.status}</li>
-                <li>No external execution performed</li>
+                <li>
+                  {t("Route contract compiled /")}
+                  {t(result.route.status)}
+                </li>
+                <li>{t("No external execution performed")}</li>
               </ol>
               <Link
                 className="text-link"
                 href={`/forge/${result.route.routeId}`}
               >
-                Inspect compiled route →
+                {t("Inspect compiled route →")}
               </Link>
-              <pre aria-label="Execution route contract">
+              <pre aria-label={t("Execution route contract")}>
                 {JSON.stringify(result.route, null, 2)}
               </pre>
               <button
                 className="text-link"
                 onClick={() => copy(result.route, "Contract")}
               >
-                Copy contract JSON
+                {t("Copy contract JSON")}
               </button>
               {rpcResponse !== null && (
                 <details>
-                  <summary>Actual MCP response</summary>
+                  <summary>{t("Actual MCP response")}</summary>
                   <pre>{JSON.stringify(rpcResponse, null, 2)}</pre>
                 </details>
               )}
@@ -290,28 +305,30 @@ export function AgentIntegrationProof() {
           ) : (
             !pending && (
               <p>
-                Your response will appear here. There are no fabricated example
-                responses or hidden calls.
+                {t(
+                  "Your response will appear here. There are no fabricated example responses or hidden calls.",
+                )}
               </p>
             )
           )}
           <details>
-            <summary>Agent Card / fetched from this deployment</summary>
+            <summary>{t("Agent Card / fetched from this deployment")}</summary>
             {card ? (
               <pre>{JSON.stringify(card, null, 2)}</pre>
             ) : (
-              <p>Agent Card unavailable.</p>
+              <p>{t("Agent Card unavailable.")}</p>
             )}
             <Link href="/.well-known/agent-card.json" className="text-link">
-              Open Agent Card →
+              {t("Open Agent Card →")}
             </Link>
           </details>
-          <p role="status">{copied}</p>
+          <p role="status">{t(copied)}</p>
         </section>
       </div>
       <p className="route-boundary">
-        execution_not_enabled · Simulated providers · $0 actual service spend ·
-        No payments
+        {t(
+          "execution_not_enabled · Simulated providers · $0 actual service spend · No payments",
+        )}
       </p>
     </article>
   );

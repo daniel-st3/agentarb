@@ -1,8 +1,5 @@
-import type { Metadata } from "next";
+import { getLocale } from "next-intl/server";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
-import Link from "next/link";
-import { Navigation } from "@/components/navigation";
-import { NetworkState } from "@/components/network-state";
 import { ResearchSession } from "@/components/session";
 import { seedRuns } from "@/domain/engine";
 import "./globals.css";
@@ -11,8 +8,7 @@ import "./command.css";
 import "./network.css";
 import "./command-canvas.css";
 import "./interactions.css";
-import { InteractionProvider } from "@/components/interactions/provider";
-import { PageChoreography } from "@/components/editorial/atmosphere";
+import "./locales.css";
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
@@ -29,58 +25,21 @@ const mono = Geist_Mono({
   variable: "--font-geist-mono",
   display: "swap",
 });
-export const metadata: Metadata = {
-  title: {
-    default: "SignalForge — Routing intelligence for the agent economy",
-    template: "%s · SignalForge",
-  },
-  description:
-    "Turn an agent objective into a budget-constrained route. Inspect public catalog metadata, capability tradeoffs and execution contracts. Discovery only.",
-};
+/** Shared root preserves tab-only routes when the locale segment changes. */
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const seeds = await seedRuns();
+  const locale = await getLocale(),
+    seeds = await seedRuns();
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${geist.variable} ${display.variable} ${mono.variable}`}
     >
       <body>
-        <InteractionProvider>
-          <a className="skip-link" href="#main">
-            Skip to content
-          </a>
-          <ResearchSession seeds={seeds}>
-            <NetworkState>
-              <Navigation />
-              <main id="main">
-                <PageChoreography>{children}</PageChoreography>
-              </main>
-            </NetworkState>
-          </ResearchSession>
-          <footer className="site-footer container">
-            <span>
-              SignalForge<span className="brand-dot">.</span>
-            </span>
-            <p>Discovery and planning only. Execution not enabled.</p>
-            <Link
-              href="https://github.com/daniel-st3/agentarb"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Source on GitHub ↗
-            </Link>
-            <p className="maker-credit">
-              <Link href="https://github.com/daniel-st3/agentarb">
-                Designed and built by Daniel Rodríguez · AI systems, data, and
-                product
-              </Link>
-            </p>
-          </footer>
-        </InteractionProvider>
+        <ResearchSession seeds={seeds}>{children}</ResearchSession>
       </body>
     </html>
   );

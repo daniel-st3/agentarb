@@ -1,5 +1,7 @@
 "use client";
-import Link from "next/link";
+import { useCopy } from "@/i18n/copy";
+
+import Link from "@/i18n/navigation";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -11,7 +13,7 @@ import {
   Clock,
   ArrowLeft,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useResearchSession } from "./session";
 import {
   DemoNotice,
@@ -32,10 +34,12 @@ import { RunSchema, type Run } from "@/domain/schema";
 import { policyLabels } from "@/domain/engine";
 
 function Budget({ run }: { run: Run }) {
+  const t = useCopy();
+
   return (
     <div className="budget-card">
       <div className="flex-between">
-        <span>Modeled route cost</span>
+        <span>{t("Modeled route cost")}</span>
         <b>
           {money(run.plan.estimatedTotalCostUsd)}{" "}
           <span>/ {money(run.request.budgetUsd)}</span>
@@ -44,7 +48,7 @@ function Budget({ run }: { run: Run }) {
       <div
         className="meter"
         role="meter"
-        aria-label="Modeled budget usage"
+        aria-label={t("Modeled budget usage")}
         aria-valuemin={0}
         aria-valuemax={run.request.budgetUsd || 1}
         aria-valuenow={run.plan.estimatedTotalCostUsd}
@@ -57,12 +61,15 @@ function Budget({ run }: { run: Run }) {
         />
       </div>
       <p>
-        Hard cap enforced. Actual service spend: <strong>$0.00</strong>.
+        {t("Hard cap enforced. Actual service spend:")}
+        <strong>$0.00</strong>.
       </p>
     </div>
   );
 }
 export function PlanView({ id }: { id: string }) {
+  const t = useCopy();
+
   const { runs, save } = useResearchSession();
   const run = runs.find((r) => r.request.id === id);
   const [busy, setBusy] = useState(false);
@@ -72,8 +79,8 @@ export function PlanView({ id }: { id: string }) {
   if (run.brief)
     return (
       <div className="empty-state">
-        <h1>This research is complete.</h1>
-        <ActionLink href={`/forge/${id}`}>Read the brief</ActionLink>
+        <h1>{t("This research is complete.")}</h1>
+        <ActionLink href={`/forge/${id}`}>{t("Read the brief")}</ActionLink>
       </div>
     );
   async function execute() {
@@ -104,39 +111,46 @@ export function PlanView({ id }: { id: string }) {
     <Reveal className="workspace container">
       <StepHeader step="Plan" />
       <div className="workspace-title" data-reveal>
-        <Eyebrow>TRANSPARENT PRE-FLIGHT</Eyebrow>
-        <h1>Research route</h1>
+        <Eyebrow>{t("TRANSPARENT PRE-FLIGHT")}</Eyebrow>
+        <h1>{t("Research route")}</h1>
         <p>{run.request.question}</p>
         <div className="metadata-row">
-          <Status>{policyLabels[run.request.optimizationPolicy]}</Status>
-          <span>{money(run.request.budgetUsd)} modeled budget</span>
-          <span>Fictional case · demo only</span>
+          <Status>{t(policyLabels[run.request.optimizationPolicy])}</Status>
+          <span>
+            {money(run.request.budgetUsd)} {t("modeled budget")}
+          </span>
+          <span>{t("Fictional case · demo only")}</span>
         </div>
       </div>
       <div className="plan-layout">
         <aside className="plan-request">
-          <Eyebrow>REQUEST / CONSTRAINTS</Eyebrow>
+          <Eyebrow>{t("REQUEST / CONSTRAINTS")}</Eyebrow>
           <p>{run.request.question}</p>
           <dl>
             <div>
-              <dt>Policy</dt>
-              <dd>{policyLabels[run.request.optimizationPolicy]}</dd>
+              <dt>{t("Policy")}</dt>
+              <dd>{t(policyLabels[run.request.optimizationPolicy])}</dd>
             </div>
             <div>
-              <dt>Budget cap</dt>
+              <dt>{t("Budget cap")}</dt>
               <dd>{money(run.request.budgetUsd)}</dd>
             </div>
             <div>
-              <dt>Modeled quality</dt>
+              <dt>{t("Modeled quality")}</dt>
               <dd>{Math.round(run.plan.expectedQualityScore * 100)} / 100</dd>
             </div>
             <div>
-              <dt>Modeled duration</dt>
-              <dd>{run.plan.expectedLatencySeconds}s</dd>
+              <dt>{t("Modeled duration")}</dt>
+              <dd>
+                {t(run.plan.expectedLatencySeconds)}
+                {t("s")}
+              </dd>
             </div>
           </dl>
           <p className="field-help">
-            Fixture inputs, not measured service performance. No external calls.
+            {t(
+              "Fixture inputs, not measured service performance. No external calls.",
+            )}
           </p>
         </aside>
         <div>
@@ -159,27 +173,32 @@ export function PlanView({ id }: { id: string }) {
                       <Icon size={21} />
                     </div>
                     <div>
-                      <h2>{offer.name}</h2>
+                      <h2>{t(offer.name)}</h2>
                       <span className="capability">
                         {step.capabilityNeeded.replaceAll("_", " ")}
                       </span>
                     </div>
-                    <Status>Mock</Status>
+                    <Status>{t("Mock")}</Status>
                   </div>
-                  <p>{step.reasonSelected}</p>
+                  <p>{t(step.reasonSelected)}</p>
                   <div className="provider-stats">
                     <span>
-                      Modeled cost<b>{money(step.estimatedCostUsd)}</b>
+                      {t("Modeled cost")}
+                      <b>{money(step.estimatedCostUsd)}</b>
                     </span>
                     <span>
-                      Modeled latency<b>{offer.estimatedLatencySeconds}s</b>
+                      {t("Modeled latency")}
+                      <b>
+                        {t(offer.estimatedLatencySeconds)}
+                        {t("s")}
+                      </b>
                     </span>
                     <span>
-                      Fixture quality
+                      {t("Fixture quality")}
                       <b>{Math.round(offer.qualityScore * 100)} / 100</b>
                     </span>
                     <span>
-                      Fixture reliability
+                      {t("Fixture reliability")}
                       <b>{Math.round(offer.reliabilityScore * 100)}%</b>
                     </span>
                   </div>
@@ -191,7 +210,7 @@ export function PlanView({ id }: { id: string }) {
           <div className="run-action">
             {error && (
               <p className="error-message" role="alert">
-                {error}
+                {t(error)}
               </p>
             )}
             <button
@@ -199,38 +218,41 @@ export function PlanView({ id }: { id: string }) {
               disabled={busy}
               onClick={execute}
             >
-              {busy ? "Compiling demo evidence…" : "Run research"}
+              {t(busy ? "Compiling demo evidence…" : "Run research")}
               <ArrowRight size={18} />
             </button>
             <p className="privacy-note" aria-live="polite">
-              {busy
-                ? "Running local fixture adapters, checking independent support, and compiling the brief."
-                : "Run starts the selected demo route only. No external services are called."}
+              {t(
+                busy
+                  ? "Running local fixture adapters, checking independent support, and compiling the brief."
+                  : "Run starts the selected demo route only. No external services are called.",
+              )}
             </p>
             <Link className="text-link" href="/forge">
               <ArrowLeft size={14} />
-              Change the request
+              {t("Change the request")}
             </Link>
           </div>
         </div>
         <aside className="plan-sidebar" data-reveal>
-          <Eyebrow>WHY THIS ROUTE</Eyebrow>
+          <Eyebrow>{t("WHY THIS ROUTE")}</Eyebrow>
           <h3>
-            The useful work.
+            {t("The useful work.")}
             <br />
-            Within your limit.
+            {t("Within your limit.")}
           </h3>
-          <p>{run.plan.planningExplanation}</p>
+          <p>{t(run.plan.planningExplanation)}</p>
           <Budget run={run} />
           <p className="field-help">
-            Expected latency is a modeled comparison, not a promised runtime.
-            Quality and reliability are fixture inputs, not measured vendor
-            ratings.
+            {t(
+              "Expected latency is a modeled comparison, not a promised runtime. Quality and reliability are fixture inputs, not measured vendor ratings.",
+            )}
           </p>
           {run.request.targetUrl && (
             <p className="field-help">
-              Your target URL is recorded as context only. This run will not
-              fetch it.
+              {t(
+                "Your target URL is recorded as context only. This run will not fetch it.",
+              )}
             </p>
           )}
         </aside>
@@ -257,14 +279,16 @@ function download(run: Run, format: "md" | "json") {
   URL.revokeObjectURL(url);
 }
 export function BriefView({ id }: { id: string }) {
+  const t = useCopy();
+
   const { runs } = useResearchSession();
   const run = runs.find((r) => r.request.id === id);
   if (!run) return <EmptyRun />;
   if (!run.brief || !run.receipt)
     return (
       <div className="empty-state">
-        <h1>Your route is ready to inspect.</h1>
-        <ActionLink href={`/forge/${id}/plan`}>View the plan</ActionLink>
+        <h1>{t("Your route is ready to inspect.")}</h1>
+        <ActionLink href={`/forge/${id}/plan`}>{t("View the plan")}</ActionLink>
       </div>
     );
   const { brief, receipt } = run;
@@ -275,56 +299,64 @@ export function BriefView({ id }: { id: string }) {
         <div className="brief-title" data-reveal>
           <div className="report-masthead">
             <span>
-              SIGNALFORGE / RESEARCH BRIEF /{" "}
-              {run.example
-                ? run.request.id.replace("example-", "00")
-                : "SESSION"}
+              {t("SIGNALFORGE / RESEARCH BRIEF /")}{" "}
+              {t(
+                run.example
+                  ? run.request.id.replace("example-", "00")
+                  : "SESSION",
+              )}
             </span>
             <span className="report-stamp" aria-hidden="true">
-              SF / DEMO EDITION <i>＋</i>
+              {t("SF / DEMO EDITION")}
+              <i>＋</i>
             </span>
           </div>
           <Eyebrow>
-            SIGNALFORGE / {run.example ? "EXAMPLE BRIEF" : "SESSION BRIEF"} /{" "}
-            {policyLabels[run.request.optimizationPolicy]} / DEMO MODE
+            {t("SIGNALFORGE /")}
+            {t(run.example ? "EXAMPLE BRIEF" : "SESSION BRIEF")} /{" "}
+            {t(policyLabels[run.request.optimizationPolicy])} {t("/ DEMO MODE")}
           </Eyebrow>
-          <h1>{brief.title}</h1>
+          <h1>{t(brief.title)}</h1>
           <p className="brief-question">{run.request.question}</p>
           <div className="brief-meta">
             <span>
               <Clock size={14} />
-              {run.example
-                ? "Seeded example"
-                : `${receipt.elapsedSeconds < 0.01 ? "<0.01" : receipt.elapsedSeconds.toFixed(2)}s local processing`}
+              {t(
+                run.example
+                  ? "Seeded example"
+                  : `${receipt.elapsedSeconds < 0.01 ? "<0.01" : receipt.elapsedSeconds.toFixed(2)}s local processing`,
+              )}
             </span>
             <span>
-              {receipt.sourceCount} fixture documents ·{" "}
-              {receipt.evidenceItemCount} excerpts
+              {t(receipt.sourceCount)} {t("fixture documents ·")}{" "}
+              {t(receipt.evidenceItemCount)} {t("excerpts")}
             </span>
             <span>
-              {receipt.verifiedClaimCount} claims corroborated in simulation
+              {t(receipt.verifiedClaimCount)}{" "}
+              {t("claims corroborated in simulation")}
             </span>
-            <span>$0.00 actual spend</span>
+            <span>{t("$0.00 actual spend")}</span>
           </div>
           <div className="provenance-banner">
             <ShieldCheck size={18} />
             <span>
-              <strong>Simulated demo evidence.</strong> Fictional companies and
-              authored documents. This is a predefined case brief, not bespoke
-              research. No live research was performed.
+              <strong>{t("Simulated demo evidence.")}</strong>{" "}
+              {t(
+                "Fictional companies and authored documents. This is a predefined case brief, not bespoke research. No live research was performed.",
+              )}
             </span>
           </div>
         </div>
         <div className="brief-layout">
           <article className="report-body">
             <section className="executive-answer" id="answer" data-reveal>
-              <Eyebrow>THE ANSWER</Eyebrow>
-              <p>{brief.executiveSummary}</p>
+              <Eyebrow>{t("THE ANSWER")}</Eyebrow>
+              <p>{t(brief.executiveSummary)}</p>
             </section>
             <section className="findings" data-reveal>
               <div className="section-topline">
-                <h2>Key findings</h2>
-                <span>Evidence-led, not certainty-led.</span>
+                <h2>{t("Key findings")}</h2>
+                <span>{t("Evidence-led, not certainty-led.")}</span>
               </div>
               {brief.claims.map((claim, i) => (
                 <div className="finding" key={claim.id}>
@@ -336,13 +368,16 @@ export function BriefView({ id }: { id: string }) {
                         "corroborated_in_simulation"
                       }
                     >
-                      {claim.verificationStatus === "corroborated_in_simulation"
-                        ? "Corroborated in simulation"
-                        : claim.verificationStatus === "single_source"
-                          ? "Single-source"
-                          : "Unverified"}
+                      {t(
+                        claim.verificationStatus ===
+                          "corroborated_in_simulation"
+                          ? "Corroborated in simulation"
+                          : claim.verificationStatus === "single_source"
+                            ? "Single-source"
+                            : "Unverified",
+                      )}
                     </Status>
-                    <h3>{claim.text}</h3>
+                    <h3>{t(claim.text)}</h3>
                     <div className="citation-row">
                       {claim.evidenceIds.map((eid, j) => (
                         <a
@@ -356,10 +391,12 @@ export function BriefView({ id }: { id: string }) {
                           }}
                         >
                           <FileText size={12} />
-                          {brief.sources.find((s) => s.id === eid)
-                            ?.providerId === "demo-verification"
-                            ? "Independent review"
-                            : "Company fixture"}{" "}
+                          {t(
+                            brief.sources.find((s) => s.id === eid)
+                              ?.providerId === "demo-verification"
+                              ? "Independent review"
+                              : "Company fixture",
+                          )}{" "}
                           {j + 1}
                         </a>
                       ))}
@@ -370,72 +407,78 @@ export function BriefView({ id }: { id: string }) {
             </section>
             <section className="known-grid" data-reveal>
               <div>
-                <Eyebrow>WHAT WE KNOW IN THIS CASE</Eyebrow>
-                <h3>The evidence supports a direction.</h3>
+                <Eyebrow>{t("WHAT WE KNOW IN THIS CASE")}</Eyebrow>
+                <h3>{t("The evidence supports a direction.")}</h3>
                 <p>
-                  {receipt.verifiedClaimCount
-                    ? `${receipt.verifiedClaimCount} important claims have support from two independently modeled source families and providers.`
-                    : "The available material is single-source or insufficient. There is no independent corroboration."}
+                  {t(
+                    receipt.verifiedClaimCount
+                      ? `${receipt.verifiedClaimCount} important claims have support from two independently modeled source families and providers.`
+                      : "The available material is single-source or insufficient. There is no independent corroboration.",
+                  )}
                 </p>
                 <p>
-                  These are simulation results—not independently established
-                  real-world facts.
+                  {t(
+                    "These are simulation results—not independently established real-world facts.",
+                  )}
                 </p>
               </div>
               <div>
-                <Eyebrow>WHAT REMAINS UNCERTAIN</Eyebrow>
+                <Eyebrow>{t("WHAT REMAINS UNCERTAIN")}</Eyebrow>
                 <ul>
                   {brief.risksAndUnknowns.map((u) => (
-                    <li key={u}>{u}</li>
+                    <li key={u}>{t(u)}</li>
                   ))}
                 </ul>
               </div>
             </section>
             <details className="evidence-ledger" id="evidence-ledger">
               <summary>
-                <span>Evidence ledger</span>
+                <span>{t("Evidence ledger")}</span>
                 <span>
-                  {brief.sources.length} excerpts · inspect provenance
+                  {t(brief.sources.length)} {t("excerpts · inspect provenance")}
                 </span>
               </summary>
               {brief.sources.length === 0 && (
                 <p>
-                  No matching fixture evidence. No source URLs have been
-                  invented.
+                  {t(
+                    "No matching fixture evidence. No source URLs have been invented.",
+                  )}
                 </p>
               )}
               {brief.sources.map((e) => (
                 <article id={e.id} key={e.id}>
-                  <Status>Simulated demo evidence</Status>
-                  <h3>{e.sourceTitle}</h3>
-                  <blockquote>{e.excerpt}</blockquote>
+                  <Status>{t("Simulated demo evidence")}</Status>
+                  <h3>{t(e.sourceTitle)}</h3>
+                  <blockquote>{t(e.excerpt)}</blockquote>
                   <dl>
                     <div>
-                      <dt>Provider</dt>
-                      <dd>{e.providerId}</dd>
+                      <dt>{t("Provider")}</dt>
+                      <dd>{t(e.providerId)}</dd>
                     </div>
                     <div>
-                      <dt>Source family</dt>
-                      <dd>{e.independentSourceId}</dd>
+                      <dt>{t("Source family")}</dt>
+                      <dd>{t(e.independentSourceId)}</dd>
                     </div>
                     <div>
-                      <dt>Claim relevance</dt>
+                      <dt>{t("Claim relevance")}</dt>
                       <dd>
-                        {brief.claims.find((c) => c.id === e.claimId)?.text}
+                        {t(brief.claims.find((c) => c.id === e.claimId)?.text)}
                       </dd>
                     </div>
                     <div>
-                      <dt>Materialized at</dt>
-                      <dd>{e.retrievedAt}</dd>
+                      <dt>{t("Materialized at")}</dt>
+                      <dd>{t(e.retrievedAt)}</dd>
                     </div>
                     <div>
-                      <dt>Fixture confidence (not measured)</dt>
+                      <dt>{t("Fixture confidence (not measured)")}</dt>
                       <dd>{e.confidence.toFixed(2)}</dd>
                     </div>
                     <div>
-                      <dt>Source URL</dt>
+                      <dt>{t("Source URL")}</dt>
                       <dd>
-                        None — authored fixture document, not a public source.
+                        {t(
+                          "None — authored fixture document, not a public source.",
+                        )}
                       </dd>
                     </div>
                   </dl>
@@ -448,22 +491,24 @@ export function BriefView({ id }: { id: string }) {
                 onClick={() => download(run, "md")}
               >
                 <Download size={16} />
-                Export Markdown
+                {t("Export Markdown")}
               </button>
               <button
                 className="button secondary"
                 onClick={() => download(run, "json")}
               >
                 <Download size={16} />
-                Download audit JSON
+                {t("Download audit JSON")}
               </button>
               <Link className="text-link" href="/forge">
-                Forge another <ArrowUpRight size={16} />
+                {t("Forge another")}
+                <ArrowUpRight size={16} />
               </Link>
             </div>
             <p className="privacy-note">
-              Exports include your request and optional target URL. Review them
-              before sharing.
+              {t(
+                "Exports include your request and optional target URL. Review them before sharing.",
+              )}
             </p>
           </article>
           <ResearchReceipt run={run} />
@@ -473,30 +518,33 @@ export function BriefView({ id }: { id: string }) {
   );
 }
 export function HistoryView() {
+  const t = useCopy();
+
   const { runs } = useResearchSession();
   const sorted = [...runs].sort((a, b) =>
     b.request.createdAt.localeCompare(a.request.createdAt),
   );
   return (
     <div className="history-page container">
-      <Eyebrow>YOUR RESEARCH, IN CONTEXT</Eyebrow>
+      <Eyebrow>{t("YOUR RESEARCH, IN CONTEXT")}</Eyebrow>
       <div className="history-heading">
         <div>
-          <h1>Archive</h1>
+          <h1>{t("Archive")}</h1>
           <p>
-            Example briefs and this tab’s research. No account, no permanent
-            archive.
+            {t(
+              "Example briefs and this tab’s research. No account, no permanent archive.",
+            )}
           </p>
         </div>
-        <ActionLink href="/forge">Forge a brief</ActionLink>
+        <ActionLink href="/forge">{t("Forge a brief")}</ActionLink>
       </div>
       <div className="history-list">
         <div className="archive-labels" aria-hidden="true">
-          <span>DATE</span>
-          <span>REPORT / EVIDENCE</span>
-          <span>POLICY</span>
-          <span>COST</span>
-          <span>STATE</span>
+          <span>{t("DATE")}</span>
+          <span>{t("REPORT / EVIDENCE")}</span>
+          <span>{t("POLICY")}</span>
+          <span>{t("COST")}</span>
+          <span>{t("STATE")}</span>
           <span>↗</span>
         </div>
         {sorted.map((run) => (
@@ -505,8 +553,9 @@ export function HistoryView() {
       </div>
       <DemoNotice />
       <p className="privacy-note">
-        Seeded examples are fictional, not previous customer activity. New runs
-        clear on reload.
+        {t(
+          "Seeded examples are fictional, not previous customer activity. New runs clear on reload.",
+        )}
       </p>
     </div>
   );

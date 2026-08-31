@@ -1,8 +1,10 @@
 "use client";
-import Link from "next/link";
+import { useCopy } from "@/i18n/copy";
+
+import Link from "@/i18n/navigation";
 import { useState } from "react";
 import { ArrowRight, Download } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useResearchSession } from "./session";
 import { Reveal } from "./motion";
 import { EmptyRun, money } from "./ui";
@@ -14,90 +16,111 @@ import {
 } from "@/domain/route-planner";
 
 function Sequence({ route }: { route: ExecutionRouteContract }) {
+  const t = useCopy();
+
   return (
     <div className="capability-sequence">
       {route.route.map((step) => (
         <article className="plan-step" key={step.step} data-reveal>
           <span className="eyebrow">
             {String(step.step).padStart(2, "0")} /{" "}
-            {step.capability.replaceAll("_", " ")}
+            {t(step.capability.replaceAll("_", " "))}
           </span>
-          <h2>{step.selectedProvider.name}</h2>
-          <p>{step.rationale}</p>
+          <h2>{t(step.selectedProvider.name)}</h2>
+          <p>{t(step.rationale)}</p>
           <div className="provider-stats">
             <span>
-              Modeled cost / call
+              {t("Modeled cost / call")}
               <b>{money(step.selectedProvider.estimatedCostUsd)}</b>
             </span>
             <span>
-              Modeled latency
-              <b>{step.selectedProvider.estimatedLatencySeconds}s</b>
+              {t("Modeled latency")}
+              <b>
+                {t(step.selectedProvider.estimatedLatencySeconds)}
+                {t("s")}
+              </b>
             </span>
             <span>
-              Fixture reliability
+              {t("Fixture reliability")}
               <b>{Math.round(step.selectedProvider.reliabilityScore * 100)}%</b>
             </span>
             <span>
-              Verification role
+              {t("Verification role")}
               <b>
-                {step.verificationRequired
-                  ? "Required, not performed"
-                  : "No result claimed"}
+                {t(
+                  step.verificationRequired
+                    ? "Required, not performed"
+                    : "No result claimed",
+                )}
               </b>
             </span>
           </div>
           <details>
-            <summary>Inputs, dependencies & fallback</summary>
-            <p>{step.inputContract}</p>
-            <p>{step.outputContract}</p>
+            <summary>{t("Inputs, dependencies & fallback")}</summary>
+            <p>{t(step.inputContract)}</p>
+            <p>{t(step.outputContract)}</p>
             <p className="field-help">
-              Dependencies: {step.dependencies.join(" → ") || "objective"}
+              {t("Dependencies:")}
+              {step.dependencies.join(" → ") || "objective"}
             </p>
             <p>
-              Fallback:{" "}
-              {step.fallbackProvider?.name ??
-                "No eligible replacement within these constraints."}
+              {t("Fallback:")}{" "}
+              {t(
+                step.fallbackProvider?.name ??
+                  "No eligible replacement within these constraints.",
+              )}
             </p>
             {step.fallbackProvider && (
-              <p className="field-help">{step.fallbackProvider.reason}</p>
+              <p className="field-help">{t(step.fallbackProvider.reason)}</p>
             )}
           </details>
         </article>
       ))}
       {!route.route.length && (
         <p>
-          No capability can fit the current constraints. Raise the budget or
-          narrow the objective; nothing will execute.
+          {t(
+            "No capability can fit the current constraints. Raise the budget or narrow the objective; nothing will execute.",
+          )}
         </p>
       )}
     </div>
   );
 }
 function Constraints({ route }: { route: ExecutionRouteContract }) {
+  const t = useCopy();
+
   return (
     <aside className="route-constraints">
-      <p className="eyebrow">ROUTE RECEIPT / MODELED</p>
+      <p className="eyebrow">{t("ROUTE RECEIPT / MODELED")}</p>
       <dl>
         <div>
-          <dt>Hard cap{route.monitoringSpec ? " / month" : ""}</dt>
+          <dt>
+            {t("Hard cap")}
+            {t(route.monitoringSpec ? " / month" : "")}
+          </dt>
           <dd>{money(route.budget.hardCapUsd)}</dd>
         </div>
         <div>
-          <dt>Projected route cost{route.monitoringSpec ? " / month" : ""}</dt>
+          <dt>
+            {t("Projected route cost")}
+            {t(route.monitoringSpec ? " / month" : "")}
+          </dt>
           <dd>{money(route.budget.estimatedRouteCostUsd)}</dd>
         </div>
         <div>
-          <dt>Actual service spend</dt>
+          <dt>{t("Actual service spend")}</dt>
           <dd>$0.00</dd>
         </div>
         <div>
-          <dt>Policy</dt>
+          <dt>{t("Policy")}</dt>
           <dd>
-            {policyLabels[route.objectiveFrame.constraints.optimizationPolicy]}
+            {t(
+              policyLabels[route.objectiveFrame.constraints.optimizationPolicy],
+            )}
           </dd>
         </div>
         <div>
-          <dt>Expected duration / run</dt>
+          <dt>{t("Expected duration / run")}</dt>
           <dd>
             {route.route
               .reduce(
@@ -105,30 +128,31 @@ function Constraints({ route }: { route: ExecutionRouteContract }) {
                 0,
               )
               .toFixed(1)}
-            s modeled
+            {t("s modeled")}
           </dd>
         </div>
         <div>
-          <dt>Verification standard</dt>
-          <dd>{route.verificationPolicy.standard.replaceAll("_", " ")}</dd>
+          <dt>{t("Verification standard")}</dt>
+          <dd>{t(route.verificationPolicy.standard.replaceAll("_", " "))}</dd>
         </div>
       </dl>
       <p className="field-help">
-        All provider prices, latency, reliability and quality are authored
-        fixtures. No vendor performance has been measured. Optional
-        decomposition is separate from actual service spend.
+        {t(
+          "All provider prices, latency, reliability and quality are authored fixtures. No vendor performance has been measured. Optional decomposition is separate from actual service spend.",
+        )}
       </p>
       {route.monitoringSpec && (
         <>
-          <p className="eyebrow">MONITORING SPEC · NOT ACTIVE</p>
+          <p className="eyebrow">{t("MONITORING SPEC · NOT ACTIVE")}</p>
           <p>
-            Every {route.monitoringSpec.intervalHours} hours ·{" "}
-            {route.monitoringSpec.executionsPerMonth} runs/month
+            {t("Every")}
+            {t(route.monitoringSpec.intervalHours)} {t("hours ·")}{" "}
+            {t(route.monitoringSpec.executionsPerMonth)} {t("runs/month")}
           </p>
-          <p>{route.monitoringSpec.alertThreshold}</p>
+          <p>{t(route.monitoringSpec.alertThreshold)}</p>
           <p>
-            {money(route.monitoringSpec.estimatedPerRunCostUsd)} modeled per
-            run. Scheduler disabled.
+            {money(route.monitoringSpec.estimatedPerRunCostUsd)}{" "}
+            {t("modeled per run. Scheduler disabled.")}
           </p>
         </>
       )}
@@ -136,37 +160,44 @@ function Constraints({ route }: { route: ExecutionRouteContract }) {
   );
 }
 function Rejections({ route }: { route: ExecutionRouteContract }) {
+  const t = useCopy();
+
   return (
     <details className="route-ledger">
       <summary>
-        Alternatives not selected ·{" "}
-        {
+        {t("Alternatives not selected ·")}{" "}
+        {t(
           route.rejectedAlternatives.filter(
             (r) => r.reason !== "capability_mismatch",
-          ).length
-        }
+          ).length,
+        )}
       </summary>
       {route.rejectedAlternatives
         .filter((r) => r.reason !== "capability_mismatch")
         .map((r, i) => (
           <div key={i}>
             <span className="eyebrow">
-              {r.capability} / {r.providerId}
+              {t(r.capability)} / {t(r.providerId)}
             </span>
-            <p>REJECTED / {r.reason.replaceAll("_", " ")}</p>
-            <p className="field-help">{r.explanation}</p>
+            <p>
+              {t("REJECTED /")} {r.reason.replaceAll("_", " ")}
+            </p>
+            <p className="field-help">{t(r.explanation)}</p>
           </div>
         ))}
     </details>
   );
 }
 function Supply({ route }: { route: ExecutionRouteContract }) {
+  const t = useCopy();
+
   return (
     <section className="route-ledger">
-      <h2>Observed Catalog Options</h2>
+      <h2>{t("Observed Catalog Options")}</h2>
       <p>
-        Capability-matched catalog observations, separate from the simulated
-        demo providers selected above. These options were not called or paid.
+        {t(
+          "Capability-matched catalog observations, separate from the simulated demo providers selected above. These options were not called or paid.",
+        )}
       </p>
       {route.observedSupply.length ? (
         route.observedSupply.map((l) => (
@@ -177,37 +208,42 @@ function Supply({ route }: { route: ExecutionRouteContract }) {
               target="_blank"
               rel="noreferrer"
             >
-              {l.name} ↗
+              {t(l.name)} ↗
             </a>
             <p className="eyebrow">
-              {l.sourceName} · {l.freshness.replaceAll("_", " ")} ·{" "}
+              {t(l.sourceName)} · {l.freshness.replaceAll("_", " ")} ·{" "}
               {l.observedAt}
             </p>
-            <p className="eyebrow">{l.boundaryLabel}</p>
+            <p className="eyebrow">{t(l.boundaryLabel)}</p>
             <p className="field-help">
               {l.accessMode.replaceAll("_", " ")} /{" "}
               {l.actionability.replaceAll("_", " ")}
-              {l.pricing.rawPriceText
-                ? ` · ${l.pricing.rawPriceText}`
-                : " · Task price not established"}
+              {t(
+                l.pricing.rawPriceText
+                  ? ` · ${l.pricing.rawPriceText}`
+                  : " · Task price not established",
+              )}
               {` · Price confidence: ${l.pricing.parseConfidence}`}
             </p>
-            <p className="field-help">{l.reason}</p>
+            <p className="field-help">{t(l.reason)}</p>
           </div>
         ))
       ) : (
         <p className="field-help">
-          No eligible observed catalog matches attached. Seeded routes do not
-          imply a live observation.
+          {t(
+            "No eligible observed catalog matches attached. Seeded routes do not imply a live observation.",
+          )}
         </p>
       )}
       <Link href="/network" className="text-link">
-        Inspect the live agent network →
+        {t("Inspect the live agent network →")}
       </Link>
     </section>
   );
 }
 export function RouteCompetition({ id }: { id: string }) {
+  const t = useCopy();
+
   const { routes, saveRoute } = useResearchSession(),
     router = useRouter();
   const route = routes.find((r) => r.routeId === id);
@@ -216,20 +252,24 @@ export function RouteCompetition({ id }: { id: string }) {
     <Reveal className="workspace container">
       <header className="workspace-title" data-reveal>
         <p className="eyebrow">
-          OBJECTIVE → CAPABILITIES → SERVICE COMPETITION
+          {t("OBJECTIVE → CAPABILITIES → SERVICE COMPETITION")}
         </p>
-        <h1>Capability route</h1>
+        <h1>{t("Capability route")}</h1>
         <p>{route.objective}</p>
-        <p className="route-boundary">DEMO PLANNING · EXECUTION NOT ENABLED</p>
+        <p className="route-boundary">
+          {t("DEMO PLANNING · EXECUTION NOT ENABLED")}
+          {" · "}
+          <code>{route.executionStatus}</code>
+        </p>
       </header>
       <div className="execution-layout">
         <div>
           <Sequence route={route} />
           {route.unmetRequirements.length > 0 && (
             <section className="route-warning">
-              <h2>Partial route / constraints not met</h2>
+              <h2>{t("Partial route / constraints not met")}</h2>
               {route.unmetRequirements.map((r) => (
-                <p key={r}>{r}</p>
+                <p key={r}>{t(r)}</p>
               ))}
             </section>
           )}
@@ -249,14 +289,17 @@ export function RouteCompetition({ id }: { id: string }) {
                 router.push(`/forge/${id}`);
               }}
             >
-              {route.status === "partial"
-                ? "Inspect partial contract"
-                : "Simulate route"}
+              {t(
+                route.status === "partial"
+                  ? "Inspect partial contract"
+                  : "Simulate route",
+              )}
               <ArrowRight size={18} />
             </button>
             <p className="field-help">
-              Local contract-state simulation only. No provider method is
-              invoked, no evidence is created, and no external action occurs.
+              {t(
+                "Local contract-state simulation only. No provider method is invoked, no evidence is created, and no external action occurs.",
+              )}
             </p>
           </div>
         </div>
@@ -277,6 +320,8 @@ function downloadContract(route: ExecutionRouteContract) {
   URL.revokeObjectURL(url);
 }
 function IntegrationActions({ route }: { route: ExecutionRouteContract }) {
+  const t = useCopy();
+
   const [message, setMessage] = useState("");
   const payload = {
     objective: route.objective,
@@ -294,32 +339,35 @@ function IntegrationActions({ route }: { route: ExecutionRouteContract }) {
   }
   return (
     <section className="route-ledger">
-      <h2>Inspect with another agent</h2>
+      <h2>{t("Inspect with another agent")}</h2>
       <div className="network-actions">
         <button className="text-link" onClick={copy}>
-          Copy API payload
+          {t("Copy API payload")}
         </button>
         <Link href="/developers/try" className="text-link">
-          Try REST & MCP →
+          {t("Try REST & MCP →")}
         </Link>
       </div>
       <details>
-        <summary>Planning API payload / MCP connection</summary>
+        <summary>{t("Planning API payload / MCP connection")}</summary>
         <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
           {JSON.stringify(payload, null, 2)}
         </pre>
-        <p>Connect an MCP client or Inspector using Streamable HTTP:</p>
+        <p>{t("Connect an MCP client or Inspector using Streamable HTTP:")}</p>
         <code>https://signalforge-rose-two.vercel.app/api/mcp</code>
         <p>
-          Tool: signalforge_plan_route. Inputs: objective, budget_usd,
-          optimization_policy. Planning only, not execution permission.
+          {t(
+            "Tool: signalforge_plan_route. Inputs: objective, budget_usd, optimization_policy. Planning only, not execution permission.",
+          )}
         </p>
       </details>
-      <p role="status">{message}</p>
+      <p role="status">{t(message)}</p>
     </section>
   );
 }
 export function ExecutionRouteView({ id }: { id: string }) {
+  const t = useCopy();
+
   const { routes } = useResearchSession(),
     route = routes.find((r) => r.routeId === id);
   if (!route) return <EmptyRun />;
@@ -327,14 +375,16 @@ export function ExecutionRouteView({ id }: { id: string }) {
     <Reveal className="workspace container execution-report">
       <header className="workspace-title" data-reveal>
         <p className="eyebrow">
-          SIGNALFORGE / EXECUTION ROUTE /{" "}
-          {id.startsWith("example") ? id.replace("example-", "00") : "SESSION"}
+          {t("SIGNALFORGE / EXECUTION ROUTE /")}{" "}
+          {t(
+            id.startsWith("example") ? id.replace("example-", "00") : "SESSION",
+          )}
         </p>
-        <h1>Agent-ready execution route</h1>
+        <h1>{t("Agent-ready execution route")}</h1>
         <h2>{route.objectiveFrame.title}</h2>
         <p>{route.objective}</p>
         <p className="route-boundary">
-          {route.status.toUpperCase()} · DEMO · execution_not_enabled
+          {route.status.toUpperCase()} {t("· DEMO · execution_not_enabled")}
         </p>
       </header>
       <RouteFlow route={route} />
@@ -343,32 +393,39 @@ export function ExecutionRouteView({ id }: { id: string }) {
           <Sequence route={route} />
           {route.unmetRequirements.length > 0 && (
             <section className="route-warning">
-              <h2>Unmet requirements</h2>
+              <h2>{t("Unmet requirements")}</h2>
               {route.unmetRequirements.map((r) => (
-                <p key={r}>{r}</p>
+                <p key={r}>{t(r)}</p>
               ))}
             </section>
           )}
           <section className="handoff">
-            <p className="eyebrow">CONTRACT / NOT AUTHORIZATION</p>
-            <h2>Agent handoff</h2>
+            <p className="eyebrow">{t("CONTRACT / NOT AUTHORIZATION")}</p>
+            <h2>{t("Agent handoff")}</h2>
             <p>
-              This route can be inspected by an external agent. Execution is not
-              enabled. A future authorized implementation would need to:
+              {t(
+                "This route can be inspected by an external agent. Execution is not enabled. A future authorized implementation would need to:",
+              )}
             </p>
             <ol>
-              <li>Execute steps in dependency order.</li>
-              <li>Never exceed the hard budget, including failed calls.</li>
+              <li>{t("Execute steps in dependency order.")}</li>
               <li>
-                Replan before a fallback; do not assume failed calls were free.
+                {t("Never exceed the hard budget, including failed calls.")}
               </li>
-              <li>Require independent corroboration where specified.</li>
-              <li>Stop when evidence or other constraints cannot be met.</li>
+              <li>
+                {t(
+                  "Replan before a fallback; do not assume failed calls were free.",
+                )}
+              </li>
+              <li>{t("Require independent corroboration where specified.")}</li>
+              <li>
+                {t("Stop when evidence or other constraints cannot be met.")}
+              </li>
             </ol>
-            <h3>Stop conditions</h3>
+            <h3>{t("Stop conditions")}</h3>
             <ul>
               {route.stopConditions.map((s) => (
-                <li key={s}>{s}</li>
+                <li key={s}>{t(s)}</li>
               ))}
             </ul>
           </section>
@@ -376,14 +433,14 @@ export function ExecutionRouteView({ id }: { id: string }) {
           <Supply route={route} />
           <IntegrationActions route={route} />
           <section className="route-ledger">
-            <h2>Example output: research brief</h2>
+            <h2>{t("Example output: research brief")}</h2>
             <p>
-              A separate fictional research case shows what an authorized route
-              might produce. It was not generated by this route, and it is not
-              evidence of service execution.
+              {t(
+                "A separate fictional research case shows what an authorized route might produce. It was not generated by this route, and it is not evidence of service execution.",
+              )}
             </p>
             <Link className="text-link" href="/forge/example-1/output">
-              Inspect simulated execution output →
+              {t("Inspect simulated execution output →")}
             </Link>
           </section>
           <div className="export-actions">
@@ -391,15 +448,16 @@ export function ExecutionRouteView({ id }: { id: string }) {
               className="text-link"
               onClick={() => downloadContract(route)}
             >
-              <Download size={16} /> Download route contract JSON
+              <Download size={16} /> {t("Download route contract JSON")}
             </button>
             <Link href="/forge" className="text-link">
-              Forge another route →
+              {t("Forge another route →")}
             </Link>
           </div>
           <p className="field-help">
-            The export includes your objective. Review before sharing. New
-            routes clear on reload; there is no persistent visitor archive.
+            {t(
+              "The export includes your objective. Review before sharing. New routes clear on reload; there is no persistent visitor archive.",
+            )}
           </p>
         </article>
         <Constraints route={route} />
@@ -408,20 +466,23 @@ export function ExecutionRouteView({ id }: { id: string }) {
   );
 }
 export function RouteArchive() {
+  const t = useCopy();
+
   const { routes } = useResearchSession();
   return (
     <section className="history-page container">
-      <p className="eyebrow">CAPABILITY ROUTES / SESSION INDEX</p>
+      <p className="eyebrow">{t("CAPABILITY ROUTES / SESSION INDEX")}</p>
       <div className="history-heading">
         <div>
-          <h1>Archive</h1>
+          <h1>{t("Archive")}</h1>
           <p>
-            Seeded route examples and this session’s contracts. Not execution
-            history.
+            {t(
+              "Seeded route examples and this session’s contracts. Not execution history.",
+            )}
           </p>
         </div>
         <Link className="text-link" href="/forge">
-          Forge route →
+          {t("Forge route →")}
         </Link>
       </div>
       <div className="route-archive">
@@ -433,28 +494,29 @@ export function RouteArchive() {
           >
             <span className="eyebrow">{r.createdAt.slice(0, 10)}</span>
             <div>
-              <h2>{r.objectiveFrame.title}</h2>
+              <h2>{t(r.objectiveFrame.title)}</h2>
               <p>
-                {r.route.length} capability steps ·{" "}
-                {r.provenance.isSimulated ? "simulated" : ""} · no services
-                called
+                {t(r.route.length)} {t("capability steps ·")}{" "}
+                {t(r.provenance.isSimulated ? "simulated" : "")}{" "}
+                {t("· no services called")}
               </p>
             </div>
             <span>
-              {policyLabels[r.objectiveFrame.constraints.optimizationPolicy]}
+              {t(policyLabels[r.objectiveFrame.constraints.optimizationPolicy])}
             </span>
             <span>
-              {money(r.budget.estimatedRouteCostUsd)} modeled
+              {money(r.budget.estimatedRouteCostUsd)} {t("modeled")}
               <br />
-              $0 actual
+              {t("$0 actual")}
             </span>
-            <span className="eyebrow">{r.status} ↗</span>
+            <span className="eyebrow">{t(r.status)} ↗</span>
           </Link>
         ))}
       </div>
       <p className="field-help">
-        Example routes are controlled fixtures, not customer activity. Session
-        routes disappear on reload.
+        {t(
+          "Example routes are controlled fixtures, not customer activity. Session routes disappear on reload.",
+        )}
       </p>
     </section>
   );

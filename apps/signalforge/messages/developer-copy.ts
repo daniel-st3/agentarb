@@ -1,0 +1,245 @@
+export const developerCopy: Array<[string, string, string]> = [
+  [
+    "SIGNALFORGE / DEVELOPER INTERFACE",
+    "SIGNALFORGE / INTERFAZ PARA DESARROLLADORES",
+    "SIGNALFORGE / INTERFACE DÉVELOPPEUR",
+  ],
+  ["Give your agent", "Dale a tu agente", "Offrez à votre agent"],
+  ["a better route.", "una mejor ruta.", "un meilleur itinéraire."],
+  [
+    "A public discovery and demo planning API. No marketplace writes, service execution, or payments. Every contract states execution_not_enabled.",
+    "API pública de descubrimiento y planificación de demostración. Sin modificaciones en mercados, ejecución de servicios ni pagos. Todos los contratos indican execution_not_enabled.",
+    "API publique de découverte et de planification de démonstration. Aucune écriture sur les places de marché, exécution de service ni paiement. Chaque contrat indique execution_not_enabled.",
+  ],
+  [
+    "Plan across capabilities",
+    "Planifica entre capacidades",
+    "Planifiez selon les capacités",
+  ],
+  [
+    "Send a real REST or MCP planning request →",
+    "Enviar una solicitud real de planificación REST o MCP →",
+    "Envoyer une vraie requête de planification REST ou MCP →",
+  ],
+  [
+    "Returns ObjectiveFrame, ExecutionRouteContract, decompositionSource, observed supply, freshnessSummary, warnings, and executionStatus. Groq may decompose the objective; deterministic code selects the demo route.",
+    "Devuelve ObjectiveFrame, ExecutionRouteContract, decompositionSource, oferta observada, freshnessSummary, warnings y executionStatus. Groq puede descomponer el objetivo; el código determinista elige la ruta de demostración.",
+    "Renvoie ObjectiveFrame, ExecutionRouteContract, decompositionSource, l’offre observée, freshnessSummary, warnings et executionStatus. Groq peut décomposer l’objectif ; le code déterministe choisit l’itinéraire de démonstration.",
+  ],
+  [
+    "Unknown prices and catalog-only offers do not become executable steps. A budget that cannot cover critical capabilities yields a partial contract.",
+    "Los precios desconocidos y las ofertas de catálogo no se convierten en pasos ejecutables. Un presupuesto insuficiente para las capacidades críticas genera un contrato parcial.",
+    "Les prix inconnus et les offres de catalogue ne deviennent pas des étapes exécutables. Un budget insuffisant pour les capacités critiques produit un contrat partiel.",
+  ],
+  [
+    "Inspect the supply network",
+    "Inspecciona la red de oferta",
+    "Inspectez le réseau d’offres",
+  ],
+  [
+    "GET /api/v1/catalog — capability, source, listingType, freshness, actionability, priceModel, maxPriceUsd, query, limit (1–50).",
+    "GET /api/v1/catalog — capability, source, listingType, freshness, actionability, priceModel, maxPriceUsd, query, limit (1–50).",
+    "GET /api/v1/catalog — capability, source, listingType, freshness, actionability, priceModel, maxPriceUsd, query, limit (1–50).",
+  ],
+  [
+    "GET /api/v1/catalog/&#123;id&#125; — an ID returned by the current catalog.",
+    "GET /api/v1/catalog/{id} — un identificador devuelto por el catálogo actual.",
+    "GET /api/v1/catalog/{id} — un identifiant renvoyé par le catalogue actuel.",
+  ],
+  [
+    "POST /api/v1/opportunities/evaluate — opportunityId and agentProfile: default_demo_profile.",
+    "POST /api/v1/opportunities/evaluate — opportunityId y agentProfile: default_demo_profile.",
+    "POST /api/v1/opportunities/evaluate — opportunityId et agentProfile: default_demo_profile.",
+  ],
+  [
+    "GET /api/v1/network/status — connector health, observation times, and cache mode.",
+    "GET /api/v1/network/status — estado de conectores, fechas de observación y modo de caché.",
+    "GET /api/v1/network/status — état des connecteurs, dates d’observation et mode de cache.",
+  ],
+  [
+    "Catalog queries filter a bounded cached sample; they never trigger arbitrary upstream searches or follow listing URLs. No cursor pagination is exposed.",
+    "Las consultas filtran una muestra acotada en caché; nunca generan búsquedas arbitrarias ni siguen las URL de los registros. No se ofrece paginación por cursor.",
+    "Les requêtes filtrent un échantillon borné en cache ; elles ne déclenchent jamais de recherches arbitraires et ne suivent pas les URL des entrées. Aucune pagination par curseur n’est proposée.",
+  ],
+  ["MCP, over HTTP", "MCP mediante HTTP", "MCP via HTTP"],
+  [
+    "Connect an MCP client supporting Streamable HTTP to",
+    "Conecta un cliente MCP compatible con Streamable HTTP a",
+    "Connectez un client MCP compatible avec Streamable HTTP à",
+  ],
+  [
+    "Stateless JSON responses, no standalone SSE, no resumable tasks, no authentication or action tools.",
+    "Respuestas JSON sin estado, sin SSE independiente, tareas reanudables, autenticación ni herramientas de acción.",
+    "Réponses JSON sans état, sans SSE autonome, tâches reprenables, authentification ni outils d’action.",
+  ],
+  [
+    "Tool fields use snake_case: objective, context_url, budget_usd, optimization_policy; catalog search accepts capability, query, listing_type, max_price_usd, freshness, limit.",
+    "Los campos de herramientas usan snake_case: objective, context_url, budget_usd, optimization_policy; la búsqueda acepta capability, query, listing_type, max_price_usd, freshness, limit.",
+    "Les champs des outils utilisent snake_case : objective, context_url, budget_usd, optimization_policy ; la recherche accepte capability, query, listing_type, max_price_usd, freshness, limit.",
+  ],
+  ["Limits & boundaries", "Límites y restricciones", "Limites et garde-fous"],
+  [
+    "Planning: 10 requests per client key per 10 minutes. Catalog and MCP protocol requests: 60 per 10 minutes. MCP planning also consumes planning quota. HTTP 429 includes Retry-After.",
+    "Planificación: 10 solicitudes por identificador de cliente cada 10 minutos. Catálogo y protocolo MCP: 60 cada 10 minutos. La planificación MCP también consume cuota de planificación. HTTP 429 incluye Retry-After.",
+    "Planification : 10 requêtes par identifiant client toutes les 10 minutes. Catalogue et protocole MCP : 60 toutes les 10 minutes. La planification MCP consomme aussi le quota de planification. HTTP 429 inclut Retry-After.",
+  ],
+  [
+    "Configured Upstash enables shared quotas and snapshots. Without it, this public demo uses conservative per-instance limits and a non-durable cache—not distributed abuse protection. Invalid shared configuration fails closed.",
+    "Upstash configurado habilita cuotas e instantáneas compartidas. Sin él, la demostración usa límites conservadores por instancia y caché no duradera, no protección distribuida. Una configuración compartida inválida bloquea las solicitudes.",
+    "Upstash configuré active des quotas et instantanés partagés. Sinon, la démonstration utilise des limites prudentes par instance et un cache non durable, pas une protection distribuée. Une configuration partagée invalide bloque les requêtes.",
+  ],
+  [
+    "Same-origin browser requests only; non-browser API/MCP clients need no cookies or credentials. Bodies are limited to 16 KiB; objectives to 2,000 characters. No visitor objectives or keys are persisted.",
+    "Solo solicitudes de navegador del mismo origen; los clientes API/MCP externos no necesitan cookies ni credenciales. Cuerpos limitados a 16 KiB y objetivos a 2.000 caracteres. No se guardan objetivos ni claves de visitantes.",
+    "Requêtes navigateur de même origine uniquement ; les clients API/MCP externes n’ont besoin ni de cookies ni d’identifiants. Corps limités à 16 Kio, objectifs à 2 000 caractères. Aucun objectif ni clé de visiteur n’est conservé.",
+  ],
+  [
+    "Discovery snapshots refresh at most hourly per source/cache instance. Cached observations retain timestamps; unavailable sources do not become simulated live data.",
+    "Las instantáneas se actualizan como máximo una vez por hora según la fuente y caché. Las observaciones conservan sus fechas; una fuente no disponible nunca se sustituye por datos simulados presentados como reales.",
+    "Les instantanés sont actualisés au maximum une fois par heure selon la source et le cache. Les observations conservent leurs dates ; une source indisponible n’est jamais remplacée par des données simulées présentées comme réelles.",
+  ],
+  [
+    "Discoverability, honestly",
+    "Descubrimiento transparente",
+    "Découvrabilité transparente",
+  ],
+  [
+    "Inspect the Agent Card →",
+    "Inspeccionar Agent Card →",
+    "Inspecter l’Agent Card →",
+  ],
+  [
+    "A2A-style discoverability, using the 1.0 field vocabulary. No A2A message/task transport is advertised or implemented; use the REST or MCP interface. No legacy plugin manifest.",
+    "Descubrimiento de estilo A2A con el vocabulario de campos 1.0. No se anuncia ni implementa transporte de mensajes o tareas A2A; usa REST o MCP. Sin manifiesto de plugin heredado.",
+    "Découvrabilité de type A2A avec le vocabulaire de champs 1.0. Aucun transport de messages ou tâches A2A n’est annoncé ni implémenté ; utilisez REST ou MCP. Aucun ancien manifeste de plugin.",
+  ],
+  [
+    "Inspect live catalog observations →",
+    "Inspeccionar observaciones de catálogos en vivo →",
+    "Inspecter les observations de catalogues en direct →",
+  ],
+  [
+    "DEVELOPER WORKBENCH / REAL HTTP · DEMO PLANNING",
+    "ENTORNO DE DESARROLLO / HTTP REAL · PLANIFICACIÓN DE DEMOSTRACIÓN",
+    "ATELIER DÉVELOPPEUR / HTTP RÉEL · PLANIFICATION DE DÉMONSTRATION",
+  ],
+  [
+    "Call the control plane.",
+    "Consulta el plano de control.",
+    "Interrogez le plan de contrôle.",
+  ],
+  [
+    "A real request. A typed route. No service execution.",
+    "Una solicitud real. Una ruta tipada. Sin ejecución de servicios.",
+    "Une vraie requête. Un itinéraire typé. Aucune exécution de service.",
+  ],
+  [
+    "Safe example objectives",
+    "Ejemplos seguros de objetivos",
+    "Exemples d’objectifs sûrs",
+  ],
+  [
+    "Choose the cheapest route to parse and validate a public document.",
+    "Elige la ruta de menor costo para analizar y validar un documento público.",
+    "Choisissez l’itinéraire le moins coûteux pour analyser et valider un document public.",
+  ],
+  [
+    "Design a daily monitoring route for competitor pricing changes.",
+    "Diseña una ruta de seguimiento diario de cambios de precios de competidores.",
+    "Concevez un itinéraire de veille quotidienne sur les changements de tarifs concurrents.",
+  ],
+  ["API budget", "Presupuesto API", "Budget API"],
+  ["API policy", "Política API", "Stratégie API"],
+  [
+    "Send REST request ↗",
+    "Enviar solicitud REST ↗",
+    "Envoyer la requête REST ↗",
+  ],
+  [
+    "Call MCP planning tool ↗",
+    "Invocar herramienta de planificación MCP ↗",
+    "Appeler l’outil de planification MCP ↗",
+  ],
+  ["Exact REST payload", "Solicitud REST exacta", "Requête REST exacte"],
+  ["MCP tool-call JSON", "JSON de llamada MCP", "JSON d’appel MCP"],
+  [
+    "AWAITING SERVER RESPONSE",
+    "ESPERANDO RESPUESTA DEL SERVIDOR",
+    "EN ATTENTE DU SERVEUR",
+  ],
+  [
+    "The server is decomposing the objective and compiling a bounded route. No task service is executed.",
+    "El servidor descompone el objetivo y compila una ruta acotada. No se ejecutan servicios de tareas.",
+    "Le serveur décompose l’objectif et compose un itinéraire borné. Aucun service de tâche n’est exécuté.",
+  ],
+  [
+    "Your response will appear here. There are no fabricated example responses or hidden calls.",
+    "Tu respuesta aparecerá aquí. No hay respuestas de ejemplo inventadas ni llamadas ocultas.",
+    "Votre réponse apparaîtra ici. Il n’y a ni réponses d’exemple fabriquées ni appels cachés.",
+  ],
+  [
+    "RESPONSE / NOT CALLED YET",
+    "RESPUESTA / AÚN SIN SOLICITUD",
+    "RÉPONSE / PAS ENCORE APPELÉ",
+  ],
+  [
+    "Execution route contract",
+    "Contrato de ruta de ejecución",
+    "Contrat d’itinéraire d’exécution",
+  ],
+  [
+    "Agent integration response",
+    "Respuesta de integración de agentes",
+    "Réponse d’intégration d’agents",
+  ],
+  ["Actual MCP response", "Respuesta MCP real", "Réponse MCP réelle"],
+  [
+    "Agent Card / fetched from this deployment",
+    "Agent Card / obtenida de este despliegue",
+    "Agent Card / récupérée depuis ce déploiement",
+  ],
+  [
+    "Agent Card unavailable.",
+    "Agent Card no disponible.",
+    "Agent Card indisponible.",
+  ],
+  ["Objective received", "Objetivo recibido", "Objectif reçu"],
+  ["decomposition returned", "descomposición recibida", "décomposition reçue"],
+  [
+    "Catalog snapshot selected /",
+    "Instantánea del catálogo seleccionada /",
+    "Instantané du catalogue sélectionné /",
+  ],
+  [
+    "Capability coverage checked /",
+    "Cobertura de capacidades comprobada /",
+    "Couverture des capacités contrôlée /",
+  ],
+  [
+    "Route contract compiled /",
+    "Contrato de ruta compilado /",
+    "Contrat d’itinéraire composé /",
+  ],
+  [
+    "No external execution performed",
+    "No se realizó ejecución externa",
+    "Aucune exécution externe effectuée",
+  ],
+  ["Local demo", "Demostración local", "Démonstration locale"],
+  ["observed sources", "fuentes observadas", "sources observées"],
+  [
+    "unmet requirements",
+    "requisitos no satisfechos",
+    "exigences non satisfaites",
+  ],
+  [
+    "Use an objective of 12–2,000 characters and a whole-cent budget from $0 to $10.",
+    "Usa un objetivo de 12 a 2.000 caracteres y un presupuesto de 0 a 10 USD en centavos enteros.",
+    "Utilisez un objectif de 12 à 2 000 caractères et un budget de 0 à 10 USD en centimes entiers.",
+  ],
+  [
+    "The planning interface is temporarily unavailable. No external execution occurred.",
+    "La interfaz de planificación no está disponible temporalmente. No hubo ejecución externa.",
+    "L’interface de planification est temporairement indisponible. Aucune exécution externe n’a eu lieu.",
+  ],
+];

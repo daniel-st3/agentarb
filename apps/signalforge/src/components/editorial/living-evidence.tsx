@@ -1,4 +1,6 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -7,6 +9,8 @@ import type { Run } from "@/domain/schema";
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function LivingEvidence({ run }: { run: Run }) {
+  const t = useCopy();
+
   const ref = useRef<HTMLElement>(null);
   const claim = run.brief?.claims.find(
     (c) => c.verificationStatus === "corroborated_in_simulation",
@@ -66,17 +70,21 @@ export function LivingEvidence({ run }: { run: Run }) {
     <figure
       ref={ref}
       className="living-evidence"
-      aria-label="Two modeled source families support a claim in simulation"
+      aria-label={t(
+        "Two modeled source families support a claim in simulation",
+      )}
     >
-      <figcaption>THE EVIDENCE CONNECTION / SIMULATED DEMO</figcaption>
+      <figcaption>{t("THE EVIDENCE CONNECTION / SIMULATED DEMO")}</figcaption>
       <div className="evidence-connection">
         <ol className="evidence-references">
           {sources.slice(0, 2).map((source, i) => (
             <li className="evidence-arrival" key={source.id}>
               <span>0{i + 1}</span>
               <div>
-                <strong>{source.sourceTitle}</strong>
-                <small>{source.providerId} · Mock</small>
+                <strong>{t(source.sourceTitle)}</strong>
+                <small>
+                  {t(source.providerId)} {t("· Mock")}
+                </small>
               </div>
             </li>
           ))}
@@ -95,15 +103,17 @@ export function LivingEvidence({ run }: { run: Run }) {
           <circle cx="115" cy="65" r="3" />
         </svg>
         <div className="evidence-claim">
-          <p>{claim.text}</p>
+          <p>{t(claim.text)}</p>
           <div className="living-status">
             <span className="living-initial" aria-hidden="true">
-              SINGLE-SOURCE / BEFORE CROSS-CHECK
+              {t("SINGLE-SOURCE / BEFORE CROSS-CHECK")}
             </span>
-            <strong className="living-final">CORROBORATED IN SIMULATION</strong>
+            <strong className="living-final">
+              {t("CORROBORATED IN SIMULATION")}
+            </strong>
           </div>
           <small>
-            Two modeled source families. Not real-world verification.
+            {t("Two modeled source families. Not real-world verification.")}
           </small>
         </div>
       </div>

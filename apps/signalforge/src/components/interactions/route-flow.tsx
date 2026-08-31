@@ -1,4 +1,6 @@
 "use client";
+import { useCopy } from "@/i18n/copy";
+
 import { useState } from "react";
 import { AnimatePresence, m } from "motion/react";
 import { routeFlow, type FlowNode } from "@/domain/route-flow";
@@ -14,7 +16,9 @@ const kindLabels = {
   rejected: "REJECTED / NOT SELECTED",
 };
 export function RouteFlow({ route }: { route: ExecutionRouteContract }) {
-  const graph = routeFlow(route);
+  const t = useCopy();
+
+  const graph = routeFlow(route, t);
   const [selected, setSelected] = useState<FlowNode>(graph.objective);
   const { reduced, transition } = useInteractionTiming();
   function node(item: FlowNode) {
@@ -34,27 +38,28 @@ export function RouteFlow({ route }: { route: ExecutionRouteContract }) {
         transition={transition}
       >
         <span className="flow-dot" aria-hidden="true" />
-        <small>{kindLabels[item.kind]}</small>
-        <span>{item.label}</span>
+        <small>{t(kindLabels[item.kind])}</small>
+        <span>{t(item.label)}</span>
       </m.button>
     );
   }
   return (
     <section
       className="route-flow"
-      aria-label="Route composition inspector"
+      aria-label={t("Route composition inspector")}
       data-motion-owner="motion"
     >
       <div className="flow-heading">
         <div>
-          <p className="eyebrow">CONTRACT / COMPOSITION</p>
-          <h2>From objective to route.</h2>
+          <p className="eyebrow">{t("CONTRACT / COMPOSITION")}</p>
+          <h2>{t("From objective to route.")}</h2>
         </div>
         <TechnicalLabel term="execution_not_enabled" />
       </div>
       <p className="field-help">
-        Select or focus a node to inspect its rationale. Dashed catalog context
-        is not a service call or an execution path.
+        {t(
+          "Select or focus a node to inspect its rationale. Dashed catalog context is not a service call or an execution path.",
+        )}
       </p>
       <div className="flow-columns">
         <svg
@@ -69,60 +74,65 @@ export function RouteFlow({ route }: { route: ExecutionRouteContract }) {
           <circle cx="990" cy="20" r="3" />
         </svg>
         <div className="flow-column">
-          <h3>01 / Objective</h3>
+          <h3>{t("01 / Objective")}</h3>
           {node(graph.objective)}
         </div>
         <div className="flow-column">
-          <h3>02 / Capabilities</h3>
+          <h3>{t("02 / Capabilities")}</h3>
           {graph.capabilities.map(node)}
         </div>
         <div className="flow-column flow-catalog">
-          <h3>03 / Observed options</h3>
-          {graph.observed.length ? (
-            graph.observed.map(node)
-          ) : (
-            <p className="field-help">
-              No observed options attached. This contract contains no live
-              catalog evidence.
-            </p>
+          <h3>{t("03 / Observed options")}</h3>
+          {t(
+            graph.observed.length ? (
+              graph.observed.map(node)
+            ) : (
+              <p className="field-help">
+                {t(
+                  "No observed options attached. This contract contains no live catalog evidence.",
+                )}
+              </p>
+            ),
           )}
           {graph.rejected.length > 0 && (
             <details>
-              <summary>Sample rejected alternatives</summary>
+              <summary>{t("Sample rejected alternatives")}</summary>
               {graph.rejected.map(node)}
               <p className="field-help">
-                Full reasons remain in the alternatives ledger.
+                {t("Full reasons remain in the alternatives ledger.")}
               </p>
             </details>
           )}
         </div>
         <div className="flow-column">
-          <h3>04 / Compiled route</h3>
-          {graph.selected.length ? (
-            graph.selected.map(node)
-          ) : (
-            <p className="field-help">
-              No feasible selected steps. Inspect unmet requirements.
-            </p>
+          <h3>{t("04 / Compiled route")}</h3>
+          {t(
+            graph.selected.length ? (
+              graph.selected.map(node)
+            ) : (
+              <p className="field-help">
+                {t("No feasible selected steps. Inspect unmet requirements.")}
+              </p>
+            ),
           )}
-          <p className="flow-stop">STOP / EXECUTION DISABLED</p>
+          <p className="flow-stop">{t("STOP / EXECUTION DISABLED")}</p>
         </div>
       </div>
       <div
         id="flow-inspection"
         className="flow-inspection"
         role="region"
-        aria-label="Selected node provenance"
+        aria-label={t("Selected node provenance")}
         aria-live="polite"
         aria-atomic="true"
       >
         <AnimatePresence initial={false} mode="wait">
           <ResultTransition key={selected.id}>
-            <p className="eyebrow">{kindLabels[selected.kind]}</p>
-            <h3>{selected.label}</h3>
-            <p>{selected.detail}</p>
+            <p className="eyebrow">{t(kindLabels[selected.kind])}</p>
+            <h3>{t(selected.label)}</h3>
+            <p>{t(selected.detail)}</p>
             <p className="flow-boundary">
-              BOUNDARY / NOT CALLED / NOT PAID / EXECUTION DISABLED
+              {t("BOUNDARY / NOT CALLED / NOT PAID / EXECUTION DISABLED")}
             </p>
           </ResultTransition>
         </AnimatePresence>

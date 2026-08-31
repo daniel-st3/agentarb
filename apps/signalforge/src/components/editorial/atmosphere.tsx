@@ -1,7 +1,7 @@
 "use client";
 import { useRef, type ReactNode } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
