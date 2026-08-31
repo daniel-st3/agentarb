@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { safeLocale, locales } from "./routing";
 const origin = "https://signalforge-rose-two.vercel.app";
 const titles: Record<string, [string, string, string]> = {
+  opportunities:["Arbitrage Radar","Radar de arbitraje","Radar d’arbitrage"],
+  privacy:["Privacy and boundaries","Privacidad y límites","Confidentialité et limites"],
   home: [
-    "Agent-routing intelligence",
-    "Inteligencia para rutas de agentes",
-    "Intelligence d’itinéraires pour agents",
+    "Arbitrage intelligence for the agent economy",
+    "Inteligencia de arbitraje para la economía de agentes",
+    "Intelligence d’arbitrage pour l’économie des agents",
   ],
   network: [
     "Live agent network",

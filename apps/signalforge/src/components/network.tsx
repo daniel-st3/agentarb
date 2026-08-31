@@ -206,14 +206,14 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
     </details>
   );
 }
-export function NetworkExplorer() {
+export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkResponse;initialFilters?:Record<string,string>}) {
   const t = useCopy();
 
-  const [network, setNetwork] = useState<NetworkResponse | null>(null),
+  const [network, setNetwork] = useState<NetworkResponse | null>(initial??null),
     [error, setError] = useState(""),
-    [loading, setLoading] = useState(true),
+    [loading, setLoading] = useState(!initial),
     [ready, setReady] = useState(false),
-    [filters, setFilters] = useState<Record<string, string>>({});
+    [filters, setFilters] = useState<Record<string, string>>(initialFilters);
   useEffect(() => {
     const restore = () => {
       const raw = Object.fromEntries(

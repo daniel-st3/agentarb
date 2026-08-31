@@ -12,10 +12,8 @@ test("V3 evidence arrives once, remains truthful, and has a static equivalent", 
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(page.locator(".signal-field")).toHaveCount(2);
-  await expect(page.locator(".research-command textarea")).toHaveCount(1);
-  await expect(page.locator(".research-command")).toContainText(
-    "Demo mode · no task services are called",
-  );
+  await expect(page.locator(".arb-hero-route")).toContainText("SIMULATED");
+  await page.goto("/forge/example-1/output");
   const evidence = page.locator(".living-evidence");
   await evidence.scrollIntoViewIfNeeded();
   await expect(evidence).toHaveAttribute("data-stage", "corroborated");
@@ -27,9 +25,7 @@ test("V3 evidence arrives once, remains truthful, and has a static equivalent", 
   await evidence.screenshot({
     path: `test-results/screenshots/${info.project.name}-living-evidence.png`,
   });
-  await page
-    .getByRole("heading", { name: "Make the route visible." })
-    .scrollIntoViewIfNeeded();
+  await page.locator(".site-footer").scrollIntoViewIfNeeded();
   await evidence.scrollIntoViewIfNeeded();
   await expect(evidence).toHaveAttribute("data-stage", "corroborated");
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -49,7 +45,7 @@ test("V3 evidence arrives once, remains truthful, and has a static equivalent", 
 
 test("precision controls support keyboard selection without changing the workflow", async ({
   page,
-}) => {
+},info) => {
   await page.goto("/forge");
   const selected = page.getByLabel("Routing policy", { exact: true });
   await selected.focus();
@@ -61,9 +57,10 @@ test("precision controls support keyboard selection without changing the workflo
   await expect(selected).toBeFocused();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(selected).toHaveValue("most_verified");
+  if(info.project.name==="mobile")await page.locator(".arb-mobile-nav summary").click();
   await page
     .getByRole("navigation")
-    .getByRole("link", { name: "Archive" })
+    .getByRole("link", { name: "Archive" }).filter({visible:true})
     .click();
   await expect(
     page.getByRole("heading", { name: "Archive", exact: true }),
@@ -86,7 +83,7 @@ test("no-JavaScript evidence is complete and ambient SVGs are decorative", async
   test.skip(info.project.name !== "desktop");
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto("http://127.0.0.1:3002/");
+  await page.goto("http://127.0.0.1:3002/forge/example-1/output");
   await expect(page.locator(".living-final")).toHaveText(
     "CORROBORATED IN SIMULATION",
   );
@@ -94,7 +91,7 @@ test("no-JavaScript evidence is complete and ambient SVGs are decorative", async
   for (const field of await page.locator(".signal-field").all())
     await expect(field).toHaveAttribute("aria-hidden", "true");
   await expect(
-    page.getByRole("link", { name: "Forge route", exact: true }).first(),
+    page.getByRole("link", { name: "Route Forge", exact: true }).first(),
   ).toBeVisible();
   await context.close();
 });

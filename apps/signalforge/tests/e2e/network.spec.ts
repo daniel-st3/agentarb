@@ -111,5 +111,6 @@ test("discovery failure is unavailable, never fake live", async ({ page }) => {
   await expect(page.locator(".network-page [role=alert]")).toContainText(
     "Live discovery is unavailable",
   );
-  await expect(page.locator(".catalog-row")).toHaveCount(0);
+  await expect(page.locator(".catalog-row")).toHaveCount(11);
+  for(const row of await page.locator(".catalog-row").all())await expect(row).toContainText("SIMULATED DEMO");
 });

@@ -9,8 +9,8 @@ type State = {
   loading: boolean;
 };
 const Context = createContext<State>({ status: null, loading: true });
-export function NetworkState({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<State>({ status: null, loading: true });
+export function NetworkState({ children, initialStatus=null }: { children: React.ReactNode;initialStatus?:State["status"] }) {
+  const [state, setState] = useState<State>({ status: initialStatus, loading: !initialStatus });
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/v1/network/status", { signal: controller.signal })
@@ -21,7 +21,7 @@ export function NetworkState({ children }: { children: React.ReactNode }) {
       .then((status) => setState({ status, loading: false }))
       .catch(() => {
         if (!controller.signal.aborted)
-          setState({ status: null, loading: false });
+          setState(previous=>({ status: previous.status, loading: false }));
       });
     return () => controller.abort();
   }, []);

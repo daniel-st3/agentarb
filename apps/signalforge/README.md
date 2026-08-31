@@ -1,6 +1,10 @@
 # SignalForge — deployed application
 
-Agent-routing intelligence: objectives → budget-constrained execution route contracts.
+Arbitrage intelligence: paid opportunity → capability routes → deterministic economic decision. This branch is preview-only; production is not promoted.
+
+Start with `/en/opportunities?mode=lab` for seven controlled scenarios or `?mode=observed` for honest demand-feed availability. EN/ES/FR are supported. The advanced `/forge` workflow and original route APIs remain compatible.
+
+Versioned underwriting: `POST /api/v1/opportunities/evaluate` with `{"opportunityId":"lab:spread","responseVersion":"2.0"}`. Omitting the version preserves the old conservative response. New demand discovery: `GET /api/v1/opportunities?mode=observed`. [Formulas, schema, API/MCP and caveats](../../docs/arbitrage-intelligence.md).
 
 [Production](https://signalforge-rose-two.vercel.app/en) · [Root guide](../../README.md).
 

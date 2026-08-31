@@ -9,6 +9,8 @@ import { Navigation } from "@/components/navigation";
 import { NetworkState } from "@/components/network-state";
 import { InteractionProvider } from "@/components/interactions/provider";
 import { PageChoreography } from "@/components/editorial/atmosphere";
+import { cachedNetworkView } from "@/server/intelligence/cached-view";
+import { NetworkStatusSchema } from "@/domain/intelligence";
 export const generateMetadata = ({
   params,
 }: {
@@ -25,6 +27,28 @@ export default async function RootLayout({
   if (!hasLocale(locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getCopy();
+  const cached = await cachedNetworkView();
+  const { records, ...network } = cached ?? { records: [] };
+  const observed = records.filter((r) =>
+    ["live", "cached_live"].includes(r.freshness),
+  );
+  const initialStatus = cached
+    ? NetworkStatusSchema.parse({
+        ...network,
+        observedCount: observed.length,
+        observedCapabilities: [
+          ...new Set(
+            observed.flatMap((r) =>
+              r.listingType === "service_offer"
+                ? r.capabilities
+                : r.requiredCapabilities,
+            ),
+          ),
+        ],
+        rateLimitMode:
+          cached.cacheMode === "shared" ? "distributed" : "best_effort",
+      })
+    : null;
   return (
     <>
       <NextIntlClientProvider locale={locale}>
@@ -33,7 +57,7 @@ export default async function RootLayout({
             {t("Skip to content")}
           </a>
 
-          <NetworkState>
+          <NetworkState initialStatus={initialStatus}>
             <Navigation />
             <main id="main">
               <PageChoreography>{children}</PageChoreography>
@@ -46,6 +70,7 @@ export default async function RootLayout({
               <span className="brand-dot">.</span>
             </span>
             <p>{t("Discovery and planning only. Execution not enabled.")}</p>
+            <Link href="/privacy">{t("Privacy and boundaries")}</Link>
             <Link
               href="https://github.com/daniel-st3/agentarb"
               target="_blank"

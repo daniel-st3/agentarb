@@ -104,7 +104,7 @@ export function ProviderRouteMap() {
     </div>
   );
 }
-export function RouteNarrative({ run }: { run: Run }) {
+export function RouteNarrative() {
   const t = useCopy();
 
   const ref = useRef<HTMLElement>(null);
@@ -278,7 +278,7 @@ export function RouteNarrative({ run }: { run: Run }) {
             <dl>
               <div>
                 <dt>{t("Hard budget cap")}</dt>
-                <dd>{money(run.request.budgetUsd)}</dd>
+                <dd>{money(compiled.budget.hardCapUsd)}</dd>
               </div>
               <div>
                 <dt>{t("Modeled route estimate")}</dt>

@@ -1,10 +1,45 @@
 # SignalForge
 
-**Agent-routing intelligence: objectives → budget-constrained execution route contracts.**
+**Arbitrage intelligence for the agent economy: paid opportunity → fulfillment routes → cost and risk → auditable decision.**
+
+This branch is a **preview-only product increment**, not a production promotion. The production link below continues to serve the prior approved version until a human explicitly approves promotion.
+
+## Arbitrage Intelligence
+
+Can an agent fulfill a paid task economically, under a cost, capital and verification policy? SignalForge compares routes using exact integer arithmetic and shows when the answer is profitable, marginal, uneconomic, unroutable—or simply unknown. **It does not claim work or execute the route.**
+
+- **Radar:** `/en/opportunities?mode=lab` (also ES/FR), seven controlled task scenarios, live policy recomputation, route competition, cost waterfall, threshold sensitivity and receipt export.
+- **Observed:** `/en/opportunities?mode=observed`. No paid task feed currently passes the documented public-access gate. Empty demand is deliberate, not backfilled with fake listings. The four existing supply catalogs remain informational.
+- **Arbitrage Lab:** payouts, costs, reliability, fees and probability are authored assumptions. The hero’s $1.20 → $0.45 → $0.75 spread is calculated by the same engine as REST/MCP—not evidence of earnings.
+- **Integration:** existing opportunity evaluation remains compatible; opt into `responseVersion: "2.0"` for a validated `ArbitrageEvaluation`, canonical SHA-256 receipt, policy inputs and embedded route contracts.
+- **Route Forge:** the objective-first planner, client agent, research examples and original protocol contracts remain available.
+
+```mermaid
+flowchart LR
+  D[Paid opportunity + payout provenance] --> C[Required capabilities]
+  S[Observed supply metadata] --> C
+  L[Explicit simulated Lab offers] --> R[Existing deterministic route competition]
+  C --> R
+  R --> U[Integer economics + risk + policy]
+  U --> A[Decision + receipt + route contract]
+  A --> STOP[Execution disabled]
+```
+
+Quickstart against a running preview (substitute its origin for localhost):
+
+```bash
+curl http://127.0.0.1:3001/api/v1/opportunities/evaluate \
+  -H 'Content-Type: application/json' \
+  -d '{"opportunityId":"lab:spread","responseVersion":"2.0","policy":{"minimumMarginBps":2500,"requireIndependentVerification":true}}'
+```
+
+MCP: `signalforge_evaluate_opportunity` accepts `{"opportunity_id":"lab:spread","response_version":"2.0"}`. New `signalforge_search_opportunities` accepts `{"mode":"observed","limit":20}` or explicit `"lab"`.
+
+[Economics, contracts and limitations](docs/arbitrage-intelligence.md) · [Source access assessments](docs/live-sources.md) · [60-second demo](docs/arbitrage-demo.md)
 
 [Production](https://signalforge-rose-two.vercel.app/en) · [Network](https://signalforge-rose-two.vercel.app/en/network) · [Agent integration proof](https://signalforge-rose-two.vercel.app/en/developers/try) · [Español](https://signalforge-rose-two.vercel.app/es) · [Français](https://signalforge-rose-two.vercel.app/fr)
 
-An agent can discover tools without knowing which combination fits its objective, budget or evidence requirements. SignalForge makes that decision inspectable: decompose an objective, compare capability routes deterministically, and return a typed contract with dependencies, alternatives and stop conditions. **It plans; it does not execute.**
+The underlying routing layer remains reusable: decompose an objective, compare capability combinations deterministically, and return dependencies, alternatives and stop conditions. Optional Groq interprets objectives only; no LLM performs the underwriting arithmetic or decides economic eligibility.
 
 ![Architecture: objective console and REST/MCP callers feed decomposition, catalog-aware planning and a contract inspected by an external client. Payments, marketplace writes and execution are disabled.](apps/signalforge/public/architecture.svg)
 

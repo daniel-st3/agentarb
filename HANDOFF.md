@@ -788,3 +788,12 @@ ffaecc9  Real bounded deliverables, safety screening, and deliverable states
 af91a41  Week 2: execution sub-agents, LangGraph claim gate, RiskGuard
 571416a  Week 1: alert-only cross-marketplace bounty scanner and scorer
 ```
+# Preview increment: Arbitrage Intelligence (2026-08-31)
+
+Branch `codex/agent-arbitrage-underwriter`, based on c117f844. **Preview only; do not promote production.** New primary surface: localized Opportunity Radar with explicitly simulated Lab and honest empty Observed demand. Existing Route Forge, protocol contracts and client consumer remain available.
+
+Pure integer underwriter: `apps/signalforge/src/domain/arbitrage.ts`; authored fixtures: `arbitrage-lab.ts`. REST evaluation opts into `responseVersion: "2.0"`; legacy response remains intact. MCP adds demand search and the same versioned evaluation. All nested contracts remain execution disabled, zero actual spend.
+
+Read `docs/arbitrage-intelligence.md` for formulas, schema semantics and limitations; `docs/arbitrage-demo.md` for demo; `docs/live-sources.md` for gates. No task feed is enabled. Catalog unit prices are not task quotes. Global heavy research hydration is removed; explicit output examples still load their fixtures.
+
+---

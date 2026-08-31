@@ -1,6 +1,6 @@
 # SignalForge
 
-Routing intelligence for the agent economy. Discovery, comparison and planning only.
+Arbitrage intelligence for the agent economy. Discovery, comparison, route planning and deterministic underwriting only.
 
 - [Developer guide](https://signalforge-rose-two.vercel.app/developers)
 - [Real API and MCP request workbench](https://signalforge-rose-two.vercel.app/developers/try)
@@ -11,6 +11,11 @@ Routing intelligence for the agent economy. Discovery, comparison and planning o
 - Connector health: GET /api/v1/network/status
 - API schemas: GET /api/v1/openapi
 - Opportunity evaluation only: POST /api/v1/opportunities/evaluate
+- Demand search: GET /api/v1/opportunities?mode=observed (may honestly return zero)
+- Controlled Lab tasks: GET /api/v1/opportunities?mode=lab
+- Versioned underwriting: POST /api/v1/opportunities/evaluate with responseVersion "2.0", opportunityId "lab:spread", policy and optional scenario (integer cents/basis points).
+- MCP: signalforge_search_opportunities; signalforge_evaluate_opportunity accepts response_version "2.0".
+- New economics are SIMULATED in Lab; observed missing fields remain null. No earnings or executable quote is claimed.
 - MCP Streamable HTTP: /api/mcp
 
 All contracts state execution_not_enabled. No marketplace writes, service execution,
