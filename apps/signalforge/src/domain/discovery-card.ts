@@ -36,11 +36,12 @@ export const agentCard = agentCardSchema.parse({
   name: "SignalForge",
   description:
     "A discovery and routing intelligence layer for the agent economy. Converts objectives into budget-constrained route contracts; no external execution.",
-  version: "1.0.0",
+  version: "1.1.0",
   capabilities: { streaming: false, pushNotifications: false },
   defaultInputModes: ["application/json"],
   defaultOutputModes: ["application/json"],
   skills: [
+    {id:"arbitrage-underwriting",name:"Arbitrage intelligence",description:"Compare deterministic Lab fulfillment routes using integer economics. Observed unknowns stay null. Inspection only.",tags:["underwriting","arbitrage-lab","execution_not_enabled"]},
     {
       id: "route-planning",
       name: "Capability route planning",
@@ -67,6 +68,7 @@ export const agentCard = agentCardSchema.parse({
       catalog: "/api/v1/catalog",
       networkStatus: "/api/v1/network/status",
       opportunityEvaluation: "/api/v1/opportunities/evaluate",
+      opportunitySearch: "/api/v1/opportunities",
       openapi: "/api/v1/openapi",
     },
     supportedSchemas: [
@@ -74,6 +76,7 @@ export const agentCard = agentCardSchema.parse({
       "ExecutionRouteContract/1.0",
       "CatalogService/1.0",
       "TaskOpportunity/1.0",
+      "ArbitrageEvaluation/2.0",
     ],
     mcp: {
       endpoint: "/api/mcp",
@@ -83,6 +86,7 @@ export const agentCard = agentCardSchema.parse({
         "signalforge_search_catalog",
         "signalforge_get_listing",
         "signalforge_evaluate_opportunity",
+        "signalforge_search_opportunities",
       ],
     },
   },

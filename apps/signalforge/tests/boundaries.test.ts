@@ -52,6 +52,7 @@ describe("deployed boundary", () => {
       "src/app/api/v1/network/status/route.ts",
       "src/app/api/v1/openapi/route.ts",
       "src/app/api/v1/opportunities/evaluate/route.ts",
+      "src/app/api/v1/opportunities/route.ts",
       "src/app/api/v1/routes/plan/route.ts",
     ]);
   });

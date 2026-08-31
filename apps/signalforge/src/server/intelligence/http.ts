@@ -14,6 +14,12 @@ import {
 } from "./service";
 import { readBounded } from "../http";
 import { checkPlanningLimit } from "../planning-limit";
+import { ArbitrageInputSchema } from "@/domain/arbitrage";
+import {
+  underwriteOpportunity,
+  searchOpportunities,
+  OpportunityQuerySchema,
+} from "../arbitrage/service";
 export const ListingIdSchema = z
   .string()
   .min(3)
@@ -47,10 +53,24 @@ export function queryInput(url: string) {
     if (params.getAll(key).length > 1) throw new Error("invalid");
   return CatalogQuerySchema.parse(Object.fromEntries(params));
 }
+function opportunityQuery(url: string) {
+  const params = new URL(url).searchParams;
+  for (const key of params.keys())
+    if (params.getAll(key).length > 1) throw new Error("invalid");
+  return OpportunityQuerySchema.parse(Object.fromEntries(params));
+}
 export async function catalogOperation(
-  kind: "search" | "listing" | "status" | "evaluate",
+  kind: "search" | "listing" | "status" | "evaluate" | "opportunities",
   input: unknown,
 ) {
+  if (kind === "opportunities") return searchOpportunities(input);
+  if (
+    kind === "evaluate" &&
+    typeof input === "object" &&
+    input !== null &&
+    "responseVersion" in input
+  )
+    return underwriteOpportunity(ArbitrageInputSchema.parse(input));
   if (kind === "search") {
     const result = await searchCatalog(CatalogQuerySchema.parse(input));
     return NetworkResponseSchema.extend({
@@ -93,7 +113,7 @@ export async function catalogOperation(
 }
 export async function handleCatalog(
   request: Request,
-  kind: "search" | "listing" | "status" | "evaluate",
+  kind: "search" | "listing" | "status" | "evaluate" | "opportunities",
   id?: string,
 ) {
   const limited = await checkPlanningLimit(request, "catalog");
@@ -105,9 +125,13 @@ export async function handleCatalog(
         ? queryInput(request.url)
         : kind === "listing"
           ? ListingIdSchema.parse(id)
-          : kind === "evaluate"
-            ? EvaluationInputSchema.parse(await readBounded(request))
-            : {};
+          : kind === "opportunities"
+            ? opportunityQuery(request.url)
+            : kind === "evaluate"
+              ? z
+                  .union([ArbitrageInputSchema, EvaluationInputSchema])
+                  .parse(await readBounded(request))
+              : {};
   } catch (error) {
     return Response.json(
       { error: "Invalid catalog request." },
