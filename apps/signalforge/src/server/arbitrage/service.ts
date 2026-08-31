@@ -137,7 +137,11 @@ export async function underwriteOpportunity(raw: unknown) {
     if (expired) evaluation.decision = "unroutable";
     evaluation.reasons = [
       ...new Set([
-        ...evaluation.reasons,
+        ...evaluation.reasons.map((reason) =>
+          reason === "payout_unknown" && state.reward
+            ? "payout_USD_conversion_unknown"
+            : reason,
+        ),
         ...state.eligibilityReasons,
         ...(expired ? ["deadline_expired"] : []),
         ...(supported ? [] : ["requirements_not_supported"]),

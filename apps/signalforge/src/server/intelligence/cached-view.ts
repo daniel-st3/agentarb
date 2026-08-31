@@ -75,7 +75,13 @@ export const cachedNetworkView = cache(
         ],
         executionStatus: "execution_not_enabled",
       });
-    } catch {
+    } catch (error) {
+      console.warn("snapshot_unavailable", {
+        category:
+          error instanceof Error && error.message === "store_unavailable"
+            ? "configuration"
+            : "cache_unavailable",
+      });
       // Do not relabel a failed durable store as a working memory fallback.
       return null;
     }

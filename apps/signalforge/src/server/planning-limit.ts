@@ -153,7 +153,17 @@ export async function checkPlanningLimit(
             },
           },
         );
-  } catch {
+  } catch (error) {
+    const category =
+      error instanceof Error &&
+      ["configuration", "store_unavailable", "caller_metadata"].includes(
+        error.message,
+      )
+        ? error.message === "caller_metadata"
+          ? "caller_metadata"
+          : "configuration"
+        : "durable_unavailable";
+    console.warn("public_protection_unavailable", { category });
     return Response.json(
       {
         error:

@@ -49,8 +49,14 @@ test("placeholder changes only while empty and unfocused", async ({ page }) => {
   await page.clock.install();
   await page.goto("/forge");
   const input = page.getByRole("textbox", { name: "Agent objective" });
+  // Wait for hydration/event state before advancing timers on slower CI runners.
+  await input.focus();
+  await expect(input).toHaveAttribute("data-placeholder-overlay", "false");
+  await input.blur();
+  await expect(input).toHaveAttribute("data-placeholder-overlay", "true");
   const first = await input.getAttribute("placeholder");
   await page.clock.fastForward(7100);
+  await expect(input).not.toHaveAttribute("placeholder", first!);
   const second = await input.getAttribute("placeholder");
   expect(first).not.toBe(second);
   await input.focus();
