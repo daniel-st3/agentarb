@@ -22,6 +22,8 @@ import * as service from "../src/server/intelligence/service";
 import {
   underwriteOpportunity,
   searchOpportunities,
+  hashReceipt,
+  receiptCoreOf,
 } from "../src/server/arbitrage/service";
 import {
   handleCatalog,
@@ -411,6 +413,52 @@ it("underwrites a complete explicit scenario conditionally and emits read-only r
     servicesCalled: false,
     paymentsMade: false,
   });
+  expect(receipt.receiptHash).toBe(hashReceipt(receiptCoreOf(receipt)));
+  expect(receipt.claimReadiness?.receiptHash).toBe(receipt.receiptHash);
+  expect(receipt.claimReadiness).toMatchObject({
+    expectedTotalCostUsdMicros: "120752",
+    worstCaseTotalCostUsdMicros: "210752",
+    worstCaseCompleteness: "complete",
+    capitalRequiredUsdMicros: "210752",
+    refundableBondUsdMicros: "100001",
+    bondAtRiskUsdMicros: "100001",
+  });
+
+  const core = receiptCoreOf(receipt);
+  const fingerprints = [
+    { ...core, economicModelVersion: "real-economics/9.9" },
+    { ...core, policyVersion: "arbitrage-policy/9.9" },
+    { ...core, evaluation: { ...core.evaluation, decision: "conditionally_uneconomic" } },
+    {
+      ...core,
+      economicEvidence: {
+        ...core.economicEvidence!,
+        marketObservation: {
+          ...core.economicEvidence!.marketObservation,
+          fx: { ...(core.economicEvidence!.marketObservation.fx as object), rateMicros: "999999" },
+        },
+      },
+    },
+    {
+      ...core,
+      claimReadinessCore: {
+        ...core.claimReadinessCore!,
+        evidenceRequirements: "changed material evidence requirement",
+      },
+    },
+    {
+      ...core,
+      economicEvidence: {
+        ...core.economicEvidence!,
+        userAssumptions: {
+          ...core.economicEvidence!.userAssumptions,
+          successProbabilityBps: { value: 8000, provenance: "user_scenario" },
+        },
+      },
+    },
+  ];
+  expect(fingerprints.every((candidate) => hashReceipt(candidate) !== receipt.receiptHash)).toBe(true);
+  expect(hashReceipt(receiptCoreOf({ ...receipt, receiptFingerprintIsSignature: false }))).toBe(receipt.receiptHash);
 });
 it("REST and MCP expose the same read-only claim-readiness packet", async () => {
   vi.useFakeTimers();

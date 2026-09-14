@@ -169,7 +169,7 @@ export function RealMarket({
             .object({
               evaluation: ArbitrageEvaluationSchema,
               receiptHash: z.string().regex(/^[a-f0-9]{64}$/),
-              hashAlgorithm: z.literal("SHA-256/canonical-json-v1"),
+              hashAlgorithm: z.literal("SHA-256/canonical-json-v2"),
               economicModelVersion: z.string().optional(),
               claimReadiness: ClaimReadinessPacketSchema.optional(),
               economicEvidence: z.unknown().optional(),
@@ -647,7 +647,9 @@ export function RealMarket({
               </button>
               {claimReadiness && (
                 <details>
-                  <summary>{t("Claim readiness inspection")}</summary>
+                  <summary>
+                    {t("Claim readiness inspection")} · {t("NOT GRANTED")}
+                  </summary>
                   <dl>
                     <dt>{t("Authorization")}</dt>
                     <dd>{t("REQUIRED / NOT GRANTED")}</dd>
@@ -655,6 +657,19 @@ export function RealMarket({
                     <dd>false</dd>
                     <dt>executionStatus</dt>
                     <dd>{claimReadiness.executionStatus}</dd>
+                    <dt>{t("Expected total cost")}</dt>
+                    <dd>{usdMicros(claimReadiness.expectedTotalCostUsdMicros)}</dd>
+                    <dt>{t("Worst-case total cost")}</dt>
+                    <dd>
+                      {usdMicros(claimReadiness.worstCaseTotalCostUsdMicros)} ·{" "}
+                      {claimReadiness.worstCaseCompleteness}
+                    </dd>
+                    <dt>{t("Capital required")}</dt>
+                    <dd>{usdMicros(claimReadiness.capitalRequiredUsdMicros)}</dd>
+                    <dt>{t("Refundable bond")}</dt>
+                    <dd>{usdMicros(claimReadiness.refundableBondUsdMicros)}</dd>
+                    <dt>{t("Bond at risk")}</dt>
+                    <dd>{usdMicros(claimReadiness.bondAtRiskUsdMicros)}</dd>
                     <dt>{t("Missing inputs")}</dt>
                     <dd>{claimReadiness.missingInputs.length ? claimReadiness.missingInputs.join(", ") : "—"}</dd>
                   </dl>
@@ -666,6 +681,15 @@ export function RealMarket({
               </details>
               <p className="receipt-fingerprint mono">
                 SHA-256 · {receiptHash}
+              </p>
+              <p className="mono">
+                MODEL {active.realEconomics?.economicModelVersion ?? "—"} · POLICY{" "}
+                arbitrage-policy/1.0 · OBSERVED {active.opportunity.observedAt}
+              </p>
+              <p>
+                {t(
+                  "Fingerprint of the economic decision payload. Not a digital signature.",
+                )}
               </p>
             </>
           ) : evaluationState === "error" || receiptStale ? (

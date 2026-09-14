@@ -17,6 +17,13 @@ export const ProviderPricingSchema = z
   })
   .strict();
 export type ProviderPricing = z.infer<typeof ProviderPricingSchema>;
+export const ProviderPricingStatusSchema = z.enum([
+  "current",
+  "expiring_soon",
+  "expired",
+  "unknown",
+]);
+export type ProviderPricingStatus = z.infer<typeof ProviderPricingStatusSchema>;
 
 /**
  * Reviewed first-party price snapshot. Runtime scraping is intentionally absent.
@@ -52,6 +59,23 @@ export function currentProviderPrice(
   )
     return null;
   return record;
+}
+
+export function providerPricingStatus(
+  provider: string,
+  modelId: string,
+  now = Date.now(),
+): ProviderPricingStatus {
+  const record = REVIEWED_PROVIDER_PRICES.find(
+    (price) => price.provider === provider && price.modelId === modelId,
+  );
+  if (!record || Date.parse(record.observedAt) > now + 60_000) return "unknown";
+  const validUntil = Date.parse(record.validUntil);
+  if (!Number.isFinite(validUntil)) return "unknown";
+  if (validUntil < now) return "expired";
+  return validUntil - now <= 7 * 24 * 60 * 60 * 1000
+    ? "expiring_soon"
+    : "current";
 }
 
 export function calculateProviderCostCeiling(

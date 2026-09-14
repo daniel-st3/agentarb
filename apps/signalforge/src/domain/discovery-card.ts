@@ -78,7 +78,8 @@ export const agentCard = agentCardSchema.parse({
       "CatalogService/1.0",
       "TaskOpportunity/1.0",
       "ArbitrageEvaluation/2.0",
-      "ClaimReadinessPacket/1.0",
+      "ClaimReadinessPacket/1.1",
+      "UnderwritingReceipt/2.0",
     ],
     mcp: {
       endpoint: "/api/mcp",

@@ -2,7 +2,11 @@ import "server-only";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
 import { storeConfig } from "../store-config";
-import { sharedStatePrefix } from "../environment";
+import {
+  sharedStatePrefix,
+  signalForgeEnvironment,
+  type SignalForgeEnvironment,
+} from "../environment";
 import { DiscoverySnapshotSchema } from "@/domain/intelligence";
 export const CacheEntrySchema = z
   .object({
@@ -45,19 +49,26 @@ export class MemorySnapshotCache implements SnapshotCache {
 }
 export class RedisSnapshotCache implements SnapshotCache {
   mode = "shared" as const;
-  private catalogPrefix: string;
+  private readonly environment: SignalForgeEnvironment;
+  private readonly prefixes: Record<"catalog" | "model-admission" | "fx", string>;
   constructor(
     private redis: Redis,
     environment: Record<string, string | undefined> = process.env,
   ) {
-    this.catalogPrefix = sharedStatePrefix("catalog", "v3", environment);
+    this.environment = signalForgeEnvironment(environment);
+    const trusted = { SIGNALFORGE_ENV: this.environment };
+    this.prefixes = {
+      catalog: sharedStatePrefix("catalog", "v3", trusted),
+      "model-admission": sharedStatePrefix("model-admission", "v3", trusted),
+      fx: sharedStatePrefix("fx", "v3", trusted),
+    };
   }
   async get(key: string) {
-    const v = await this.redis.get(`${this.catalogPrefix}:${key}`);
+    const v = await this.redis.get(`${this.prefixes.catalog}:${key}`);
     return v ? CacheEntrySchema.parse(v) : null;
   }
   async set(key: string, v: CacheEntry) {
-    await this.redis.set(`${this.catalogPrefix}:${key}`, CacheEntrySchema.parse(v), {
+    await this.redis.set(`${this.prefixes.catalog}:${key}`, CacheEntrySchema.parse(v), {
       ex: 172800,
     });
   }
@@ -66,10 +77,7 @@ export class RedisSnapshotCache implements SnapshotCache {
     seconds: number,
     purpose: "catalog" | "model-admission" | "fx" = "catalog",
   ) {
-    const prefix =
-      purpose === "catalog"
-        ? this.catalogPrefix
-        : sharedStatePrefix(purpose, "v3");
+    const prefix = this.prefixes[purpose];
     return (
       (await this.redis.set(`${prefix}:lease:${key}`, "1", {
         nx: true,

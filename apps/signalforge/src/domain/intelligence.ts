@@ -233,6 +233,16 @@ export const NetworkStatusSchema = NetworkResponseSchema.omit({
   environmentNamespace: z
     .enum(["production", "preview", "development", "test"])
     .optional(),
+  providerPricing: z
+    .object({
+      provider: z.string(),
+      modelId: z.string(),
+      status: z.enum(["current", "expiring_soon", "expired", "unknown"]),
+      observedAt: z.string().datetime().nullable(),
+      validUntil: z.string().datetime().nullable(),
+    })
+    .strict()
+    .optional(),
 });
 export function matchListing(l: Listing, q: CatalogQuery) {
   const caps =

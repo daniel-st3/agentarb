@@ -153,6 +153,10 @@ const DerivedEconomicsSchema = z
     maximumFulfillmentCostUsdMicros: z.string().nullable(),
     requiredSuccessProbabilityBps: z.number().int().nullable(),
     capitalRequiredUsdMicros: z.string().nullable(),
+    refundableBondUsdMicros: z.string().nullable(),
+    bondAtRiskUsdMicros: z.string().nullable(),
+    worstCaseTotalCostUsdMicros: z.string().nullable(),
+    worstCaseCompleteness: z.enum(["complete", "partial", "unknown"]),
   })
   .strict();
 
@@ -162,7 +166,7 @@ const ProvenancedAssumptionSchema = z
 export const RealEnvelopeSchema = z
   .object({
     schemaVersion: z.literal("1.0"),
-    economicModelVersion: z.literal("real-economics/1.0"),
+    economicModelVersion: z.literal("real-economics/1.1"),
     phase: z.literal("pre_execution_estimate"),
     knownExternalSpendUsdcBaseUnits: z.string().nullable(),
     refundableBondUsdcBaseUnits: z.string().nullable(),
@@ -257,6 +261,7 @@ export function realEnvelope(
   const missingInputs = [
     ...(reward === null ? ["observed_reward"] : []),
     ...(spend === null ? ["observed_required_external_spend"] : []),
+    ...(bond === null ? ["observed_refundable_bond"] : []),
     ...(!usableFx ? ["USDC_USD_fx_rate"] : []),
     ...(!price ? ["current_provider_pricing"] : []),
     ...(!workload ? ["bounded_provider_workload"] : []),
@@ -286,6 +291,44 @@ export function realEnvelope(
       BigInt(assumptions.timeValueCostUsdMicros!) +
       BigInt(assumptions.competitionRiskAdjustmentUsdMicros!) + BigInt(expectedFailure)
     : null;
+  const boundedCashCosts =
+    spendUsd !== null &&
+    ceiling !== null &&
+    platformAndVerification !== null &&
+    assumptions.humanReviewCostUsdMicros !== undefined &&
+    assumptions.additionalFulfillmentCostUsdMicros !== undefined
+      ? BigInt(spendUsd) +
+        BigInt(ceiling) +
+        BigInt(platformAndVerification) +
+        BigInt(assumptions.humanReviewCostUsdMicros) +
+        BigInt(assumptions.additionalFulfillmentCostUsdMicros)
+      : null;
+  const bondAtRisk =
+    bond !== null && BigInt(bond) === 0n
+      ? 0n
+      : bondUsd !== null && assumptions.bondLossProbabilityBps !== undefined
+        ? assumptions.bondLossProbabilityBps === 0
+          ? 0n
+          : BigInt(bondUsd)
+        : null;
+  const worstCaseInputsKnown =
+    boundedCashCosts !== null &&
+    assumptions.timeValueCostUsdMicros !== undefined &&
+    assumptions.competitionRiskAdjustmentUsdMicros !== undefined &&
+    bondAtRisk !== null;
+  const worstCase = worstCaseInputsKnown
+    ? boundedCashCosts +
+      BigInt(assumptions.timeValueCostUsdMicros!) +
+      BigInt(assumptions.competitionRiskAdjustmentUsdMicros!) +
+      bondAtRisk
+    : null;
+  const worstCaseCompleteness = worstCaseInputsKnown
+    ? "complete"
+    : [spendUsd, ceiling, platformAndVerification, bondUsd].every(
+          (value) => value === null,
+        )
+      ? "unknown"
+      : "partial";
   const expectedProfit = total !== null ? BigInt(rewardUsd!) - total : null;
   const riskAdjusted =
     total !== null && probability !== undefined
@@ -337,13 +380,17 @@ export function realEnvelope(
         : null,
     requiredSuccessProbabilityBps: requiredProbability,
     capitalRequiredUsdMicros:
-      bondUsd !== null && spendUsd !== null
-        ? (BigInt(bondUsd) + BigInt(spendUsd)).toString()
+      bondUsd !== null && boundedCashCosts !== null
+        ? (BigInt(bondUsd) + boundedCashCosts).toString()
         : null,
+    refundableBondUsdMicros: bondUsd,
+    bondAtRiskUsdMicros: bondAtRisk?.toString() ?? null,
+    worstCaseTotalCostUsdMicros: worstCase?.toString() ?? null,
+    worstCaseCompleteness,
   };
   return RealEnvelopeSchema.parse({
     schemaVersion: "1.0",
-    economicModelVersion: "real-economics/1.0",
+    economicModelVersion: "real-economics/1.1",
     phase: "pre_execution_estimate",
     knownExternalSpendUsdcBaseUnits: spend,
     refundableBondUsdcBaseUnits: bond,

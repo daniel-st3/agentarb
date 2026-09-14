@@ -4,7 +4,7 @@ import { isIP } from "node:net";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 import { storeConfig, StoreConfigurationError } from "./store-config";
-import { sharedStatePrefix } from "./environment";
+import { sharedStatePrefix, signalForgeEnvironment } from "./environment";
 
 /** Best-effort per-instance protection, NOT a distributed production quota. */
 export function createPlanningLimiter(now = () => Date.now(), maximum = 10) {
@@ -94,6 +94,7 @@ export async function checkPlanningLimit(
     }
     if (!process.env.RATE_LIMIT_SALT || process.env.RATE_LIMIT_SALT.length < 32)
       throw new Error("rate_limit_salt_invalid");
+    const environment = signalForgeEnvironment();
     const header =
         request.headers.get("x-vercel-forwarded-for") ??
         request.headers.get("x-forwarded-for"),
@@ -119,7 +120,7 @@ export async function checkPlanningLimit(
         category === "planning" ? 10 : category === "underwriting" ? 20 : 60,
         "10 m",
       ),
-      prefix: rateLimitPrefix(category),
+      prefix: rateLimitPrefix(category, { SIGNALFORGE_ENV: environment }),
       analytics: false,
       timeout: 2000,
     });

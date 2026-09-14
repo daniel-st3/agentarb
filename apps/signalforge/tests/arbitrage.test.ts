@@ -14,6 +14,7 @@ import {
   canonicalJson,
   hashReceipt,
   ArbitrageReceiptSchema,
+  receiptCoreOf,
 } from "../src/server/arbitrage/service";
 import { handleCatalog } from "../src/server/intelligence/http";
 import { invokeSafeTool } from "../src/server/mcp";
@@ -378,7 +379,8 @@ describe("versioned interfaces", () => {
       ),
     );
     expect(a.evaluation.economics).toEqual(b.evaluation.economics);
-    expect(a.receiptHash).toBe(hashReceipt(a.evaluation));
+    expect(a.receiptHash).toBe(hashReceipt(receiptCoreOf(a)));
+    expect(a.hashAlgorithm).toBe("SHA-256/canonical-json-v2");
     expect(f).not.toHaveBeenCalled();
   });
   it("legacy evaluation stays backward-compatible", async () => {

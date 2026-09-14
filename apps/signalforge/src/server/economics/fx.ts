@@ -6,8 +6,13 @@ import {
   FxObservationSchema,
   type FxObservation,
 } from "@/domain/fx";
-import { sharedStatePrefix } from "../environment";
+import {
+  sharedStatePrefix,
+  signalForgeEnvironment,
+  type SignalForgeEnvironment,
+} from "../environment";
 import { storeConfig } from "../store-config";
+import { jsonMime, readBoundedResponseText } from "../bounded-response";
 
 export const COINBASE_USDC_USD_SPOT =
   "https://api.coinbase.com/v2/prices/USDC-USD/spot";
@@ -40,12 +45,13 @@ export async function fetchCoinbaseFxObservation(
     signal: AbortSignal.timeout(4_000),
   });
   if (!response.ok) throw new Error("fx_source_unavailable");
-  const contentType = response.headers.get("content-type") ?? "";
-  if (!contentType.toLowerCase().includes("application/json"))
+  if (!jsonMime(response.headers.get("content-type")))
     throw new Error("fx_content_type_invalid");
-  const body = await response.text();
-  if (new TextEncoder().encode(body).byteLength > MAX_BYTES)
-    throw new Error("fx_payload_too_large");
+  const body = await readBoundedResponseText(
+    response,
+    MAX_BYTES,
+    "fx_payload_too_large",
+  );
   let decoded: unknown;
   try {
     decoded = JSON.parse(body);
@@ -67,6 +73,39 @@ export async function fetchCoinbaseFxObservation(
       "https://docs.cdp.coinbase.com/coinbase-app/track-apis/prices",
     provenance: "observed_market_rate",
   });
+}
+
+export class RedisFxObservationCache {
+  private readonly environment: SignalForgeEnvironment;
+  private readonly key: string;
+
+  constructor(
+    private readonly redis: Redis,
+    environment: Record<string, string | undefined> = process.env,
+  ) {
+    this.environment = signalForgeEnvironment(environment);
+    this.key = `${sharedStatePrefix("fx", "v3", {
+      SIGNALFORGE_ENV: this.environment,
+    })}:USDC-USD`;
+  }
+
+  async get(now: number) {
+    const parsed = FxObservationSchema.safeParse(await this.redis.get(this.key));
+    return parsed.success ? current(parsed.data, now) : null;
+  }
+
+  async lease() {
+    return (
+      (await this.redis.set(`${this.key}:lease`, "1", { nx: true, ex: 20 })) ===
+      "OK"
+    );
+  }
+
+  async set(observation: FxObservation) {
+    await this.redis.set(this.key, FxObservationSchema.parse(observation), {
+      ex: STALE_SECONDS,
+    });
+  }
 }
 
 function current(observation: FxObservation | null, now: number) {
@@ -95,24 +134,17 @@ export async function getUsdcUsdObservation(
       memoryObservation = await fetchCoinbaseFxObservation(fetcher, now);
       return memoryObservation;
     }
-    const redis = new Redis({
+    const cache = new RedisFxObservationCache(new Redis({
       ...configured,
       retry: false,
       signal: () => AbortSignal.timeout(2_500),
-    });
-    const key = `${sharedStatePrefix("fx", "v3")}:USDC-USD`;
-    const cachedRaw = await redis.get(key);
-    const parsed = FxObservationSchema.safeParse(cachedRaw);
-    const cached = parsed.success ? current(parsed.data, now) : null;
+    }));
+    const cached = await cache.get(now);
     if (cached && now - Date.parse(cached.observedAt) < CACHE_SECONDS * 1000)
       return cached;
-    const lease = await redis.set(`${key}:lease`, "1", {
-      nx: true,
-      ex: 20,
-    });
-    if (lease !== "OK") return cached;
+    if (!(await cache.lease())) return cached;
     const observation = await fetchCoinbaseFxObservation(fetcher, now);
-    await redis.set(key, observation, { ex: STALE_SECONDS });
+    await cache.set(observation);
     return observation;
   } catch {
     // FX is optional evidence. Failure is an explicit unknown, never a peg guess.

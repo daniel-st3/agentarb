@@ -83,7 +83,7 @@ test("open Radar expires a deadline locally and invalidates its prior receipt", 
       json: {
         evaluation: { ...evaluation, opportunity: expiring },
         receiptHash: "a".repeat(64),
-        hashAlgorithm: "SHA-256/canonical-json-v1",
+        hashAlgorithm: "SHA-256/canonical-json-v2",
         receiptFingerprintIsSignature: false,
       },
     });
@@ -165,7 +165,7 @@ test("populated Radar exits a failed request, respects Retry-After and downloads
     return route.fulfill({ json: {
       evaluation,
       receiptHash: "a".repeat(64),
-      hashAlgorithm: "SHA-256/canonical-json-v1",
+      hashAlgorithm: "SHA-256/canonical-json-v2",
       receiptFingerprintIsSignature: false,
     } });
   });

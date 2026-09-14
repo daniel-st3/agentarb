@@ -22,6 +22,10 @@ import {
   OpportunityQuerySchema,
 } from "../arbitrage/service";
 import { signalForgeEnvironment } from "../environment";
+import {
+  providerPricingStatus,
+  REVIEWED_PROVIDER_PRICES,
+} from "@/domain/provider-pricing";
 export const ListingIdSchema = z
   .string()
   .min(3)
@@ -94,6 +98,16 @@ export async function catalogOperation(
       rateLimitMode:
         status.cacheMode === "shared" ? "distributed" : "best_effort",
       environmentNamespace: signalForgeEnvironment(),
+      providerPricing: {
+        provider: REVIEWED_PROVIDER_PRICES[0].provider,
+        modelId: REVIEWED_PROVIDER_PRICES[0].modelId,
+        status: providerPricingStatus(
+          REVIEWED_PROVIDER_PRICES[0].provider,
+          REVIEWED_PROVIDER_PRICES[0].modelId,
+        ),
+        observedAt: REVIEWED_PROVIDER_PRICES[0].observedAt,
+        validUntil: REVIEWED_PROVIDER_PRICES[0].validUntil,
+      },
     });
   }
   const id =
