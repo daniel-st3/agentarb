@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TaskOpportunitySchema } from "@/domain/intelligence";
-import { AtomicAmountSchema } from "@/domain/real-economics";
+import { AtomicAmountSchema, refreshDemandEligibility } from "@/domain/real-economics";
 import { capabilityIds } from "@/domain/objective";
 
 export const agentBountiesDefinition = {
@@ -162,7 +162,7 @@ export function parseAgentBounties(raw: unknown, observedAt: string) {
             "Source-reported funding; not independently verified. Gross cash headroom is not profit.",
           ],
         },
-        demandState: {
+        demandState: refreshDemandEligibility({
           sourceType: p.source_type,
           workState: p.work_state,
           paymentState: p.payment_state,
@@ -181,14 +181,17 @@ export function parseAgentBounties(raw: unknown, observedAt: string) {
           scoringEndsAt: evidence?.scoring_window?.ends_at ?? null,
           participationPhase: evidence?.participation_phase ?? null,
           standingMetaBounty: p.standing_meta_bounty,
-          capabilityStatus: capabilities.length ? "source_mapped" : "unknown",
+          capabilityStatus:
+            capabilities.length > 0 && p.skills.every((skill) =>
+              (capabilityIds as readonly string[]).includes(skill))
+              ? "source_mapped" : "unknown",
           eligibility: reasons.length ? "not_eligible" : "source_ready",
           eligibilityReasons: reasons,
           projectionGeneratedAt: new Date(
             projection.generated_at,
           ).toISOString(),
           provenance: "observed_source",
-        },
+        }, p.deadline ?? undefined, now),
       }),
     ];
   });

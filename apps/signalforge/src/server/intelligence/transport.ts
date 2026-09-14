@@ -66,11 +66,17 @@ export async function publicDiscoveryGet(
         }
         throw new Error("upstream_unavailable");
       }
+      const mediaType = response.headers
+        .get("content-type")
+        ?.split(";", 1)[0]
+        .trim()
+        .toLowerCase();
       if (
         !(
-          response.headers.get("content-type")?.includes("json") ||
-          (source === "litellm" &&
-            response.headers.get("content-type")?.startsWith("text/plain"))
+          mediaType === "application/json" ||
+          (source === "agentbounties" &&
+            mediaType === "application/feed+json") ||
+          (source === "litellm" && mediaType === "text/plain")
         ) ||
         Number(response.headers.get("content-length") ?? 0) > byteLimit
       ) {

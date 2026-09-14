@@ -48,6 +48,91 @@
   color: var(--muted);
   line-height: 1.65;
 }
+.snapshot-track {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block: 1.2rem 1.8rem;
+  color: var(--accent);
+}
+.snapshot-track i {
+  width: 5px;
+  height: 5px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.snapshot-track span {
+  height: 1px;
+  width: 3rem;
+  background: var(--line);
+}
+.live-market-note .snapshot-provenance {
+  font-size: 0.62rem;
+  overflow-wrap: anywhere;
+  margin-top: 1.5rem;
+}
+.market-notice {
+  border-left: 2px solid var(--uncertain);
+  padding: 0.8rem 1.1rem;
+  margin-block: 1.5rem;
+  color: var(--muted);
+}
+.underwriting-verdict {
+  border-block: 1px solid var(--line);
+  margin-block: 2.5rem;
+  padding-block: 1.7rem;
+}
+.underwriting-verdict h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  font-weight: 400;
+  margin: 0.7rem 0;
+}
+.underwriting-verdict p:last-child {
+  color: var(--muted);
+  max-width: 60ch;
+}
+.underwriting-reasons {
+  padding-left: 1.2rem;
+  max-width: 72ch;
+  color: var(--muted);
+}
+.underwriting-reasons li {
+  padding-block: 0.5rem;
+  line-height: 1.65;
+}
+.real-market .receipt-fingerprint {
+  color: var(--muted);
+  font-size: 0.6rem;
+  overflow-wrap: anywhere;
+  margin-top: 1.5rem;
+}
+.policy-apply {
+  background: none;
+  color: var(--ink);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0.9rem 0;
+  margin-top: 0.6rem;
+  min-height: 44px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+.real-market button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.real-table-wrap tr {
+  transition: background-color 150ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .real-table-wrap tbody tr:hover {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+  .policy-apply:not(:disabled):hover {
+    border-color: var(--accent);
+  }
+}
 .live-reality {
   display: flex;
   flex-wrap: wrap;

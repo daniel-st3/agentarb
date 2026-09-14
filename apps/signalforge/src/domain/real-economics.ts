@@ -43,6 +43,50 @@ export const DemandStateSchema = z
   .strict();
 export type DemandState = z.infer<typeof DemandStateSchema>;
 
+/** Eligibility is time-dependent even when the source representation has not changed. */
+export function refreshDemandEligibility(
+  state: DemandState,
+  deadline: string | undefined,
+  now = Date.now(),
+): DemandState {
+  const temporalReasons = new Set([
+    "deadline_unknown",
+    "deadline_expired",
+    "scoring_window_unknown",
+    "scoring_window_closed",
+  ]);
+  const reasons = state.eligibilityReasons.filter(
+    (r) => !temporalReasons.has(r),
+  );
+  if (!deadline || !Number.isFinite(Date.parse(deadline)))
+    reasons.push("deadline_unknown");
+  else if (Date.parse(deadline) <= now) reasons.push("deadline_expired");
+  if (state.scoringEndsAt !== null) {
+    const ends = Date.parse(state.scoringEndsAt);
+    if (!Number.isFinite(ends)) reasons.push("scoring_window_unknown");
+    else if (ends <= now) reasons.push("scoring_window_closed");
+  }
+  if (
+    state.capabilityStatus === "unknown" &&
+    !reasons.includes("requirements_unknown")
+  )
+    reasons.push("requirements_unknown");
+  const unknownReasons = new Set([
+    "deadline_unknown",
+    "scoring_window_unknown",
+    "requirements_unknown",
+  ]);
+  return {
+    ...state,
+    eligibilityReasons: reasons,
+    eligibility: reasons.some((r) => !unknownReasons.has(r))
+      ? "not_eligible"
+      : reasons.length
+        ? "unknown"
+        : "source_ready",
+  };
+}
+
 // First-party production-model pricing, reviewed 2026-08-31. No provider call occurs here.
 export const publishedGroqPrice = {
   provider: "Groq",

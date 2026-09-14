@@ -170,7 +170,8 @@ it("configured server adapters pass real runtime gates with status-only output",
     status.decomposition !== "groq" ||
     status.frameValid !== true ||
     !["allowed", "quota_enforced"].includes(String(status.planningLimiter)) ||
-    !["allowed", "quota_enforced"].includes(String(status.catalogLimiter))
+    !["allowed", "quota_enforced"].includes(String(status.catalogLimiter)) ||
+    !["allowed", "quota_enforced"].includes(String(status.underwritingLimiter))
   ) {
     throw new Error(
       "Configured runtime verification incomplete. See safe status categories above; do not push.",

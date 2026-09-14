@@ -7,6 +7,9 @@ import {
 import { snapshotCache } from "./cache";
 import { definitions, demoListings } from "./service";
 import { demoDataEnabled } from "../demo-mode";
+import { refreshDemandEligibility } from "@/domain/real-economics";
+/** One server evaluation instant per render request; serialized to client previews. */
+export const snapshotEvaluationTime = cache(() => Date.now());
 /** Server first paint reads existing snapshots only. No unmetered connector refresh. */
 export const cachedNetworkView = cache(
   async (): Promise<NetworkResponse | null> => {
@@ -21,7 +24,7 @@ export const cachedNetworkView = cache(
           executionStatus: "execution_not_enabled",
         };
       const store = snapshotCache(),
-        now = Date.now();
+        now = snapshotEvaluationTime();
       const entries = await Promise.all(
         definitions.map((d) => store.get(d.id)),
       );
@@ -36,6 +39,15 @@ export const cachedNetworkView = cache(
             e!.snapshot!.records.map((l) => ({
               ...l,
               freshness: "cached_live",
+              ...(l.listingType === "task_opportunity" && l.demandState
+                ? {
+                    demandState: refreshDemandEligibility(
+                      l.demandState,
+                      l.deadline,
+                      now,
+                    ),
+                  }
+                : {}),
               dataQuality: {
                 ...l.dataQuality,
                 freshnessScore: Math.max(

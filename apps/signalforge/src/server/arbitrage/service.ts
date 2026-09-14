@@ -10,7 +10,10 @@ import { arbitrageLab, findLab } from "@/domain/arbitrage-lab";
 import { networkSnapshot } from "../intelligence/service";
 import { ListingSchema } from "@/domain/intelligence";
 import { demoDataEnabled } from "../demo-mode";
-import { realEnvelope } from "@/domain/real-economics";
+import {
+  realEnvelope,
+  refreshDemandEligibility,
+} from "@/domain/real-economics";
 
 export const OpportunityQuerySchema = z
   .object({
@@ -118,7 +121,17 @@ export async function underwriteOpportunity(raw: unknown) {
     snapshotVersion,
   });
   if (task.listingType === "task_opportunity" && task.demandState) {
-    const state = task.demandState;
+    const state = refreshDemandEligibility(task.demandState, task.deadline);
+    evaluation.opportunity = { ...task, demandState: state };
+    // The legacy payout is denominated in USD cents. A user scenario cannot
+    // replace the observed USDC reward or make its USD conversion "exact".
+    // Preserve the submitted scenario for audit, but keep real economics separate.
+    evaluation.payout = {
+      amountCents: null,
+      provenance: "unknown",
+      confidence: "unknown",
+    };
+    evaluation.economicProvenance = "incomplete";
     const supported =
       state.capabilityStatus === "source_mapped" &&
       task.requiredCapabilities.length > 0 &&
@@ -135,6 +148,21 @@ export async function underwriteOpportunity(raw: unknown) {
       state.eligibility === "not_eligible" ? "unroutable" : "insufficient_data";
     const expired = task.deadline && Date.parse(task.deadline) <= Date.now();
     if (expired) evaluation.decision = "unroutable";
+    const missingInputs = [
+      ...new Set([
+        ...evaluation.missingInputs.filter(
+          (reason) => reason !== "payout_unknown",
+        ),
+        ...evaluation.realEconomics.missingInputs,
+        ...(state.reward
+          ? ["payout_USD_conversion_unknown"]
+          : ["payout_unknown"]),
+        ...state.eligibilityReasons.filter((reason) =>
+          reason.endsWith("_unknown"),
+        ),
+        ...(supported ? [] : ["requirements_not_supported"]),
+      ]),
+    ];
     evaluation.reasons = [
       ...new Set([
         ...evaluation.reasons.map((reason) =>
@@ -145,10 +173,13 @@ export async function underwriteOpportunity(raw: unknown) {
         ...state.eligibilityReasons,
         ...(expired ? ["deadline_expired"] : []),
         ...(supported ? [] : ["requirements_not_supported"]),
-        ...evaluation.realEconomics.missingInputs,
+        ...missingInputs,
+        ...(input.scenario?.payoutCents !== undefined
+          ? ["USD_payout_scenario_not_applied_to_observed_reward"]
+          : []),
       ]),
     ];
-    evaluation.missingInputs = evaluation.realEconomics.missingInputs;
+    evaluation.missingInputs = missingInputs;
   }
   return ArbitrageReceiptSchema.parse({
     evaluation,

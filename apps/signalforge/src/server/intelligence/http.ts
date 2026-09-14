@@ -14,6 +14,7 @@ import {
 } from "./service";
 import { readBounded } from "../http";
 import { checkPlanningLimit, quotaHeaders } from "../planning-limit";
+import { requestQuery } from "../request-query";
 import { ArbitrageInputSchema } from "@/domain/arbitrage";
 import {
   underwriteOpportunity,
@@ -48,16 +49,10 @@ const headers = {
   "X-Content-Type-Options": "nosniff",
 };
 export function queryInput(url: string) {
-  const params = new URL(url).searchParams;
-  for (const key of params.keys())
-    if (params.getAll(key).length > 1) throw new Error("invalid");
-  return CatalogQuerySchema.parse(Object.fromEntries(params));
+  return CatalogQuerySchema.parse(requestQuery(url, true));
 }
 function opportunityQuery(url: string) {
-  const params = new URL(url).searchParams;
-  for (const key of params.keys())
-    if (params.getAll(key).length > 1) throw new Error("invalid");
-  return OpportunityQuerySchema.parse(Object.fromEntries(params));
+  return OpportunityQuerySchema.parse(requestQuery(url, true));
 }
 export async function catalogOperation(
   kind: "search" | "listing" | "status" | "evaluate" | "opportunities",
@@ -116,10 +111,15 @@ export async function handleCatalog(
   kind: "search" | "listing" | "status" | "evaluate" | "opportunities",
   id?: string,
 ) {
-  const limited = await checkPlanningLimit(request, kind === "evaluate" ? "underwriting" : "catalog");
+  const limited = await checkPlanningLimit(
+    request,
+    kind === "evaluate" ? "underwriting" : "catalog",
+  );
   if (limited) return limited;
   let input: unknown;
   try {
+    if (kind !== "search" && kind !== "opportunities")
+      requestQuery(request.url);
     input =
       kind === "search"
         ? queryInput(request.url)
@@ -145,7 +145,9 @@ export async function handleCatalog(
     );
   }
   try {
-    return Response.json(await catalogOperation(kind, input), { headers: {...headers,...quotaHeaders(request)} });
+    return Response.json(await catalogOperation(kind, input), {
+      headers: { ...headers, ...quotaHeaders(request) },
+    });
   } catch (error) {
     return Response.json(
       {

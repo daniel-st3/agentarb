@@ -2,6 +2,7 @@ import { z } from "zod";
 import { requestInputSchema, ResearchRequestSchema } from "@/domain/schema";
 import { createPlan, executeRun } from "@/domain/engine";
 import { demoDataEnabled } from "./demo-mode";
+import { requestQuery } from "./request-query";
 
 const runInput = z
   .object({ request: ResearchRequestSchema, consent: z.literal(true) })
@@ -11,6 +12,7 @@ const headers = {
   "X-Content-Type-Options": "nosniff",
 };
 export async function readBounded(request: Request): Promise<unknown> {
+  requestQuery(request.url);
   if (request.headers.get("content-type")?.split(";")[0] !== "application/json")
     throw new Error("invalid");
   const origin = request.headers.get("origin");

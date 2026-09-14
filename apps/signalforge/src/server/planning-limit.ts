@@ -3,7 +3,7 @@ import { createHmac, randomBytes } from "node:crypto";
 import { isIP } from "node:net";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
-import { storeConfig } from "./store-config";
+import { storeConfig, StoreConfigurationError } from "./store-config";
 
 /** Best-effort per-instance protection, NOT a distributed production quota. */
 export function createPlanningLimiter(now = () => Date.now(), maximum = 10) {
@@ -78,7 +78,7 @@ export async function checkPlanningLimit(
     const configured = storeConfig();
     if (!configured) {
       // Local hermetic demos may use bounded per-instance limits. Hosted live APIs may not.
-      if (process.env.VERCEL) throw new Error("configuration");
+      if (process.env.VERCEL) throw new Error("durable_store_required");
       return (
         category === "planning"
           ? localPlanning
@@ -88,7 +88,7 @@ export async function checkPlanningLimit(
       )(request);
     }
     if (!process.env.RATE_LIMIT_SALT || process.env.RATE_LIMIT_SALT.length < 32)
-      throw new Error("configuration");
+      throw new Error("rate_limit_salt_invalid");
     const header =
         request.headers.get("x-vercel-forwarded-for") ??
         request.headers.get("x-forwarded-for"),
@@ -156,14 +156,32 @@ export async function checkPlanningLimit(
   } catch (error) {
     const category =
       error instanceof Error &&
-      ["configuration", "store_unavailable", "caller_metadata"].includes(
-        error.message,
-      )
+      [
+        "configuration",
+        "store_unavailable",
+        "durable_store_required",
+        "rate_limit_salt_invalid",
+        "caller_metadata",
+      ].includes(error.message)
         ? error.message === "caller_metadata"
           ? "caller_metadata"
           : "configuration"
         : "durable_unavailable";
-    console.warn("public_protection_unavailable", { category });
+    // Fixed diagnostic codes only: never include values, thrown upstream errors,
+    // request text or caller addresses. Public responses stay deliberately generic.
+    const configurationCode =
+      error instanceof StoreConfigurationError
+        ? error.code
+        : error instanceof Error &&
+            ["durable_store_required", "rate_limit_salt_invalid"].includes(
+              error.message,
+            )
+          ? error.message
+          : undefined;
+    console.warn("public_protection_unavailable", {
+      category,
+      ...(configurationCode ? { configurationCode } : {}),
+    });
     return Response.json(
       {
         error:

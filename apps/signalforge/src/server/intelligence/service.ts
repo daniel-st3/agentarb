@@ -20,6 +20,7 @@ import { modelsDevDefinition, parseModelsDev } from "./connectors/models-dev";
 import { litellmDefinition, parseLiteLlm } from "./connectors/litellm";
 import { snapshotCache, type SnapshotCache } from "./cache";
 import { demoDataEnabled } from "../demo-mode";
+import { refreshDemandEligibility } from "@/domain/real-economics";
 import {
   agentBountiesDefinition,
   parseAgentBounties,
@@ -101,6 +102,9 @@ export function createConnector(
             ...snapshot,
             records: snapshot.records.slice(0, input.limit).map((l) => ({
               ...l,
+              ...(l.listingType === "task_opportunity" && l.demandState
+                ? { demandState: refreshDemandEligibility(l.demandState, l.deadline, time) }
+                : {}),
               freshness: "cached_live",
               dataQuality: {
                 ...l.dataQuality,
@@ -161,14 +165,18 @@ export function createConnector(
             lastModified?: string;
             notModified?: boolean;
           } = {};
+          // A validator cannot keep an old observation alive indefinitely. Once
+          // retention expires, fetch the complete representation again.
+          const canRevalidate = entry?.snapshot &&
+            time - Date.parse(entry.snapshot.observedAt) < 86400000;
           const raw = await publicDiscoveryGet(
             def.id as keyof typeof parsers,
             fetcher,
-            entry ?? undefined,
+            canRevalidate ? entry ?? undefined : undefined,
             metadata,
           );
           if (metadata.notModified) {
-            if (!entry?.snapshot) throw new Error("invalid_payload");
+            if (!entry?.snapshot || !canRevalidate) throw new Error("invalid_payload");
             entry = {
               ...entry,
               failures: 0,

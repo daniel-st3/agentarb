@@ -1,5 +1,114 @@
 export const realCopy: Array<[string, string, string]> = [
   [
+    "Eligibility has changed. Recheck the current source constraints.",
+    "La elegibilidad ha cambiado. Vuelve a comprobar las restricciones actuales de la fuente.",
+    "L’admissibilité a changé. Vérifiez à nouveau les contraintes actuelles de la source.",
+  ],
+  [
+    "Market observations are temporarily unavailable.",
+    "Las observaciones del mercado no están disponibles temporalmente.",
+    "Les observations du marché sont temporairement indisponibles.",
+  ],
+  [
+    "Inspect this opportunity",
+    "Examinar esta oportunidad",
+    "Examiner cette opportunité",
+  ],
+  ["Observed at", "Observado el", "Observé le"],
+  ["Apply policy", "Aplicar política", "Appliquer la politique"],
+  ["Retry underwriting", "Reintentar evaluación", "Réessayer l’analyse"],
+  [
+    "UNDERWRITING RESULT",
+    "RESULTADO DE LA EVALUACIÓN",
+    "RÉSULTAT DE L’ANALYSE",
+  ],
+  [
+    "A source or policy constraint blocks this opportunity.",
+    "Una restricción de la fuente o de la política bloquea esta oportunidad.",
+    "Une contrainte de la source ou de la politique bloque cette opportunité.",
+  ],
+  [
+    "The evidence is not complete enough to recommend this work.",
+    "La evidencia es insuficiente para recomendar esta tarea.",
+    "Les éléments disponibles ne suffisent pas à recommander cette mission.",
+  ],
+  [
+    "What holds this decision back",
+    "Qué impide una recomendación",
+    "Ce qui empêche une recommandation",
+  ],
+  ["Exact reason codes", "Códigos de motivo exactos", "Codes de motif exacts"],
+  [
+    "The submission deadline has passed.",
+    "El plazo de entrega ha vencido.",
+    "La date limite de soumission est passée.",
+  ],
+  [
+    "The source does not provide a usable submission deadline.",
+    "La fuente no proporciona un plazo de entrega válido.",
+    "La source ne fournit pas de date limite de soumission exploitable.",
+  ],
+  [
+    "The scoring window has closed, even if the listing remains visible.",
+    "El periodo de puntuación ha cerrado, aunque el anuncio siga visible.",
+    "La période d’évaluation est terminée, même si l’annonce reste visible.",
+  ],
+  [
+    "The source has not reported a committed payment.",
+    "La fuente no ha declarado un pago comprometido.",
+    "La source n’a pas signalé de paiement engagé.",
+  ],
+  [
+    "The source has not confirmed that verification is ready.",
+    "La fuente no ha confirmado que la verificación esté lista.",
+    "La source n’a pas confirmé que la vérification est prête.",
+  ],
+  [
+    "Participation requires funding activity outside SignalForge’s permitted scope.",
+    "Participar requiere financiación fuera del alcance permitido de SignalForge.",
+    "La participation exige un financement hors du périmètre autorisé de SignalForge.",
+  ],
+  [
+    "The complete task cannot be mapped to a supported fulfillment route.",
+    "La tarea completa no puede asignarse a una ruta de ejecución compatible.",
+    "La mission complète ne peut pas être associée à un itinéraire de réalisation pris en charge.",
+  ],
+  [
+    "A complete, bounded fulfillment specification is still needed.",
+    "Falta una especificación completa y acotada de la tarea.",
+    "Une spécification complète et bornée de la mission reste nécessaire.",
+  ],
+  [
+    "Platform, verification and other fulfillment fees are not fully known.",
+    "No se conocen todos los costes de plataforma, verificación y ejecución.",
+    "Les frais de plateforme, de vérification et de réalisation ne sont pas tous connus.",
+  ],
+  [
+    "The source’s funding and eligibility statements require independent confirmation.",
+    "Las declaraciones de financiación y elegibilidad requieren confirmación independiente.",
+    "Les déclarations de financement et d’admissibilité de la source nécessitent une confirmation indépendante.",
+  ],
+  [
+    "The USDC reward and USD provider prices have not been converted or combined.",
+    "La recompensa en USDC y los precios en USD no se han convertido ni combinado.",
+    "La récompense en USDC et les prix des prestataires en USD n’ont été ni convertis ni combinés.",
+  ],
+  [
+    "The reward is known in USDC; a USD exchange assumption has not been supplied.",
+    "La recompensa se conoce en USDC; no se ha indicado un tipo de cambio a USD.",
+    "La récompense est connue en USDC ; aucune hypothèse de change en USD n’a été fournie.",
+  ],
+  [
+    "There is no measured probability of winning or completing this work.",
+    "No existe una probabilidad medida de ganar o completar esta tarea.",
+    "Il n’existe aucune probabilité mesurée de remporter ou de terminer cette mission.",
+  ],
+  [
+    "A supported task and explicit token/call limits are needed for a provider cost ceiling.",
+    "Para acotar el coste del proveedor se necesitan una tarea compatible y límites explícitos de tokens y llamadas.",
+    "Un plafond de coût exige une mission prise en charge et des limites explicites de jetons et d’appels.",
+  ],
+  [
     "Underwrite agent work.",
     "Evalúa el trabajo de agentes.",
     "Évaluez les missions d’agents.",

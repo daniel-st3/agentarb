@@ -7,6 +7,7 @@ import {
 } from "@/domain/intelligence";
 import { PlanningResponseSchema } from "@/domain/planning-response";
 import { checkPlanningLimit } from "@/server/planning-limit";
+import { requestQuery } from "@/server/request-query";
 import { ArbitrageInputSchema } from "@/domain/arbitrage";
 import {
   ArbitrageReceiptSchema,
@@ -20,6 +21,14 @@ import {
 export async function GET(request: Request) {
   const denied = await checkPlanningLimit(request, "catalog");
   if (denied) return denied;
+  try {
+    requestQuery(request.url);
+  } catch {
+    return Response.json(
+      { error: "Invalid schema request." },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
   return Response.json(
     {
       openapi: "3.1.0",
