@@ -36,7 +36,7 @@ export const agentCard = agentCardSchema.parse({
   name: "SignalForge",
   description:
     "SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. Source-reported paid opportunities, exact economic provenance and explicit unknowns; execution_not_enabled.",
-  version: "1.1.0",
+  version: "1.2.0",
   capabilities: { streaming: false, pushNotifications: false },
   defaultInputModes: ["application/json"],
   defaultOutputModes: ["application/json"],
@@ -69,6 +69,7 @@ export const agentCard = agentCardSchema.parse({
       networkStatus: "/api/v1/network/status",
       opportunityEvaluation: "/api/v1/opportunities/evaluate",
       opportunitySearch: "/api/v1/opportunities",
+      claimReadiness: "/api/v1/opportunities/claim-readiness",
       openapi: "/api/v1/openapi",
     },
     supportedSchemas: [
@@ -77,6 +78,7 @@ export const agentCard = agentCardSchema.parse({
       "CatalogService/1.0",
       "TaskOpportunity/1.0",
       "ArbitrageEvaluation/2.0",
+      "ClaimReadinessPacket/1.0",
     ],
     mcp: {
       endpoint: "/api/mcp",
@@ -87,6 +89,7 @@ export const agentCard = agentCardSchema.parse({
         "signalforge_get_listing",
         "signalforge_evaluate_opportunity",
         "signalforge_search_opportunities",
+        "signalforge_get_claim_readiness",
       ],
     },
   },

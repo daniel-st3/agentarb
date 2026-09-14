@@ -2,7 +2,7 @@
 
 SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. This increment extends feature baseline b9e62aad; it does not promote or rewrite production baseline c117f844. Git authorship uses a GitHub noreply identity; historical commits are unchanged.
 
-Preview uses sf:catalog:v2 and sf:limit:v2 Redis namespaces. The older production v1 cache schema and caller quotas are not overwritten by this increment.
+Every shared key is isolated by trusted server runtime environment: `sf:<production|preview|development|test>:<purpose>:v3:...`. This covers catalog snapshots and validators, refresh/circuit state, rate counters, model-admission leases and FX observations. Conflicting or unknown hosted environments fail closed. Separate Preview and Production Upstash databases remain recommended defense in depth.
 
 ## Observed demand
 
@@ -16,9 +16,13 @@ USDC reward, refundable bond and external spend retain structured integer base u
 
 Economic provenance: observed_source, published_provider_price, estimated_from_live_inputs, actual_usage, user_scenario, unknown. No universal success probability exists. Explicit probability input is a user assumption, not measured confidence. Legacy USD payout scenarios remain in the submitted-scenario audit field but do not replace an observed USDC reward or populate an exact USD payout. There are zero outcome observations.
 
-The first-party Groq production-model snapshot (2026-08-31, expires 2026-09-30) prices openai/gpt-oss-20b at $0.075 input / $0.30 output per million tokens. With explicit maximum input/output tokens and bounded calls, integer ceiling arithmetic yields worstCaseProviderCost. It is a workload ceiling, not a task quote or observed spend. Unsupported requirements return null. USDC is not silently equated with USD. Missing fees, human effort, verification costs, FX and success probability keep expected profit null.
+The reviewed first-party Groq production-model snapshot (2026-09-14, expires 2026-10-14) prices `openai/gpt-oss-20b` at $0.075 input / $0.30 output per million tokens. The dedicated pricing module returns unknown after expiry; it never scrapes pricing pages at runtime. With explicit maximum input/output tokens and bounded calls, integer ceiling arithmetic yields a worst-case provider cost. It is a workload ceiling, not a task quote or observed spend.
 
-ActualOutcomeSchema reserves provider request IDs, token usage, charges, external/proof/review costs, reward and realized margin. It neither creates records nor enables the events it describes. Claims, execution, submission and settlement require a separate authorization milestone.
+USDC is never silently equated with USD. A fixed, public, read-only Coinbase `USDC-USD` spot endpoint supplies a short-lived market observation. Its decimal string is parsed to exact USD micros, cached under an environment namespace, and rejected when stale, malformed, redirected, oversized or non-JSON. An operator may explicitly supply a separate `user_scenario` FX rate. If neither is usable, cross-currency economics remain unknown.
+
+Real Economics v1 requires explicit success probability, bounded workload, platform/proof fees, human review, additional fulfillment, time-value and competition-risk inputs. A nonzero refundable bond additionally needs an explicit loss probability. It computes conditional profit and margin, risk-adjusted EV, break-even reward, maximum fulfillment cost and required success probability using integer arithmetic. Bond principal is capital required, not guaranteed spend. Decisions are `CONDITIONALLY_PROFITABLE`, `CONDITIONALLY_MARGINAL`, `CONDITIONALLY_UNECONOMIC`, `UNROUTABLE`, `NOT_ELIGIBLE`, or `INSUFFICIENT_DATA`; conditional values are never called realized earnings.
+
+ActualOutcomeSchema reserves provider request IDs, token usage, charges, external/proof/review costs, reward and realized margin. It is manual/import-only schema foundation: no public outcome-write endpoint or synthesized history exists. `ClaimReadinessPacket/1.0` is exposed through read-only REST and MCP inspection and always states `claimAuthorized=false`, `authorizationState=authorization_required`, and `executionStatus=execution_not_enabled`. Claims, execution, submission and settlement require a separate authorization milestone.
 
 ## Security
 

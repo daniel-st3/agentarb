@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { RealEnvelopeSchema, WorkloadSchema } from "./real-economics";
+import {
+  RealEconomicAssumptionsSchema,
+  RealEnvelopeSchema,
+} from "./real-economics";
 import {
   FreshnessSchema,
   TaskOpportunitySchema,
@@ -54,11 +57,8 @@ export const ArbitragePolicySchema = z
   })
   .strict();
 export type ArbitragePolicy = z.infer<typeof ArbitragePolicySchema>;
-export const ScenarioSchema = z
-  .object({
-    workload: WorkloadSchema.optional(),
+export const ScenarioSchema = RealEconomicAssumptionsSchema.extend({
     payoutCents: Cents.optional(),
-    successProbabilityBps: Bps.optional(),
   })
   .strict();
 export const ArbitrageInputSchema = z
@@ -82,7 +82,11 @@ export const DecisionSchema = z.enum([
   "profitable",
   "marginal",
   "uneconomic",
+  "conditionally_profitable",
+  "conditionally_marginal",
+  "conditionally_uneconomic",
   "unroutable",
+  "not_eligible",
   "insufficient_data",
 ]);
 export type Decision = z.infer<typeof DecisionSchema>;
@@ -265,6 +269,7 @@ export const ArbitrageEvaluationSchema = z
       "simulated_fixture",
       "user_scenario",
       "incomplete",
+      "conditional_real_inputs",
     ]),
     payout: z
       .object({
@@ -339,10 +344,14 @@ export function compareEvaluations(
 ) {
   const rank: Record<Decision, number> = {
     profitable: 0,
-    marginal: 1,
-    uneconomic: 2,
-    unroutable: 3,
-    insufficient_data: 4,
+    conditionally_profitable: 1,
+    marginal: 2,
+    conditionally_marginal: 3,
+    uneconomic: 4,
+    conditionally_uneconomic: 5,
+    not_eligible: 6,
+    unroutable: 7,
+    insufficient_data: 8,
   };
   return (
     rank[a.decision] - rank[b.decision] ||
@@ -634,10 +643,14 @@ export function evaluateArbitrage(
   }
   const rank: Record<Decision, number> = {
     profitable: 0,
-    marginal: 1,
-    uneconomic: 2,
-    insufficient_data: 3,
-    unroutable: 4,
+    conditionally_profitable: 1,
+    marginal: 2,
+    conditionally_marginal: 3,
+    uneconomic: 4,
+    conditionally_uneconomic: 5,
+    insufficient_data: 6,
+    not_eligible: 7,
+    unroutable: 8,
   };
   candidates.sort(
     (a, b) =>

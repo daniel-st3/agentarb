@@ -295,6 +295,22 @@
 .real-market dt {
   color: var(--muted);
 }
+.economics-completion {
+  border-top: 1px solid var(--line);
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+}
+.economics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1.25rem;
+  margin-block: 1rem 1.25rem;
+}
+.economics-grid small {
+  color: var(--muted);
+  font: 0.62rem var(--font-mono);
+  text-transform: uppercase;
+}
 .real-market details {
   border-bottom: 1px solid var(--line);
   padding-block: 1.2rem;
@@ -337,6 +353,9 @@
     flex-direction: column;
   }
   .real-columns {
+    grid-template-columns: 1fr;
+  }
+  .economics-grid {
     grid-template-columns: 1fr;
   }
   .real-market {

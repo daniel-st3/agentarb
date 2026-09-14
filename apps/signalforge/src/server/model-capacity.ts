@@ -6,7 +6,7 @@ export async function admitModelCall(): Promise<boolean> {
     const cache = snapshotCache();
     if (process.env.VERCEL && cache.mode !== "shared") return false;
     for (let slot = 0; slot < 4; slot++)
-      if (await cache.lease(`model-admission:${slot}`, 20)) return true;
+    if (await cache.lease(String(slot), 20, "model-admission")) return true;
     return false;
   } catch {
     return false;

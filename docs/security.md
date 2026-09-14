@@ -19,7 +19,7 @@ Shared rate limits use Upstash sliding windows: planning 10/10min; catalog 60/10
 
 On Vercel, trust platform-normalized `x-vercel-forwarded-for`, falling back to the first validated `x-forwarded-for` address. IPv6 representations are normalized. HMAC SHA-256 with a server salt precedes rate-limit storage. Memory mode uses an ephemeral random salt; Redis uses the configured stable salt. No raw IP logging, policy-input persistence, request-body analytics, or visitor identity database. Hosting/upstream infrastructure may retain their own access logs. Behind another proxy, strip client-supplied forwarding headers before setting trusted ones; do not expose the origin directly.
 
-Redis contains only expiring hashed quota counters, normalized public catalog snapshots and source refresh leases. Snapshot TTL 48h, display maximum age 24h. Model outputs/visitor routes are React session memory only and reset on reload. Downloaded route contracts contain the objective; users are warned to review before sharing.
+Redis contains only expiring hashed quota counters, normalized public catalog snapshots/source metadata, refresh and model-admission leases, and short-lived public FX observations. Keys use `sf:<trusted environment>:<purpose>:<version>:...`; Preview and Production cannot share logical state even if misconfigured onto one database. Snapshot TTL is 48h with a 24h display maximum; FX expires after ten minutes. Model outputs/visitor routes are React session memory only and reset on reload. Downloaded route contracts or economic receipts may contain operator input; users are warned to review before sharing.
 
 ## Validation and disclosure
 

@@ -4,6 +4,7 @@ import { isIP } from "node:net";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 import { storeConfig, StoreConfigurationError } from "./store-config";
+import { sharedStatePrefix } from "./environment";
 
 /** Best-effort per-instance protection, NOT a distributed production quota. */
 export function createPlanningLimiter(now = () => Date.now(), maximum = 10) {
@@ -63,6 +64,10 @@ const localPlanning = createPlanningLimiter(),
 const responseQuota = new WeakMap<Request, Record<string, string>>();
 export const quotaHeaders = (request: Request) =>
   responseQuota.get(request) ?? {};
+export const rateLimitPrefix = (
+  category: "planning" | "catalog" | "underwriting",
+  environment: Record<string, string | undefined> = process.env,
+) => `${sharedStatePrefix("limit", "v3", environment)}:${category}`;
 export async function checkPlanningLimit(
   request: Request,
   category: "planning" | "catalog" | "underwriting" = "planning",
@@ -114,7 +119,7 @@ export async function checkPlanningLimit(
         category === "planning" ? 10 : category === "underwriting" ? 20 : 60,
         "10 m",
       ),
-      prefix: `sf:limit:v2:${category}`,
+      prefix: rateLimitPrefix(category),
       analytics: false,
       timeout: 2000,
     });

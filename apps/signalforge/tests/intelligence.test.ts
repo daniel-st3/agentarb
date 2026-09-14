@@ -353,7 +353,7 @@ describe("public endpoint protection", () => {
   });
 });
 describe("agent-facing discovery", () => {
-  it("MCP can initialize and list exactly four read-only tools", async () => {
+  it("MCP can initialize and list exactly the declared read-only tools", async () => {
     const request = (method: string, params?: object) =>
       new Request("http://localhost/api/mcp", {
         method: "POST",

@@ -1,5 +1,19 @@
 # Live source assessments
 
+## Coinbase public USDC/USD spot observation
+
+- Official endpoint: `GET https://api.coinbase.com/v2/prices/USDC-USD/spot`.
+- Official documentation verified 2026-09-14: https://docs.cdp.coinbase.com/coinbase-app/track-apis/prices . The pricing endpoint is documented as public and does not require authentication.
+- Use: currency normalization evidence only. SignalForge sends no cookie, authorization, body or visitor input; the origin/path/pair are fixed and redirects fail.
+- Validation: HTTPS fixed origin, four-second timeout, 16 KiB response cap, JSON Content-Type, strict response schema and exact six-decimal parsing. Fresh cache target five minutes; unusable after ten minutes.
+- Limitation: a spot observation is short-lived market evidence, not a redemption guarantee or silent 1:1 USDC assumption. Stale/error data makes USD economics unknown.
+
+## Groq reviewed provider pricing
+
+- Official model page verified 2026-09-14: https://console.groq.com/docs/model/openai/gpt-oss-20b . Published price: $0.075 per million input tokens and $0.30 per million output tokens.
+- Use: exact bounded token/call workload ceiling only; never treated as a task quote or actual charge.
+- The reviewed table is isolated in `provider-pricing.ts`, expires closed, and is updated from first-party documentation. SignalForge does not scrape pricing pages at runtime.
+
 Catalogs verified 2026-08-30; Agent Bounties verified 2026-08-31. These are engineering access assessments, not a legal opinion or endorsement. Four fixed catalog sources and one fixed opportunity source are enabled. No HTML scraping, target-service requests, account access, wallet code or marketplace participation.
 
 ## Agent Bounties — enabled, public opportunity projection

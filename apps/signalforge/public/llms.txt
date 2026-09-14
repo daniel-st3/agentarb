@@ -11,11 +11,12 @@ SignalForge is an arbitrage underwriter and routing intelligence layer for agent
 - Connector health: GET /api/v1/network/status
 - API schemas: GET /api/v1/openapi
 - Opportunity evaluation only: POST /api/v1/opportunities/evaluate
+- Claim-readiness inspection only: POST /api/v1/opportunities/claim-readiness
 - Demand search: GET /api/v1/opportunities?mode=observed (may honestly return zero)
 - Versioned underwriting: POST /api/v1/opportunities/evaluate with responseVersion "2.0", a returned observed opportunityId, policy and optional explicit scenario.
-- MCP: signalforge_search_opportunities; signalforge_evaluate_opportunity accepts response_version "2.0".
+- MCP: signalforge_search_opportunities; signalforge_evaluate_opportunity and signalforge_get_claim_readiness accept response_version "2.0".
 - Agent Bounties hosted projection supplies exact USDC reward, bond and required spend. Funding is source-reported, not independently chain-verified.
-- First-party Groq token pricing can bound supported explicit workloads; it is not a task quote. Unknown success probability, fees and currency conversion keep expected profit null.
+- First-party Groq token pricing can bound supported explicit workloads; it is not a task quote. Current public USDC/USD spot observation may normalize currencies. Stale or missing FX, workload, probability, or fees keeps expected profit unknown.
 - Public defaults contain no simulated tasks or providers. Historical Lab is explicit non-production opt-in only.
 - MCP Streamable HTTP: /api/mcp
 

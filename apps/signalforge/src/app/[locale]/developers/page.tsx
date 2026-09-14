@@ -60,6 +60,11 @@ export default function Page() {
           </li>
           <li>
             {t(
+              "POST /api/v1/opportunities/claim-readiness — read-only economic and authorization inspection; claimAuthorized is always false.",
+            )}
+          </li>
+          <li>
+            {t(
               "GET /api/v1/network/status — connector health, observation times, and cache mode.",
             )}
           </li>
@@ -86,6 +91,7 @@ export default function Page() {
           <li>signalforge_search_catalog</li>
           <li>signalforge_get_listing</li>
           <li>signalforge_evaluate_opportunity</li>
+          <li>signalforge_get_claim_readiness</li>
         </ul>
         <p>
           {t(

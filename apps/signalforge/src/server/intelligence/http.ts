@@ -21,6 +21,7 @@ import {
   searchOpportunities,
   OpportunityQuerySchema,
 } from "../arbitrage/service";
+import { signalForgeEnvironment } from "../environment";
 export const ListingIdSchema = z
   .string()
   .min(3)
@@ -92,6 +93,7 @@ export async function catalogOperation(
       ],
       rateLimitMode:
         status.cacheMode === "shared" ? "distributed" : "best_effort",
+      environmentNamespace: signalForgeEnvironment(),
     });
   }
   const id =
@@ -105,6 +107,35 @@ export async function catalogOperation(
   return kind === "evaluate"
     ? EvaluationSchema.parse(evaluateOpportunity(listing))
     : ListingSchema.parse(listing);
+}
+export async function handleClaimReadiness(request: Request) {
+  const limited = await checkPlanningLimit(request, "underwriting");
+  if (limited) return limited;
+  let input: z.infer<typeof ArbitrageInputSchema>;
+  try {
+    requestQuery(request.url);
+    input = ArbitrageInputSchema.parse(await readBounded(request));
+  } catch (error) {
+    const status =
+      error instanceof Error && error.message === "body_too_large" ? 413 : 400;
+    return Response.json(
+      { error: "Invalid claim-readiness request. No action occurred." },
+      { status, headers },
+    );
+  }
+  try {
+    const receipt = await underwriteOpportunity(input);
+    if (!receipt.claimReadiness) throw new Error("not_ready");
+    return Response.json(receipt.claimReadiness, {
+      headers: { ...headers, ...quotaHeaders(request) },
+    });
+  } catch (error) {
+    const status = error instanceof Error && error.message === "not_found" ? 404 : 503;
+    return Response.json(
+      { error: status === 404 ? "Opportunity not found in the current bounded catalog." : "Claim-readiness inspection is temporarily unavailable. No action occurred." },
+      { status, headers },
+    );
+  }
 }
 export async function handleCatalog(
   request: Request,

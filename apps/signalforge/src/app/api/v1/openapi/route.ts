@@ -18,6 +18,7 @@ import {
   EvaluationInputSchema,
   EvaluationSchema,
 } from "@/server/intelligence/http";
+import { ClaimReadinessPacketSchema } from "@/domain/claim-readiness";
 export async function GET(request: Request) {
   const denied = await checkPlanningLimit(request, "catalog");
   if (denied) return denied;
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
       openapi: "3.1.0",
       info: {
         title: "SignalForge discovery, planning and arbitrage underwriting",
-        version: "1.1.0",
+        version: "1.2.0",
         description:
           "SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. Observed economics preserve unknowns. execution_not_enabled; no marketplace actions.",
       },
@@ -46,6 +47,7 @@ export async function GET(request: Request) {
           Opportunities: z.toJSONSchema(OpportunitiesResponseSchema),
           Listing: z.toJSONSchema(ListingSchema),
           NetworkStatus: z.toJSONSchema(NetworkStatusSchema),
+          ClaimReadinessPacket: z.toJSONSchema(ClaimReadinessPacketSchema),
         },
       },
       paths: {
@@ -168,6 +170,35 @@ export async function GET(request: Request) {
                 description:
                   "Unavailable margin or defensible projection with assumptions; no marketplace action",
               },
+            },
+          },
+        },
+        "/api/v1/opportunities/claim-readiness": {
+          post: {
+            summary:
+              "Build a read-only claim-readiness packet; never claim or execute",
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: z.toJSONSchema(ArbitrageInputSchema),
+                },
+              },
+            },
+            responses: {
+              "200": {
+                description:
+                  "Inspection packet with claimAuthorized=false and execution_not_enabled",
+                content: {
+                  "application/json": {
+                    schema: {
+                      $ref: "#/components/schemas/ClaimReadinessPacket",
+                    },
+                  },
+                },
+              },
+              "400": { description: "Invalid input; no action occurred" },
+              "429": { description: "Rate limit" },
             },
           },
         },

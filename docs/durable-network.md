@@ -18,6 +18,10 @@ No accounts or storage resources are provisioned by application code.
    require writes. A read-only token correctly makes protected routes return 503.
 3. Add a separate random `RATE_LIMIT_SALT` of at least 32 characters. Use different
    stores/salts for Preview and Production. Never add a NEXT_PUBLIC_ prefix.
+   Application keys are also logically isolated as
+   `sf:<production|preview|development|test>:<purpose>:v3:...`. Vercel supplies
+   the trusted `VERCEL_ENV`; an optional `SIGNALFORGE_ENV` is for non-Vercel hosts,
+   and conflicts fail closed. Separate stores remain defense in depth.
 4. Set `CACHE_MODE=durable` in Production, then redeploy the current production
    branch. Do not modify the separate legacy web Vercel project.
 5. GET `/api/v1/network/status`: verify `cacheMode: shared`,
@@ -67,11 +71,13 @@ the operator to finish the production-infrastructure rollout.
 ## Storage, refresh and privacy
 
 Only normalized catalog snapshots, observation times, connector health/failure
-counts, refresh leases and quota counters are stored. Snapshot retention: 48 hours;
+counts, refresh/model-admission leases, short-lived public FX observations and quota counters are stored. Snapshot retention: 48 hours;
 last-good data is usable for at most 24 hours. Source TTLs: MCP/APIs.guru one hour,
 Models.dev/LiteLLM six hours. Next.js after() supports stale-while-revalidate without
 detaching a promise that serverless could discard; atomic Redis leases prevent
 concurrent refreshes. Three failures pause a source for six hours.
+The Coinbase USDC/USD market observation is fresh for five minutes and unusable
+after ten; stale rates never unlock mixed-currency underwriting.
 
 Planning quota: 10 / client / rolling ten minutes. Catalog/MCP protocol: 60 / client /
 rolling ten minutes. MCP planning consumes both. Hash keys use HMAC-SHA256 with the

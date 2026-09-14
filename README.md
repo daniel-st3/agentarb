@@ -6,10 +6,10 @@ This branch is a **preview-only product increment**, not a production promotion.
 
 ## Arbitrage Intelligence
 
-Can an agent fulfill a paid task economically, under a cost, capital and verification policy? SignalForge compares routes using exact integer arithmetic and shows when the answer is profitable, marginal, uneconomic, unroutable—or simply unknown. **It does not claim work or execute the route.**
+Can an agent fulfill a paid task economically, under a cost, capital and verification policy? SignalForge compares routes using exact integer arithmetic and returns conditionally profitable, marginal, uneconomic, unroutable, not eligible—or insufficient data. **It does not claim work or execute the route.**
 
 - **Real-first Radar:** `/en/opportunities` (also ES/FR) observes Agent Bounties' official read-only opportunity projection. It preserves exact USDC reward, refundable bond and required spend, plus funding, deadline and verification evidence. Source-ready is not a guarantee of eligibility or profit.
-- **Known economics, explicit gaps:** first-party Groq pricing supports a bounded workload cost ceiling. Unknown fees, success probability, execution scope and currency conversion remain unknown. No historical outcomes or realized earnings are invented.
+- **Known economics, explicit gaps:** reviewed first-party Groq pricing supports a bounded workload ceiling; a short-lived public Coinbase observation can normalize USDC/USD. Operator assumptions are field-level `user_scenario` values. Stale/missing inputs stay unknown. No history or realized earnings are invented.
 - **No public fixtures:** default network and task results contain no demo records. `ENABLE_DEMO_DATA=true` deliberately restores historical Lab fixtures only outside Vercel Production; it is off by default.
 - **Integration:** existing opportunity evaluation remains compatible; opt into `responseVersion: "2.0"` for a validated `ArbitrageEvaluation`, canonical SHA-256 receipt, policy inputs and embedded route contracts.
 - **Route Forge:** the objective-first planner, client agent, research examples and original protocol contracts remain available.
@@ -30,7 +30,7 @@ Quickstart against a running preview (substitute its origin for localhost):
 ```bash
 curl http://127.0.0.1:3001/api/v1/opportunities/evaluate \
   -H 'Content-Type: application/json' \
-  -d '{"opportunityId":"REPLACE_WITH_ID_FROM_OPPORTUNITIES","responseVersion":"2.0","policy":{"minimumMarginBps":2500,"requireIndependentVerification":true}}'
+  -d '{"opportunityId":"REPLACE_WITH_ID_FROM_OPPORTUNITIES","responseVersion":"2.0","policy":{"minimumMarginBps":2500},"scenario":{"successProbabilityBps":7000,"workload":{"maxInputTokens":8000,"maxOutputTokens":1500,"boundedCalls":2},"platformFeeUsdMicros":"0","proofGasFeeUsdMicros":"0","humanReviewCostUsdMicros":"0","additionalFulfillmentCostUsdMicros":"0","timeValueCostUsdMicros":"0","competitionRiskAdjustmentUsdMicros":"0","bondLossProbabilityBps":0}}'
 ```
 
 First fetch `GET /api/v1/opportunities?mode=observed&limit=20` and use a returned ID. Results report `matchedCount` and `truncated`; underwriting uses the complete bounded server snapshot, not a client catalog page. MCP: `signalforge_search_opportunities` accepts `{"mode":"observed","limit":20}`; pass a returned ID to `signalforge_evaluate_opportunity` with `response_version:"2.0"`.
@@ -105,7 +105,7 @@ The response includes `route`, `decompositionSource` and warnings. The contract 
 
 Streamable HTTP: `https://signalforge-rose-two.vercel.app/api/mcp`.
 
-Tools: `signalforge_plan_route`, `signalforge_search_catalog`, `signalforge_get_listing`, `signalforge_evaluate_opportunity`.
+Tools: `signalforge_plan_route`, `signalforge_search_catalog`, `signalforge_get_listing`, `signalforge_evaluate_opportunity`, `signalforge_search_opportunities`, `signalforge_get_claim_readiness`.
 
 ```json
 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"signalforge_plan_route","arguments":{"objective":"Build a verified startup due-diligence route","budget_usd":0.25,"optimization_policy":"most_verified"}}}
@@ -157,6 +157,7 @@ Use the existing SignalForge project, root **`apps/signalforge`**, build `npm ru
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`: read/write Upstash REST configuration; Vercel KV aliases supported.
 - `RATE_LIMIT_SALT`: required for configured shared HMAC-derived caller keys. Raw IPs are not stored/logged.
 - `CACHE_MODE=durable`: require shared storage; absent/invalid configuration fails closed. Public Vercel API access also fails closed without distributed limiter configuration. Explicit local memory mode supports hermetic development. Configured credentials never silently downgrade.
+- `VERCEL_ENV` supplies the trusted Redis namespace on Vercel. Optional `SIGNALFORGE_ENV` supports non-Vercel hosts; allowed values are production/preview/development/test and conflicts fail closed.
 - `ENABLE_DEMO_DATA=false`: default. An explicit true value enables historical fixtures only outside Vercel Production.
 
 Configure variables privately for intended Vercel environments. Upstash holds public catalog snapshots, health/cache metadata and hashed quota counters—not visitor objectives. Vercel filesystem writes are not durable storage; visitor routes remain session-memory only. [Durable setup](docs/durable-network.md) · [Security](docs/security.md).

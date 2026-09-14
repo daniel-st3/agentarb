@@ -15,6 +15,7 @@ export default async function Privacy() {
       <p>{t("Upstash stores bounded public source snapshots, validator metadata, connector health, expiring refresh/model-admission leases and rate-limit counters. Caller keys are salted HMACs; SignalForge does not store raw IP addresses in these records.")}</p>
       <p>{t("Only optional objective decomposition sends your objective, context URL, budget, policy and language preference to Groq. The URL is text, not fetched. Marketplace descriptions never enter this model path. No tools, credentials or server configuration are included in the prompt.")}</p>
       <p>{t("SignalForge does not intentionally persist visitor objectives, scenarios or outcomes. Vercel may retain request metadata and operational logs; Groq may retain provider-side logs under its policies. Do not submit confidential text. No marketplace credentials, wallet credentials or private keys are requested; autonomous signing is not available.")}</p>
+      <p>{t("A public Coinbase spot-price endpoint may be queried for USDC/USD. SignalForge caches the rate, timestamp and source metadata, never account data. Operator economic assumptions are processed for the requested receipt and are not intentionally persisted. Manual outcome records remain schema-only in this milestone. Shared Redis keys are isolated by a trusted production, preview, development or test namespace.")}</p>
       <h2>{t("Session-only controls")}</h2>
       <p>
         {t(

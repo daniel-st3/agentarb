@@ -164,6 +164,9 @@ it("revalidates recent observations but fetches an expired representation uncond
 });
 
 it("does not turn a USD scenario into an exact observed USDC payout", async () => {
+  // This regression isolates the legacy USD scenario boundary. A market FX
+  // observation would legitimately make the source reward convertible.
+  vi.stubEnv("DISCOVERY_MODE", "offline");
   const task = parseAgentBounties(projection(), at)[0];
   vi.spyOn(intelligence, "networkSnapshot").mockResolvedValue({
     version: "1.0",
@@ -209,7 +212,7 @@ it("returns the same current eligibility in the decision and echoed opportunity"
     opportunityId: task.id,
     responseVersion: "2.0",
   });
-  expect(evaluation.decision).toBe("unroutable");
+  expect(evaluation.decision).toBe("not_eligible");
   expect(evaluation.opportunity.demandState!.eligibility).toBe("not_eligible");
   expect(evaluation.opportunity.demandState!.eligibilityReasons).toContain(
     "scoring_window_closed",

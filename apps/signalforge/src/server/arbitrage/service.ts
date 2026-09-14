@@ -13,7 +13,11 @@ import { demoDataEnabled } from "../demo-mode";
 import {
   realEnvelope,
   refreshDemandEligibility,
+  RealEconomicAssumptionsSchema,
 } from "@/domain/real-economics";
+import { getUsdcUsdObservation } from "../economics/fx";
+import { FxObservationSchema } from "@/domain/fx";
+import { ClaimReadinessPacketSchema } from "@/domain/claim-readiness";
 
 export const OpportunityQuerySchema = z
   .object({
@@ -54,6 +58,36 @@ export const ArbitrageReceiptSchema = z
     evaluation: ArbitrageEvaluationSchema,
     receiptHash: z.string().regex(/^[a-f0-9]{64}$/),
     hashAlgorithm: z.literal("SHA-256/canonical-json-v1"),
+    economicModelVersion: z.literal("real-economics/1.0").optional(),
+    claimReadiness: ClaimReadinessPacketSchema.optional(),
+    receiptFingerprintIsSignature: z.literal(false).default(false),
+    economicEvidence: z
+      .object({
+        observed: z
+          .object({
+            marketplaceSource: z.string(),
+            opportunityId: z.string(),
+            sourceObservedAt: z.string().datetime(),
+            rewardUsdcBaseUnits: z.string().nullable(),
+            requiredSpendUsdcBaseUnits: z.string().nullable(),
+            refundableBondUsdcBaseUnits: z.string().nullable(),
+            deadline: z.string().nullable(),
+            eligibility: z.string(),
+            provenance: z.literal("observed_source"),
+          })
+          .strict(),
+        published: z
+          .object({ providerPricing: z.unknown().nullable(), provenance: z.enum(["published_provider_price", "unknown"]) })
+          .strict(),
+        marketObservation: z
+          .object({ fx: z.unknown().nullable(), provenance: z.enum(["observed_market_rate", "user_scenario", "unknown"]) })
+          .strict(),
+        userAssumptions: z.record(z.string(), z.unknown()),
+        derived: z.record(z.string(), z.unknown()),
+        unknown: z.array(z.string()),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 export async function searchOpportunities(raw: unknown) {
@@ -138,14 +172,63 @@ export async function underwriteOpportunity(raw: unknown) {
       task.requiredCapabilities.every((c) =>
         ["data_extract", "synthesis"].includes(c),
       );
-    evaluation.realEconomics = realEnvelope(
-      state,
-      input.scenario?.workload,
-      input.scenario?.successProbabilityBps,
-      supported,
-    );
-    evaluation.decision =
-      state.eligibility === "not_eligible" ? "unroutable" : "insufficient_data";
+    const scenario = input.scenario
+      ? RealEconomicAssumptionsSchema.parse({
+          successProbabilityBps: input.scenario.successProbabilityBps,
+          workload: input.scenario.workload,
+          platformFeeUsdMicros: input.scenario.platformFeeUsdMicros,
+          proofGasFeeUsdMicros: input.scenario.proofGasFeeUsdMicros,
+          humanReviewCostUsdMicros: input.scenario.humanReviewCostUsdMicros,
+          additionalFulfillmentCostUsdMicros:
+            input.scenario.additionalFulfillmentCostUsdMicros,
+          timeValueCostUsdMicros: input.scenario.timeValueCostUsdMicros,
+          competitionRiskAdjustmentUsdMicros:
+            input.scenario.competitionRiskAdjustmentUsdMicros,
+          bondLossProbabilityBps: input.scenario.bondLossProbabilityBps,
+          fxRateMicros: input.scenario.fxRateMicros,
+        })
+      : {};
+    const observedFx = scenario.fxRateMicros
+      ? FxObservationSchema.parse({
+          baseCurrency: "USDC",
+          quoteCurrency: "USD",
+          rateMicros: scenario.fxRateMicros,
+          observedAt: new Date().toISOString(),
+          validUntil: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          source: "Operator scenario",
+          sourceUrl: null,
+          provenance: "user_scenario",
+        })
+      : await getUsdcUsdObservation();
+    evaluation.realEconomics = realEnvelope(state, scenario, observedFx, supported);
+    evaluation.decision = state.eligibility === "not_eligible"
+      ? "not_eligible"
+      : state.eligibility === "unknown"
+        ? "insufficient_data"
+        : !supported
+          ? "unroutable"
+          : "insufficient_data";
+    const derived = evaluation.realEconomics.derived;
+    if (
+      state.eligibility === "source_ready" &&
+      supported &&
+      derived.expectedProfitUsdMicros !== null &&
+      derived.expectedMarginBps !== null &&
+      derived.riskAdjustedExpectedValueUsdMicros !== null
+    ) {
+      const minimumProfitMicros =
+        BigInt(input.policy.minimumExpectedProfitCents) * 10_000n;
+      const expectedProfit = BigInt(derived.expectedProfitUsdMicros);
+      const riskAdjusted = BigInt(derived.riskAdjustedExpectedValueUsdMicros);
+      evaluation.decision =
+        expectedProfit < 0n || riskAdjusted < 0n
+          ? "conditionally_uneconomic"
+          : expectedProfit < minimumProfitMicros ||
+              derived.expectedMarginBps < input.policy.minimumMarginBps
+            ? "conditionally_marginal"
+            : "conditionally_profitable";
+      evaluation.economicProvenance = "conditional_real_inputs";
+    }
     const expired = task.deadline && Date.parse(task.deadline) <= Date.now();
     if (expired) evaluation.decision = "unroutable";
     const missingInputs = [
@@ -155,7 +238,9 @@ export async function underwriteOpportunity(raw: unknown) {
         ),
         ...evaluation.realEconomics.missingInputs,
         ...(state.reward
-          ? ["payout_USD_conversion_unknown"]
+          ? evaluation.realEconomics.fx
+            ? []
+            : ["payout_USD_conversion_unknown"]
           : ["payout_unknown"]),
         ...state.eligibilityReasons.filter((reason) =>
           reason.endsWith("_unknown"),
@@ -165,11 +250,20 @@ export async function underwriteOpportunity(raw: unknown) {
     ];
     evaluation.reasons = [
       ...new Set([
-        ...evaluation.reasons.map((reason) =>
-          reason === "payout_unknown" && state.reward
-            ? "payout_USD_conversion_unknown"
-            : reason,
-        ),
+        ...evaluation.reasons
+          .filter(
+            (reason) =>
+              !(
+                reason === "payout_unknown" &&
+                state.reward &&
+                evaluation.realEconomics?.fx
+              ),
+          )
+          .map((reason) =>
+            reason === "payout_unknown" && state.reward
+              ? "payout_USD_conversion_unknown"
+              : reason,
+          ),
         ...state.eligibilityReasons,
         ...(expired ? ["deadline_expired"] : []),
         ...(supported ? [] : ["requirements_not_supported"]),
@@ -177,13 +271,95 @@ export async function underwriteOpportunity(raw: unknown) {
         ...(input.scenario?.payoutCents !== undefined
           ? ["USD_payout_scenario_not_applied_to_observed_reward"]
           : []),
+        ...(evaluation.decision.startsWith("conditionally_")
+          ? ["conditional_on_explicit_operator_assumptions"]
+          : []),
       ]),
     ];
     evaluation.missingInputs = missingInputs;
   }
+  const receiptHash = hashReceipt(evaluation);
+  const readiness = evaluation.realEconomics
+    ? ClaimReadinessPacketSchema.parse({
+        schemaVersion: "1.0",
+        opportunityId: evaluation.opportunityId,
+        sourceUrl: evaluation.opportunity.sourceUrl,
+        sourceObservedAt: evaluation.opportunity.observedAt,
+        deadline: evaluation.opportunity.deadline ?? null,
+        requiredCapabilities: evaluation.opportunity.requiredCapabilities,
+        evidenceRequirements:
+          evaluation.opportunity.demandState?.evidenceRequirements ?? "",
+        currentEligibility:
+          evaluation.opportunity.demandState?.eligibility ?? "unknown",
+        economicAssumptions: input.scenario
+          ? RealEconomicAssumptionsSchema.parse({
+              successProbabilityBps: input.scenario.successProbabilityBps,
+              workload: input.scenario.workload,
+              platformFeeUsdMicros: input.scenario.platformFeeUsdMicros,
+              proofGasFeeUsdMicros: input.scenario.proofGasFeeUsdMicros,
+              humanReviewCostUsdMicros: input.scenario.humanReviewCostUsdMicros,
+              additionalFulfillmentCostUsdMicros:
+                input.scenario.additionalFulfillmentCostUsdMicros,
+              timeValueCostUsdMicros: input.scenario.timeValueCostUsdMicros,
+              competitionRiskAdjustmentUsdMicros:
+                input.scenario.competitionRiskAdjustmentUsdMicros,
+              bondLossProbabilityBps: input.scenario.bondLossProbabilityBps,
+              fxRateMicros: input.scenario.fxRateMicros,
+            })
+          : {},
+        expectedCostUsdMicros:
+          evaluation.realEconomics.derived.totalExpectedCostUsdMicros,
+        worstCaseProviderCostUsdMicros:
+          evaluation.realEconomics.worstCaseProviderCostUsdMicros,
+        economicDecision: evaluation.decision,
+        missingInputs: evaluation.missingInputs,
+        receiptHash,
+        policyVersion: "arbitrage-policy/1.0",
+        claimAuthorized: false,
+        authorizationState: "authorization_required",
+        executionStatus: "execution_not_enabled",
+        servicesCalled: false,
+        paymentsMade: false,
+      })
+    : undefined;
   return ArbitrageReceiptSchema.parse({
     evaluation,
-    receiptHash: hashReceipt(evaluation),
+    receiptHash,
     hashAlgorithm: "SHA-256/canonical-json-v1",
+    economicModelVersion: readiness ? "real-economics/1.0" : undefined,
+    claimReadiness: readiness,
+    receiptFingerprintIsSignature: false,
+    economicEvidence: evaluation.realEconomics
+      ? {
+          observed: {
+            marketplaceSource: evaluation.opportunity.sourceName,
+            opportunityId: evaluation.opportunityId,
+            sourceObservedAt: evaluation.opportunity.observedAt,
+            rewardUsdcBaseUnits:
+              evaluation.realEconomics.rewardUsdcBaseUnits,
+            requiredSpendUsdcBaseUnits:
+              evaluation.realEconomics.knownExternalSpendUsdcBaseUnits,
+            refundableBondUsdcBaseUnits:
+              evaluation.realEconomics.refundableBondUsdcBaseUnits,
+            deadline: evaluation.opportunity.deadline ?? null,
+            eligibility:
+              evaluation.opportunity.demandState?.eligibility ?? "unknown",
+            provenance: "observed_source",
+          },
+          published: {
+            providerPricing: evaluation.realEconomics.providerPricing,
+            provenance: evaluation.realEconomics.providerPricing
+              ? "published_provider_price"
+              : "unknown",
+          },
+          marketObservation: {
+            fx: evaluation.realEconomics.fx,
+            provenance: evaluation.realEconomics.fx?.provenance ?? "unknown",
+          },
+          userAssumptions: evaluation.realEconomics.assumptions,
+          derived: evaluation.realEconomics.derived,
+          unknown: evaluation.realEconomics.missingInputs,
+        }
+      : undefined,
   });
 }

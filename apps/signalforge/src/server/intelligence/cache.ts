@@ -2,6 +2,7 @@ import "server-only";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
 import { storeConfig } from "../store-config";
+import { sharedStatePrefix } from "../environment";
 import { DiscoverySnapshotSchema } from "@/domain/intelligence";
 export const CacheEntrySchema = z
   .object({
@@ -20,7 +21,11 @@ export interface SnapshotCache {
   mode: "shared" | "non_durable_demo";
   get(key: string): Promise<CacheEntry | null>;
   set(key: string, value: CacheEntry): Promise<void>;
-  lease(key: string, seconds: number): Promise<boolean>;
+  lease(
+    key: string,
+    seconds: number,
+    purpose?: "catalog" | "model-admission" | "fx",
+  ): Promise<boolean>;
 }
 export class MemorySnapshotCache implements SnapshotCache {
   mode = "non_durable_demo" as const;
@@ -40,19 +45,33 @@ export class MemorySnapshotCache implements SnapshotCache {
 }
 export class RedisSnapshotCache implements SnapshotCache {
   mode = "shared" as const;
-  constructor(private redis: Redis) {}
+  private catalogPrefix: string;
+  constructor(
+    private redis: Redis,
+    environment: Record<string, string | undefined> = process.env,
+  ) {
+    this.catalogPrefix = sharedStatePrefix("catalog", "v3", environment);
+  }
   async get(key: string) {
-    const v = await this.redis.get(`sf:catalog:v2:${key}`);
+    const v = await this.redis.get(`${this.catalogPrefix}:${key}`);
     return v ? CacheEntrySchema.parse(v) : null;
   }
   async set(key: string, v: CacheEntry) {
-    await this.redis.set(`sf:catalog:v2:${key}`, CacheEntrySchema.parse(v), {
+    await this.redis.set(`${this.catalogPrefix}:${key}`, CacheEntrySchema.parse(v), {
       ex: 172800,
     });
   }
-  async lease(key: string, seconds: number) {
+  async lease(
+    key: string,
+    seconds: number,
+    purpose: "catalog" | "model-admission" | "fx" = "catalog",
+  ) {
+    const prefix =
+      purpose === "catalog"
+        ? this.catalogPrefix
+        : sharedStatePrefix(purpose, "v3");
     return (
-      (await this.redis.set(`sf:catalog:v2:lease:${key}`, "1", {
+      (await this.redis.set(`${prefix}:lease:${key}`, "1", {
         nx: true,
         ex: seconds,
       })) === "OK"

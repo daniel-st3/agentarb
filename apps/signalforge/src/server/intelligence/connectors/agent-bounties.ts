@@ -91,9 +91,11 @@ export function parseAgentBounties(raw: unknown, observedAt: string) {
       return [];
     const evidenceText = JSON.stringify(p.evidence_requirements ?? null);
     if (evidenceText.length > 6000) return [];
-    const evidence = evidenceSchema.safeParse(p.evidence_requirements).data;
+    const evidenceResult = evidenceSchema.safeParse(p.evidence_requirements);
+    const evidence = evidenceResult.success ? evidenceResult.data : undefined;
     const now = Date.parse(observedAt),
       reasons: string[] = [];
+    if (!evidenceResult.success) reasons.push("requirements_unknown");
     if (p.work_state !== "claimable") reasons.push("work_not_claimable");
     if (p.payment_state !== "escrowed" || !p.payment_committed)
       reasons.push("payment_not_committed");

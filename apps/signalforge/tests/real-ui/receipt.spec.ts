@@ -83,6 +83,8 @@ test("open Radar expires a deadline locally and invalidates its prior receipt", 
       json: {
         evaluation: { ...evaluation, opportunity: expiring },
         receiptHash: "a".repeat(64),
+        hashAlgorithm: "SHA-256/canonical-json-v1",
+        receiptFingerprintIsSignature: false,
       },
     });
   });
@@ -96,7 +98,7 @@ test("open Radar expires a deadline locally and invalidates its prior receipt", 
   ).toBeVisible();
   await expect(
     page.getByRole("row").filter({ hasText: task.title }),
-  ).toContainText("UNROUTABLE");
+  ).toContainText("NOT ELIGIBLE");
   await expect(
     page.getByRole("button", { name: /Download underwriting JSON/ }),
   ).toHaveCount(0);
@@ -160,7 +162,12 @@ test("populated Radar exits a failed request, respects Retry-After and downloads
         headers: { "Retry-After": "1" },
         json: { error: "Limited" },
       });
-    return route.fulfill({ json: { evaluation, receiptHash: "a".repeat(64) } });
+    return route.fulfill({ json: {
+      evaluation,
+      receiptHash: "a".repeat(64),
+      hashAlgorithm: "SHA-256/canonical-json-v1",
+      receiptFingerprintIsSignature: false,
+    } });
   });
   await page.goto("/en/opportunities");
   await expect(page.getByRole("button", { name: task.title })).toBeVisible();
@@ -179,8 +186,20 @@ test("populated Radar exits a failed request, respects Retry-After and downloads
   await expect(page.locator(".underwriting-verdict")).toBeVisible();
   expect(attempts).toBe(2);
   await page.getByLabel("Minimum margin").fill("3000");
+  for (const [label, value] of [
+    ["Success probability", "70"],
+    ["Max input tokens", "1000"],
+    ["Max output tokens", "500"],
+    ["Bounded model calls", "1"],
+    ["Platform fee", "0"],
+    ["Proof / gas fee", "0"],
+    ["Human review cost", "0"],
+    ["Additional fulfillment", "0"],
+    ["Time-value cost", "0"],
+    ["Competition-risk adjustment", "0"],
+  ] as const) await page.getByLabel(new RegExp(label)).fill(value);
   expect(attempts).toBe(2);
-  await page.getByRole("button", { name: "Apply policy →" }).click();
+  await page.getByRole("button", { name: "Apply assumptions →" }).click();
   await expect(page.locator(".underwriting-verdict")).toBeVisible();
   expect(margins).toEqual([2500, 2500, 3000]);
   const download = page.waitForEvent("download");

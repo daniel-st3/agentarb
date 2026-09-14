@@ -230,6 +230,9 @@ export const NetworkStatusSchema = NetworkResponseSchema.omit({
   observedCount: z.number().int().nonnegative(),
   observedCapabilities: z.array(z.enum(capabilityIds)),
   rateLimitMode: z.enum(["distributed", "best_effort"]),
+  environmentNamespace: z
+    .enum(["production", "preview", "development", "test"])
+    .optional(),
 });
 export function matchListing(l: Listing, q: CatalogQuery) {
   const caps =
