@@ -1,0 +1,822 @@
+.lab {
+  --lab-bg: #111210;
+  --lab-ink: #f3f0e7;
+  --lab-muted: #989993;
+  --lab-line: #343632;
+  --lab-line-strong: #565a52;
+  --lab-signal: #e4593f;
+  --lab-signal-soft: #aa4635;
+  --lab-green: #8fae97;
+  --lab-amber: #b8976b;
+  min-block-size: 100svh;
+  color: var(--lab-ink);
+  background:
+    linear-gradient(90deg, transparent 0 24.9%, rgb(255 255 255 / 0.025) 25%, transparent 25.1% 74.9%, rgb(255 255 255 / 0.025) 75%, transparent 75.1%),
+    var(--lab-bg);
+  padding: clamp(2rem, 5vw, 5.5rem) max(1rem, calc((100vw - 1660px) / 2));
+  overflow: clip;
+}
+
+.lab * {
+  box-sizing: border-box;
+}
+
+.labHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 24rem);
+  gap: clamp(2rem, 8vw, 10rem);
+  align-items: end;
+  padding-block-end: clamp(2.5rem, 6vw, 5rem);
+  border-block-end: 1px solid var(--lab-line-strong);
+}
+
+.labMarker,
+.sectionIndex,
+.truthRail,
+.controls,
+.stateDisclosure,
+.labFooter,
+.compressionCopy span,
+.compressionCopy small,
+.capitalRail,
+.marketCapture span,
+.marketCapture dt,
+.instrumentColumn > span,
+.contractSpine span,
+.contractSpine small {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.labMarker,
+.sectionIndex {
+  color: var(--lab-signal);
+  margin: 0 0 1.25rem;
+}
+
+.labHeader h1 {
+  max-inline-size: 16ch;
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2.8rem, 6vw, 6.8rem);
+  font-weight: 420;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+}
+
+.labIntro {
+  max-inline-size: 54ch;
+  margin: 1.5rem 0 0;
+  color: var(--lab-muted);
+  font-size: clamp(1rem, 1.3vw, 1.22rem);
+  line-height: 1.55;
+}
+
+.truthRail {
+  display: grid;
+  gap: 0.7rem;
+  border-inline-start: 1px solid var(--lab-signal-soft);
+  padding-inline-start: 1rem;
+  color: var(--lab-muted);
+}
+
+.truthRail strong {
+  color: var(--lab-ink);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.truthRail small {
+  color: var(--lab-amber);
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-block: 1rem;
+  border-block-end: 1px solid var(--lab-line);
+}
+
+.controlGroup {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--lab-muted);
+}
+
+.controlGroup > span,
+.controlGroup legend {
+  float: left;
+  margin: 0.82rem 1rem 0 0;
+  padding: 0;
+}
+
+.controlGroup > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.controlGroup button,
+.controlGroup label {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+  color: var(--lab-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.controlGroup button[aria-selected="true"],
+.controlGroup label:has(input:checked) {
+  color: var(--lab-ink);
+}
+
+.controlGroup input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+}
+
+.controlGroup button:focus-visible,
+.controlGroup label:has(input:focus-visible),
+.instrumentNode:focus-visible,
+.marketList button:focus-visible,
+.marketMark:focus-visible {
+  outline: 2px solid var(--lab-ink);
+  outline-offset: 3px;
+}
+
+.controlIndicator,
+.controlGroup label::after {
+  position: absolute;
+  inset: auto 0 0;
+  block-size: 2px;
+  background: var(--lab-signal);
+  content: "";
+}
+
+.controlGroup label::after {
+  transform: scaleX(0);
+  transition: transform 160ms ease;
+}
+
+.controlGroup label:has(input:checked)::after {
+  transform: scaleX(1);
+}
+
+.stateDisclosure {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.55fr) minmax(0, 1.2fr) minmax(13rem, 0.6fr);
+  gap: 1.5rem;
+  align-items: baseline;
+  padding-block: 1rem;
+  color: var(--lab-muted);
+  border-block-end: 1px solid var(--lab-line);
+}
+
+.stateDisclosure > span {
+  color: var(--lab-signal);
+}
+
+.stateDisclosure p,
+.stateDisclosure small {
+  margin: 0;
+}
+
+.conceptStage {
+  min-block-size: min(780px, 77svh);
+  padding-block: clamp(3rem, 7vw, 7rem);
+}
+
+.conceptEmpty {
+  display: grid;
+  align-content: center;
+  min-block-size: 55svh;
+  max-inline-size: 70rem;
+  border-block: 1px solid var(--lab-line);
+}
+
+.conceptEmpty h2,
+.conceptEmpty strong {
+  max-inline-size: 16ch;
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2.6rem, 7vw, 7rem);
+  font-weight: 430;
+  line-height: 0.92;
+}
+
+.conceptEmpty p {
+  max-inline-size: 55ch;
+  color: var(--lab-muted);
+}
+
+/* Concept A — typography carries the decision. */
+.conceptA {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.9fr) minmax(26rem, 1.1fr) minmax(9rem, 0.32fr);
+  gap: clamp(2rem, 5vw, 6rem);
+  align-items: start;
+}
+
+.aQuestion h2 {
+  margin: 0;
+  max-inline-size: 8ch;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(4rem, 8.2vw, 9.6rem);
+  font-weight: 360;
+  line-height: 0.78;
+  letter-spacing: -0.075em;
+}
+
+.subjectTitle {
+  max-inline-size: 38ch;
+  margin-block-start: 2.2rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--lab-line);
+  color: var(--lab-muted);
+}
+
+.compression {
+  margin-block-start: clamp(2rem, 8vw, 8rem);
+}
+
+.compressionRow {
+  padding-block: 0.75rem 1.2rem;
+}
+
+.compressionRule {
+  position: relative;
+  block-size: 2px;
+  background: var(--lab-line);
+  overflow: hidden;
+}
+
+.compressionRule span {
+  display: block;
+  block-size: 100%;
+  background: var(--lab-signal);
+}
+
+.interrupted .compressionRule {
+  background: repeating-linear-gradient(90deg, var(--lab-amber) 0 5px, transparent 5px 12px);
+}
+
+.interrupted .compressionRule span {
+  display: none;
+}
+
+.compressionCopy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.3rem 1rem;
+  align-items: baseline;
+  margin-block-start: 0.75rem;
+}
+
+.compressionCopy strong,
+.capitalRail strong {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.compressionCopy small {
+  grid-column: 1 / -1;
+  color: var(--lab-muted);
+}
+
+.capitalRail {
+  display: grid;
+  gap: 0.65rem;
+  margin-block-start: clamp(2rem, 8vw, 8rem);
+  padding-block-start: 0.75rem;
+  border-block-start: 3px double var(--lab-green);
+  color: var(--lab-muted);
+}
+
+.capitalRail strong {
+  color: var(--lab-green);
+}
+
+.aVerdict {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.35fr) minmax(0, 1.15fr);
+  gap: 1rem 3rem;
+  align-items: end;
+  margin-block-start: clamp(2rem, 5vw, 5rem);
+  padding-block: 1rem;
+  border-block: 1px solid var(--lab-line-strong);
+  overflow: hidden;
+}
+
+.aVerdict span,
+.aVerdict p {
+  color: var(--lab-muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.aVerdict strong {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2.7rem, 7vw, 8.5rem);
+  font-weight: 520;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  color: var(--lab-amber);
+}
+
+.aVerdict p {
+  grid-column: 2;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Concept B — spatial marks are evidence, never decoration. */
+.conceptHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.55fr);
+  gap: 1rem 4rem;
+  align-items: end;
+  margin-block-end: 3rem;
+}
+
+.conceptHeader .sectionIndex {
+  grid-column: 1 / -1;
+}
+
+.conceptHeader h2 {
+  max-inline-size: 17ch;
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2.8rem, 6vw, 6.5rem);
+  font-weight: 430;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+}
+
+.conceptHeader p,
+.conceptHeader small {
+  margin: 0;
+  color: var(--lab-muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.conceptHeader small {
+  grid-column: 2;
+}
+
+.marketField {
+  position: relative;
+  min-block-size: 31rem;
+  border-block: 1px solid var(--lab-line);
+}
+
+.marketPlot {
+  display: block;
+  inline-size: min(66%, 58rem);
+  min-block-size: 27rem;
+  overflow: visible;
+}
+
+.axis,
+.plotTick line {
+  fill: none;
+  stroke: var(--lab-line-strong);
+  stroke-width: 1;
+}
+
+.plotTick text {
+  fill: var(--lab-muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.captureTrace {
+  fill: none;
+  stroke: var(--lab-signal);
+  stroke-width: 1.5;
+}
+
+.marketMark {
+  cursor: pointer;
+  outline: none;
+}
+
+.marketMark circle {
+  fill: var(--lab-bg);
+  stroke: var(--lab-signal);
+  stroke-width: 2;
+}
+
+.marketMark line {
+  stroke: var(--lab-line);
+  stroke-dasharray: 2 5;
+}
+
+.marketMark text {
+  fill: var(--lab-ink);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.marketMark:focus-visible circle {
+  stroke: var(--lab-ink);
+  stroke-width: 4;
+}
+
+.marketCapture {
+  position: absolute;
+  inset: 3rem 0 auto auto;
+  display: grid;
+  inline-size: min(31%, 27rem);
+  gap: 1.2rem;
+  border-inline-start: 1px solid var(--lab-signal);
+  padding-inline-start: 1.25rem;
+}
+
+.marketCapture > span {
+  color: var(--lab-signal);
+}
+
+.marketCapture > strong {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 3.2rem);
+  font-weight: 430;
+  line-height: 0.98;
+}
+
+.marketCapture dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem 1rem;
+  margin: 0;
+}
+
+.marketCapture dd {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.marketList {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Concept C — the diagram is backed by semantic controls. */
+.routeInstrument {
+  position: relative;
+  min-block-size: 31rem;
+  border-block: 1px solid var(--lab-line);
+}
+
+.routeWiring {
+  position: absolute;
+  inset: 2rem 0 auto;
+  inline-size: 100%;
+  block-size: calc(100% - 4rem);
+  pointer-events: none;
+}
+
+.routeWiring path {
+  fill: none;
+  stroke: var(--lab-signal);
+  stroke-width: 1.4;
+  stroke-dasharray: 680;
+  stroke-dashoffset: 0;
+  vector-effect: non-scaling-stroke;
+}
+
+.routeWiring .rejectedWire {
+  stroke: var(--lab-amber);
+  stroke-dasharray: 4 8;
+}
+
+.instrumentColumns {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 0.9fr 1fr 1fr 0.9fr 1fr;
+  gap: clamp(0.8rem, 2vw, 2.5rem);
+  min-block-size: 31rem;
+  align-items: center;
+}
+
+.instrumentColumn {
+  min-inline-size: 0;
+}
+
+.instrumentColumn > span {
+  display: block;
+  min-block-size: 2.5rem;
+  color: var(--lab-muted);
+}
+
+.instrumentColumn > div {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.instrumentNode {
+  display: grid;
+  gap: 0.35rem;
+  inline-size: 100%;
+  min-block-size: 3.5rem;
+  padding: 0.8rem 0;
+  color: var(--lab-ink);
+  background: var(--lab-bg);
+  border: 0;
+  border-block: 1px solid var(--lab-line-strong);
+  border-radius: 0;
+  cursor: pointer;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  text-align: start;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.instrumentNode[aria-pressed="true"] {
+  border-color: var(--lab-signal);
+  color: var(--lab-ink);
+}
+
+.instrumentNode small {
+  color: var(--lab-muted);
+  font-size: 0.62rem;
+}
+
+.rejectedNode {
+  border-block-end-style: dashed;
+}
+
+.rejectedNode::after {
+  content: "RETAINED / NOT SELECTED";
+  color: var(--lab-amber);
+  font-size: 0.58rem;
+}
+
+.contractSpine {
+  display: grid;
+  grid-template-columns: 0.35fr 0.35fr minmax(0, 1fr);
+  gap: 1rem 2rem;
+  margin-block-start: 2rem;
+  padding-inline-start: 1rem;
+  border-inline-start: 3px solid var(--lab-signal);
+}
+
+.contractSpine strong {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 450;
+}
+
+.contractSpine p,
+.contractSpine small {
+  margin: 0;
+  color: var(--lab-muted);
+  overflow-wrap: anywhere;
+}
+
+.contractSpine small {
+  grid-column: 3;
+}
+
+.labFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-block: 1rem;
+  color: var(--lab-muted);
+  border-block-start: 1px solid var(--lab-line-strong);
+}
+
+@media (max-width: 960px) {
+  .labHeader,
+  .conceptHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .conceptHeader small,
+  .conceptHeader .sectionIndex {
+    grid-column: 1;
+  }
+
+  .conceptA {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.8fr);
+  }
+
+  .capitalRail {
+    grid-column: 1 / -1;
+    margin-block-start: 0;
+  }
+
+  .instrumentColumns {
+    gap: 0.8rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .lab {
+    padding-inline: 1rem;
+    background: var(--lab-bg);
+  }
+
+  .labHeader {
+    gap: 2rem;
+  }
+
+  .labHeader h1 {
+    font-size: clamp(3rem, 15vw, 5rem);
+  }
+
+  .controls,
+  .stateDisclosure,
+  .labFooter {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .controlGroup > span,
+  .controlGroup legend {
+    float: none;
+    display: block;
+    margin: 0 0 0.5rem;
+  }
+
+  .controlGroup > div {
+    justify-content: space-between;
+    gap: 0.2rem;
+  }
+
+  .controlGroup:nth-child(2) > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem 1rem;
+  }
+
+  .controlGroup button,
+  .controlGroup label {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+    font-size: 0.62rem;
+  }
+
+  .conceptStage {
+    min-block-size: auto;
+    padding-block: 3rem;
+  }
+
+  .conceptA {
+    display: block;
+  }
+
+  .aQuestion h2 {
+    font-size: clamp(4rem, 24vw, 6.8rem);
+  }
+
+  .compression,
+  .capitalRail {
+    margin-block-start: 3rem;
+  }
+
+  .aVerdict {
+    grid-template-columns: 1fr;
+  }
+
+  .aVerdict strong,
+  .aVerdict p {
+    grid-column: 1;
+  }
+
+  .aVerdict strong {
+    font-size: clamp(2.7rem, 13vw, 4.4rem);
+    overflow-wrap: break-word;
+  }
+
+  .marketField {
+    display: none;
+  }
+
+  .marketList {
+    display: grid;
+    border-block-start: 1px solid var(--lab-line);
+  }
+
+  .marketList button {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.45rem 1rem;
+    inline-size: 100%;
+    min-block-size: 4.25rem;
+    padding: 1rem 0;
+    color: var(--lab-ink);
+    background: transparent;
+    border: 0;
+    border-block-end: 1px solid var(--lab-line);
+    border-radius: 0;
+    text-align: start;
+  }
+
+  .marketList button > span,
+  .marketList button small {
+    color: var(--lab-muted);
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.7rem;
+  }
+
+  .marketList button small {
+    grid-column: 2;
+  }
+
+  .routeWiring {
+    display: none;
+  }
+
+  .instrumentColumns {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-block: 1rem;
+  }
+
+  .instrumentColumn {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 1rem;
+    border-block-end: 1px solid var(--lab-line);
+    padding-block-end: 1rem;
+  }
+
+  .instrumentColumn > span {
+    font-size: 0.62rem;
+  }
+
+  .contractSpine {
+    grid-template-columns: 1fr;
+  }
+
+  .contractSpine small {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 390px) {
+  .controlGroup > div {
+    justify-content: flex-start;
+  }
+
+  .instrumentColumn {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab *,
+  .lab *::before,
+  .lab *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .controlIndicator,
+  .controlGroup label::after,
+  .compressionRule span {
+    background: CanvasText;
+  }
+
+  .marketMark circle,
+  .instrumentNode[aria-pressed="true"] {
+    stroke: Highlight;
+    border-color: Highlight;
+  }
+}
