@@ -1,0 +1,367 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
+import { Flip } from "gsap/Flip";
+import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import { m, useReducedMotion } from "motion/react";
+import type { ArbitrageEvaluation, Decision } from "@/domain/arbitrage";
+import type { LabCopy } from "./copy";
+import {
+  fetchLabUnderwriting,
+  explicitLabChallengeScenario,
+  type LabChallengeScenario,
+  type LabDataset,
+  type LabReceipt,
+  type LabSubject,
+} from "./lab-model";
+import styles from "./v2-lab.module.css";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText, Flip, DrawSVGPlugin);
+
+const STAGES = ["capture", "capabilities", "route", "economics", "decision"] as const;
+type DerivedEconomics = NonNullable<ArbitrageEvaluation["realEconomics"]>["derived"];
+
+function usdMicros(value: string | null | undefined) {
+  if (value == null) return "UNKNOWN";
+  const amount = BigInt(value), negative = amount < 0n, absolute = negative ? -amount : amount;
+  const fraction = (absolute % 1_000_000n).toString().padStart(6, "0").replace(/0+$/, "");
+  return `${negative ? "−" : ""}$${absolute / 1_000_000n}${fraction ? `.${fraction}` : ""}`;
+}
+
+function percentageWidth(value: string | null | undefined, reward: string | null | undefined) {
+  if (value == null || reward == null || BigInt(reward) <= 0n) return null;
+  const amount = BigInt(value) < 0n ? -BigInt(value) : BigInt(value);
+  return Math.max(3, Math.min(100, Number((amount * 1000n) / BigInt(reward)) / 10));
+}
+
+function decisionText(decision: Decision, copy: LabCopy) {
+  const labels: Partial<Record<Decision, string>> = {
+    conditionally_profitable: copy.conditionallyProfitable,
+    conditionally_marginal: copy.conditionallyMarginal,
+    conditionally_uneconomic: copy.conditionallyUneconomic,
+    insufficient_data: copy.insufficient,
+    not_eligible: copy.notEligible,
+    unroutable: copy.unroutable,
+  };
+  return labels[decision] ?? decision.toUpperCase().replaceAll("_", " ");
+}
+
+export function ConceptD({ dataset, copy }: { dataset: LabDataset; copy: LabCopy }) {
+  const subject = dataset.subject;
+  const scope = useRef<HTMLElement>(null);
+  const timeline = useRef<gsap.core.Timeline | null>(null);
+  const trigger = useRef<ScrollTrigger | null>(null);
+  const replayTween = useRef<gsap.core.Tween | null>(null);
+  const stageValue = useRef(0);
+  const reduced = useReducedMotion();
+  const motionReduced = reduced === true;
+  const [receipt, setReceipt] = useState<LabReceipt>();
+  const [requestState, setRequestState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [stage, setStage] = useState(0);
+  const [skipped, setSkipped] = useState(motionReduced);
+  const [scenarioActive, setScenarioActive] = useState(false);
+  const [probability, setProbability] = useState(70);
+  const [reviewMicros, setReviewMicros] = useState("250000");
+
+  const request = useCallback(async (scenario?: LabChallengeScenario, signal?: AbortSignal) => {
+    if (!subject?.opportunity) return;
+    const local = signal ?? AbortSignal.timeout(12_000);
+    setRequestState("loading");
+    try {
+      const next = await fetchLabUnderwriting(subject.id, local, scenario);
+      if (!local.aborted) {
+        setReceipt(next);
+        setRequestState("ready");
+      }
+    } catch {
+      if (!local.aborted) setRequestState("error");
+    }
+  }, [subject]);
+
+  useEffect(() => {
+    if (!subject?.opportunity) {
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      request(undefined, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [request, subject?.id, subject?.opportunity]);
+
+  useEffect(() => {
+    if (!scenarioActive || !subject?.opportunity) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      request(
+        explicitLabChallengeScenario(subject, probability, reviewMicros),
+        AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]),
+      );
+    }, 320);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [probability, request, reviewMicros, scenarioActive, subject]);
+
+  const evaluation = receipt?.evaluation;
+  const economics = evaluation?.realEconomics;
+  const derived = economics?.derived;
+  const activeDecision = evaluation?.decision ?? subject?.decision ?? "insufficient_data";
+  const options = evaluation?.supplyOptions ?? subject?.options ?? [];
+  const capabilities = evaluation?.capabilityCoverage.required ?? subject?.capabilities ?? [];
+  const reasons = evaluation?.reasons ?? subject?.missing ?? [];
+
+  const ledger = useMemo(() => [
+    { label: copy.reward, value: derived?.grossRewardUsdMicros ?? null, provenance: "OBSERVED / MARKET RATE" },
+    { label: copy.spend, value: derived?.knownExternalSpendUsdMicros ?? null, provenance: "OBSERVED / MARKET RATE" },
+    { label: copy.cost, value: derived?.providerCostCeilingUsdMicros ?? null, provenance: "PUBLISHED / USER WORKLOAD" },
+    { label: "REVIEW + FEES", value: derived?.humanReviewCostUsdMicros ?? null, provenance: scenarioActive ? "USER ASSUMPTION" : "UNKNOWN" },
+    { label: copy.risk, value: derived?.expectedFailureCostUsdMicros ?? null, provenance: scenarioActive ? "USER ASSUMPTION / DERIVED" : "UNKNOWN" },
+    { label: copy.residual, value: derived?.expectedProfitUsdMicros ?? null, provenance: "DERIVED" },
+  ], [copy, derived, scenarioActive]);
+
+  useGSAP(() => {
+    const media = gsap.matchMedia();
+    media.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+      if (skipped) return;
+      const root = scope.current;
+      const story = root?.querySelector<HTMLElement>("[data-forge-story]");
+      const pin = root?.querySelector<HTMLElement>("[data-forge-pin]");
+      const marketMark = root?.querySelector<HTMLElement>("[data-forge-active-mark]");
+      const subjectCore = root?.querySelector<HTMLElement>("[data-forge-subject]");
+      const heading = root?.querySelector<HTMLElement>("[data-forge-heading]");
+      const verdict = root?.querySelector<HTMLElement>("[data-forge-verdict]");
+      if (!story || !pin || !marketMark || !subjectCore || !heading || !verdict) return;
+
+      const headingSplit = SplitText.create(heading, { type: "lines", mask: "lines", aria: "auto", autoSplit: true });
+      const verdictSplit = SplitText.create(verdict, { type: "lines", mask: "lines", aria: "auto", autoSplit: true });
+      const layers = gsap.utils.toArray<HTMLElement>("[data-forge-layer]", root);
+      gsap.set(layers, { autoAlpha: 0 });
+      gsap.set(layers[0], { autoAlpha: 1 });
+      gsap.set(subjectCore, { autoAlpha: 0 });
+      Flip.fit(subjectCore, marketMark, { scale: true });
+
+      const updateStage = (progress: number) => {
+        const next = progress < 0.34 ? 0 : progress < 0.5 ? 1 : progress < 0.68 ? 2 : progress < 0.86 ? 3 : 4;
+        if (stageValue.current !== next) {
+          stageValue.current = next;
+          setStage(next);
+        }
+      };
+      const tl = gsap.timeline({ defaults: { ease: "none" } });
+      tl.from(headingSplit.lines, { yPercent: 8, opacity: 0.72, duration: 0.08, stagger: 0.025, ease: "power3.out" })
+        .to("[data-forge-market-secondary]", { opacity: 0.18, duration: 0.08 }, 0.1)
+        .to(subjectCore, { autoAlpha: 1, x: 0, y: 0, scale: 1, duration: 0.12, ease: "power3.inOut" }, 0.13)
+        .to(layers[0], { autoAlpha: 0, duration: 0.04 }, 0.18)
+        .to(layers[1], { autoAlpha: 1, duration: 0.04 }, 0.18)
+        .to(layers[1], { autoAlpha: 0, duration: 0.04 }, 0.34)
+        .to(layers[2], { autoAlpha: 1, duration: 0.04 }, 0.34)
+        .from("[data-forge-capability]", { opacity: 0, xPercent: -5, stagger: 0.014, duration: 0.06 }, 0.36)
+        .from("[data-forge-capability-path]", { drawSVG: 0, stagger: 0.012, duration: 0.08 }, 0.36)
+        .to(layers[2], { autoAlpha: 0, duration: 0.04 }, 0.5)
+        .to(layers[3], { autoAlpha: 1, duration: 0.04 }, 0.5)
+        .from("[data-forge-option-line]", { drawSVG: 0, stagger: 0.014, duration: 0.08 }, 0.53)
+        .to("[data-forge-rejected]", { opacity: 0.38, x: -6, duration: 0.08 }, 0.62)
+        .to(layers[3], { autoAlpha: 0, duration: 0.04 }, 0.68)
+        .to(layers[4], { autoAlpha: 1, duration: 0.04 }, 0.68)
+        .from("[data-forge-economic-row]", { opacity: 0, xPercent: -4, stagger: 0.012, duration: 0.06 }, 0.7)
+        .to(layers[4], { autoAlpha: 0, duration: 0.04 }, 0.86)
+        .to(layers[5], { autoAlpha: 1, duration: 0.04 }, 0.86)
+        .from(verdictSplit.lines, { yPercent: 100, duration: 0.09, stagger: 0.02, ease: "power3.out" }, 0.88);
+
+      const st = ScrollTrigger.create({
+        id: "v2-forge-story",
+        trigger: story,
+        start: "top top",
+        end: "+=400%",
+        pin,
+        scrub: 0.55,
+        animation: tl,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => updateStage(self.progress),
+      });
+      timeline.current = tl;
+      trigger.current = st;
+      return () => {
+        replayTween.current?.kill();
+        st.kill();
+        tl.kill();
+        headingSplit.revert();
+        verdictSplit.revert();
+        timeline.current = null;
+        trigger.current = null;
+      };
+    });
+    return () => media.revert();
+  }, { scope, dependencies: [subject?.id, activeDecision, skipped], revertOnUpdate: true });
+
+  const replay = () => {
+    setSkipped(false);
+    requestAnimationFrame(() => {
+      const tl = timeline.current, st = trigger.current;
+      if (!tl || !st) return;
+      scope.current?.querySelector("[data-forge-story]")?.scrollIntoView({ block: "start" });
+      st.disable(false);
+      tl.pause(0);
+      replayTween.current?.kill();
+      replayTween.current = gsap.to(tl, {
+        progress: 1,
+        duration: 11,
+        ease: "none",
+        onUpdate: () => {
+          const progress = tl.progress();
+          const next = progress < 0.34 ? 0 : progress < 0.5 ? 1 : progress < 0.68 ? 2 : progress < 0.86 ? 3 : 4;
+          if (next !== stageValue.current) { stageValue.current = next; setStage(next); }
+        },
+        onComplete: () => st.enable(false, true),
+      });
+    });
+  };
+
+  const skip = () => {
+    replayTween.current?.kill();
+    timeline.current?.progress(1).pause();
+    trigger.current?.disable(true);
+    setStage(4);
+    setSkipped(true);
+  };
+
+  if (!subject) return (
+    <section className={styles.conceptEmpty} aria-labelledby="concept-d-title">
+      <p className={styles.sectionIndex}>D / {copy.forge}</p>
+      <h2 id="concept-d-title">{copy.forgeTitle}</h2>
+      <p>{copy.noData}</p>
+    </section>
+  );
+
+  return (
+    <section ref={scope} className={styles.conceptD} aria-labelledby="concept-d-title" data-scenario-active={scenarioActive} data-forge-stage={STAGES[stage]} data-story-skipped={skipped} data-decision={activeDecision}>
+      <header className={styles.dIntro}>
+        <p className={styles.sectionIndex}>D / {copy.forge} · SIGNALFORGE / LIVE UNDERWRITING</p>
+        <h2 id="concept-d-title">{copy.forgeIntro}</h2>
+        <div className={styles.dPlayback} aria-label="Story controls">
+          <button type="button" onClick={replay} disabled={motionReduced}>{copy.replay}</button>
+          <button type="button" onClick={skip}>{copy.skip}</button>
+        </div>
+      </header>
+
+      <ol className={styles.dProgress} aria-label="Underwriting stages">
+        {STAGES.map((item, index) => <li key={item} aria-current={stage === index ? "step" : undefined}><span>0{index + 1}</span>{item === "route" ? copy.compile : copy[item]}</li>)}
+      </ol>
+
+      <div className={`${styles.dStory} ${skipped ? styles.dStorySkipped : ""}`} data-forge-story>
+        <div className={styles.dPin} data-forge-pin aria-hidden="true">
+          <div className={styles.dMarketField} data-forge-layer>
+            <h3 data-forge-heading>{copy.forgeTitle}</h3>
+            <p>{copy.observedContext}</p>
+            {dataset.observations.slice(0, 9).map((item, index) => (
+              <span
+                key={item.id}
+                className={`${styles.dMarketMark} ${item.id === subject.id ? styles.dMarketMarkActive : ""}`}
+                data-forge-active-mark={item.id === subject.id ? "true" : undefined}
+                data-forge-market-secondary={item.id === subject.id ? undefined : "true"}
+                data-observation-id={item.id}
+                style={{ "--mark-x": `${9 + (index * 31) % 82}%`, "--mark-y": `${22 + (index * 23) % 63}%` } as React.CSSProperties}
+              >
+                <b>{item.reward.display ?? "?"}</b><small>{item.sourceName}</small>
+              </span>
+            ))}
+          </div>
+
+          <div className={styles.dSubjectCore} data-forge-subject>
+            <span>{subject.sourceName} / {subject.freshness}</span>
+            <strong>{subject.title}</strong>
+          </div>
+
+          <div className={styles.dLayer} data-forge-layer>
+            <CaptureStage subject={subject} copy={copy} />
+          </div>
+          <div className={styles.dLayer} data-forge-layer>
+            <CapabilityStage capabilities={capabilities} missing={subject.missing} copy={copy} />
+          </div>
+          <div className={styles.dLayer} data-forge-layer>
+            <RouteStage options={options} reasons={reasons} decision={activeDecision} copy={copy} />
+          </div>
+          <div className={styles.dLayer} data-forge-layer>
+            <EconomicsStage ledger={ledger} derived={derived} subject={subject} copy={copy} reduced={motionReduced} />
+          </div>
+          <div className={`${styles.dLayer} ${styles.dVerdict}`} data-forge-layer>
+            <span>DECISION / {activeDecision.replaceAll("_", " ")}</span>
+            <strong data-forge-verdict>{decisionText(activeDecision, copy)}</strong>
+            <small>{scenarioActive ? "OBSERVED + PUBLISHED + USER ASSUMPTION + DERIVED" : "OBSERVED / UNKNOWN REMAINS UNKNOWN"}</small>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.dMobileFlow} aria-label="Complete underwriting sequence">
+        <CausalStep index="01" label={copy.capture}><CaptureStage subject={subject} copy={copy} /></CausalStep>
+        <CausalStep index="02" label={copy.capabilities}><CapabilityStage capabilities={capabilities} missing={subject.missing} copy={copy} /></CausalStep>
+        <CausalStep index="03" label={copy.compile}><RouteStage options={options} reasons={reasons} decision={activeDecision} copy={copy} /></CausalStep>
+        <CausalStep index="04" label={copy.economics}><EconomicsStage ledger={ledger} derived={derived} subject={subject} copy={copy} reduced={true} /></CausalStep>
+        <CausalStep index="05" label={copy.decision}><div className={styles.dSemanticVerdict}><strong>{decisionText(activeDecision, copy)}</strong><span>{evaluation?.executionStatus ?? subject.executionStatus}</span></div></CausalStep>
+      </div>
+
+      <Challenge
+        subject={subject}
+        copy={copy}
+        scenarioActive={scenarioActive}
+        activate={() => setScenarioActive(true)}
+        probability={probability}
+        setProbability={setProbability}
+        reviewMicros={reviewMicros}
+        setReviewMicros={setReviewMicros}
+        evaluation={evaluation}
+        requestState={requestState}
+        reduced={motionReduced}
+      />
+
+      <div className={styles.dAfterword}>
+        <section><h3>{copy.whatSaw}</h3><p>{subject.sourceName} · {subject.observedAt || copy.unknownValue} · {subject.reward.display ?? copy.unknownValue}</p></section>
+        <section><h3>{copy.whatAssumed}</h3><p>{scenarioActive ? `${probability}% · ${usdMicros(reviewMicros)} review · USER ASSUMPTION` : copy.unknownValue}</p></section>
+        <section><h3>{copy.whatSurvived}</h3><p>{options.length} observed options · {copy.routeLimit}</p></section>
+        <section><h3>{copy.whatChanges}</h3><p>{economics?.missingInputs.join(" · ") || `${copy.probability} · ${copy.reviewCost}`}</p></section>
+      </div>
+      <p className={styles.dBoundary}>{subject.executionStatus} · NOT CALLED · NOT PAID</p>
+    </section>
+  );
+}
+
+function CaptureStage({ subject, copy }: { subject: LabSubject; copy: LabCopy }) {
+  const facts = [
+    [copy.source, subject.sourceName], [copy.observed, subject.observedAt || copy.unknownValue],
+    [copy.reward, subject.reward.display ?? copy.unknownValue], [copy.spend, subject.externalSpend.display ?? copy.unknownValue],
+    [copy.bond, subject.refundableBond.display ?? copy.unknownValue], ["ELIGIBILITY", subject.eligibility.replaceAll("_", " ")],
+  ];
+  return <div className={styles.dCapture}><p>{copy.capture} / REAL OBSERVATION</p><h3>{subject.title}</h3><dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><small>{subject.missing.join(" · ")}</small></div>;
+}
+
+function CapabilityStage({ capabilities, missing, copy }: { capabilities: string[]; missing: string[]; copy: LabCopy }) {
+  return <div className={styles.dCapabilities}><p>{copy.capabilities}</p><svg viewBox="0 0 720 110"><path data-forge-capability-path d="M4 55H716" /></svg><ol>{capabilities.length ? capabilities.map((capability, index) => <li data-forge-capability key={capability}><span>0{index + 1}</span><strong>{capability.replaceAll("_", " ")}</strong></li>) : <li data-forge-capability><strong>{copy.unknownValue}</strong></li>}</ol><small>{missing.filter((item) => item.includes("requirement") || item.includes("support")).join(" · ") || "DETERMINISTIC REQUIREMENTS"}</small></div>;
+}
+
+function RouteStage({ options, reasons, decision, copy }: { options: Array<{ id: string; name: string; executionStatus: string; rawPriceText?: string | null; price?: string | null }>; reasons: string[]; decision: Decision; copy: LabCopy }) {
+  const visible = options.slice(0, 4);
+  return <div className={styles.dRoute}><p>{copy.compile} / ECONOMIC COMPILER</p><div className={styles.dRouteRows}>{visible.length ? visible.map((option) => <div key={option.id} data-forge-rejected><svg viewBox="0 0 360 16"><path data-forge-option-line d="M2 8H350" /></svg><strong>{option.name}</strong><span>× {option.rawPriceText ?? option.price ?? "TASK COST UNKNOWN"}</span><small>OBSERVED OPTION · {option.executionStatus}</small></div>) : <div data-forge-rejected><strong>{copy.unknownValue}</strong><span>× OBSERVED SUPPLY MATCH UNAVAILABLE</span></div>}</div><aside data-route-candidate-set="absent"><b>{copy.routeOutcome}</b><strong>{decisionText(decision, copy)}</strong><p>{copy.routeLimit}</p><small>{reasons.slice(0, 4).join(" · ")}</small></aside></div>;
+}
+
+function EconomicsStage({ ledger, derived, subject, copy, reduced }: { ledger: Array<{ label: string; value: string | null; provenance: string }>; derived?: DerivedEconomics; subject: LabSubject; copy: LabCopy; reduced: boolean }) {
+  const reward = derived?.grossRewardUsdMicros ?? null;
+  return <div className={styles.dEconomics}><p>ECONOMIC COMPRESSION / USD MICROS</p>{ledger.map((row, index) => { const width = percentageWidth(row.value, reward); return <div className={`${styles.dEconomicRow} ${width === null ? styles.dEconomicUnknown : ""}`} data-forge-economic-row key={row.label}><span>{row.label}</span><div><m.i initial={false} animate={{ scaleX: width === null ? 0.2 : width / 100 }} transition={{ duration: reduced ? 0 : 0.28 }} /></div><strong>{usdMicros(row.value)}</strong><small>{row.provenance}</small>{index < ledger.length - 1 && <em>−</em>}</div>; })}<aside><span>{copy.bond}</span><strong>{subject.refundableBond.display ?? copy.unknownValue}</strong><small>CAPITAL ≠ EXPENSE</small></aside></div>;
+}
+
+function CausalStep({ index, label, children }: { index: string; label: string; children: React.ReactNode }) {
+  return <section className={styles.dCausalStep}><header><span>{index}</span><h3>{label}</h3></header>{children}</section>;
+}
+
+function Challenge({ subject, copy, scenarioActive, activate, probability, setProbability, reviewMicros, setReviewMicros, evaluation, requestState, reduced }: { subject: LabSubject; copy: LabCopy; scenarioActive: boolean; activate: () => void; probability: number; setProbability: (value: number) => void; reviewMicros: string; setReviewMicros: (value: string) => void; evaluation?: ArbitrageEvaluation; requestState: string; reduced: boolean }) {
+  const breakEven = evaluation?.realEconomics?.derived.requiredSuccessProbabilityBps;
+  return <section className={styles.dChallenge} aria-labelledby="forge-challenge-title"><header><p className={styles.sectionIndex}>MODEL INPUT / USER SCENARIO</p><h2 id="forge-challenge-title">{copy.challenge}</h2><p>{scenarioActive ? copy.scenarioApplied : copy.scenarioDisclosure}</p></header>{!scenarioActive ? <button type="button" className={styles.dApplyScenario} onClick={activate} disabled={!subject.opportunity}>{copy.applyScenario} ↗</button> : <div className={styles.dChallengeControls}><label><span>{copy.probability}</span><output>{probability}%</output><input type="range" min="0" max="100" step="1" value={probability} onChange={(event) => setProbability(Number(event.target.value))} /></label><label><span>{copy.reviewCost}</span><output>{usdMicros(reviewMicros)}</output><input type="range" min="0" max="3000000" step="50000" value={reviewMicros} onChange={(event) => setReviewMicros(event.target.value)} /></label><div className={styles.dThreshold}><span>{copy.threshold}</span><strong>{breakEven == null ? copy.unknownValue : `${breakEven / 100}%`}</strong><m.i key={evaluation?.decision ?? "unknown"} initial={reduced ? false : { scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: reduced ? 0 : 0.24 }} style={{ insetInlineStart: `${Math.min(100, (breakEven ?? 0) / 100)}%` }} /></div></div>}<m.p key={evaluation?.decision ?? requestState} initial={reduced ? false : { opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: reduced ? 0 : 0.18 }} role="status" aria-live="polite">{requestState === "loading" ? copy.recalculating : evaluation ? `${decisionText(evaluation.decision, copy)} · ${evaluation.executionStatus}` : copy.insufficient}</m.p></section>;
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  explicitLabChallengeScenario,
   normalizeRealLabData,
   simulatedLabData,
 } from "../src/components/v2-lab/lab-model";
@@ -120,6 +121,30 @@ describe("V2 visual lab data boundary", () => {
       reason: "task_cost_unknown",
     });
     expect(result.observations).toHaveLength(1);
+    expect(result.subject?.opportunity?.id).toBe("agentbounties:live");
+  });
+
+  it("builds only an explicit bounded user scenario and never replaces observed fields", () => {
+    const result = normalizeRealLabData(
+      {
+        records: [task()],
+        matchedCount: 1,
+        truncated: false,
+        executionStatus: "execution_not_enabled",
+      },
+      { records: [service()], executionStatus: "execution_not_enabled" },
+    );
+    const scenario = explicitLabChallengeScenario(result.subject!, 61, "450000");
+    expect(scenario).toMatchObject({
+      successProbabilityBps: 6100,
+      humanReviewCostUsdMicros: "450000",
+      bondLossProbabilityBps: 0,
+      workload: { maxInputTokens: 2400, maxOutputTokens: 700, boundedCalls: 1 },
+    });
+    expect(scenario).not.toHaveProperty("payoutCents");
+    expect(scenario).not.toHaveProperty("fxRateMicros");
+    expect(result.subject?.reward.atomicAmount).toBe("4000000");
+    expect(result.subject?.refundableBond.atomicAmount).toBe("100000");
   });
 
   it("UNKNOWN keeps absent values null rather than converting them to zero", () => {

@@ -6,6 +6,7 @@ import type { Locale } from "@/i18n/routing";
 import { ConceptA } from "./concept-a";
 import { ConceptB } from "./concept-b";
 import { ConceptC } from "./concept-c";
+import { ConceptD } from "./concept-d";
 import { labCopy } from "./copy";
 import {
   fetchRealLabData,
@@ -15,7 +16,7 @@ import {
 } from "./lab-model";
 import styles from "./v2-lab.module.css";
 
-type Concept = "a" | "b" | "c";
+type Concept = "a" | "b" | "c" | "d";
 
 const emptyReal: LabDataset = {
   mode: "real",
@@ -87,7 +88,7 @@ export function VisualLab({ locale }: { locale: Locale }) {
         <div className={styles.controlGroup}>
           <span>{copy.concept}</span>
           <div role="tablist" aria-label={copy.concept}>
-            {(["a", "b", "c"] as const).map((item) => (
+            {(["a", "b", "c", "d"] as const).map((item) => (
               <button
                 key={item}
                 type="button"
@@ -150,6 +151,7 @@ export function VisualLab({ locale }: { locale: Locale }) {
           {concept === "a" && <ConceptA subject={dataset.subject} copy={copy} />}
           {concept === "b" && <ConceptB dataset={dataset} copy={copy} />}
           {concept === "c" && <ConceptC subject={dataset.subject} copy={copy} />}
+          {concept === "d" && <ConceptD dataset={dataset} copy={copy} />}
         </m.article>
       </AnimatePresence>
 

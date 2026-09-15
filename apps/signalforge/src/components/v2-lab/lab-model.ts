@@ -5,6 +5,9 @@ import {
   type CatalogService,
   type TaskOpportunity,
 } from "@/domain/intelligence";
+import {
+  ArbitrageEvaluationSchema,
+} from "@/domain/arbitrage";
 
 export const LabModeSchema = z.enum(["real", "unknown", "degraded", "empty"]);
 export type LabMode = z.infer<typeof LabModeSchema>;
@@ -70,6 +73,7 @@ export type LabSubject = LabObservation & {
   missing: string[];
   sourceUrl: string | null;
   executionStatus: "execution_not_enabled";
+  opportunity: TaskOpportunity | null;
 };
 
 export type LabDataset = {
@@ -216,6 +220,7 @@ export function normalizeRealLabData(
       missing,
       sourceUrl: task.sourceUrl,
       executionStatus: "execution_not_enabled",
+      opportunity: task,
     },
     observations,
     fetchedAt: new Date().toISOString(),
@@ -271,6 +276,7 @@ export function simulatedLabData(mode: Exclude<LabMode, "real">): LabDataset {
       : ["reward_unknown", "fulfillment_cost_unknown", "risk_unknown"],
     sourceUrl: null,
     executionStatus: "execution_not_enabled",
+    opportunity: null,
   };
   return {
     mode,
@@ -295,4 +301,72 @@ export async function fetchRealLabData(signal: AbortSignal) {
     await opportunities.json(),
     await catalog.json(),
   );
+}
+
+const LabReceiptSchema = z
+  .object({
+    evaluation: ArbitrageEvaluationSchema,
+    receiptHash: z.string().regex(/^[a-f0-9]{64}$/),
+    hashAlgorithm: z.literal("SHA-256/canonical-json-v2"),
+    receiptFingerprintIsSignature: z.literal(false),
+  })
+  .passthrough();
+
+export type LabReceipt = z.infer<typeof LabReceiptSchema>;
+
+export type LabChallengeScenario = {
+  successProbabilityBps: number;
+  workload: {
+    maxInputTokens: number;
+    maxOutputTokens: number;
+    boundedCalls: number;
+  };
+  platformFeeUsdMicros: string;
+  proofGasFeeUsdMicros: string;
+  humanReviewCostUsdMicros: string;
+  additionalFulfillmentCostUsdMicros: string;
+  timeValueCostUsdMicros: string;
+  competitionRiskAdjustmentUsdMicros: string;
+  bondLossProbabilityBps?: number;
+};
+
+export function explicitLabChallengeScenario(
+  subject: LabSubject,
+  probabilityPercent: number,
+  humanReviewCostUsdMicros: string,
+): LabChallengeScenario {
+  const hasBond =
+    subject.refundableBond.atomicAmount !== null &&
+    BigInt(subject.refundableBond.atomicAmount) > 0n;
+  return {
+    successProbabilityBps: probabilityPercent * 100,
+    workload: { maxInputTokens: 2400, maxOutputTokens: 700, boundedCalls: 1 },
+    platformFeeUsdMicros: "0",
+    proofGasFeeUsdMicros: "0",
+    humanReviewCostUsdMicros,
+    additionalFulfillmentCostUsdMicros: "0",
+    timeValueCostUsdMicros: "0",
+    competitionRiskAdjustmentUsdMicros: "0",
+    ...(hasBond ? { bondLossProbabilityBps: 0 } : {}),
+  };
+}
+
+export async function fetchLabUnderwriting(
+  opportunityId: string,
+  signal: AbortSignal,
+  scenario?: LabChallengeScenario,
+): Promise<LabReceipt> {
+  const response = await fetch("/api/v1/opportunities/evaluate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal,
+    body: JSON.stringify({
+      opportunityId,
+      responseVersion: "2.0",
+      policy: { minimumMarginBps: 2500 },
+      ...(scenario ? { scenario } : {}),
+    }),
+  });
+  if (!response.ok) throw new Error("lab_underwriting_unavailable");
+  return LabReceiptSchema.parse(await response.json());
 }
