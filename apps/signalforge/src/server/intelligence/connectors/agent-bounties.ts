@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TaskOpportunitySchema } from "@/domain/intelligence";
 import { AtomicAmountSchema, refreshDemandEligibility } from "@/domain/real-economics";
 import { capabilityIds } from "@/domain/objective";
+import { AgentBountiesDiagnosticError } from "../diagnostics";
 
 export const agentBountiesDefinition = {
   id: "agentbounties",
@@ -70,13 +71,21 @@ const evidenceSchema = z.object({
     .optional(),
 });
 export function parseAgentBounties(raw: unknown, observedAt: string) {
-  const projection = AgentBountiesProjectionSchema.parse(raw);
+  const parsed = AgentBountiesProjectionSchema.safeParse(raw);
+  if (!parsed.success)
+    throw new AgentBountiesDiagnosticError(
+      "agentbounties_projection_schema_changed",
+    );
+  const projection = parsed.data;
+  if (projection.degraded)
+    throw new AgentBountiesDiagnosticError(
+      "agentbounties_projection_degraded",
+    );
   if (
-    projection.degraded ||
     Math.abs(Date.parse(projection.generated_at) - Date.parse(observedAt)) >
-      86400000
+    86400000
   )
-    throw new Error("invalid_payload");
+    throw new AgentBountiesDiagnosticError("agentbounties_projection_stale");
   return projection.items.flatMap((entry) => {
     const result = itemSchema.safeParse(entry);
     if (!result.success) return [];

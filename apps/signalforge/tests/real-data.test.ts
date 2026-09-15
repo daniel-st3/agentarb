@@ -39,6 +39,7 @@ import * as cacheModule from "../src/server/intelligence/cache";
 import { admitModelCall } from "../src/server/model-capacity";
 import { GET as openapi } from "../src/app/api/v1/openapi/route";
 import { invokeSafeTool } from "../src/server/mcp";
+import { agentBountiesDiagnosticCategory } from "../src/server/intelligence/diagnostics";
 const at = "2026-08-31T12:00:00.000Z";
 const amount = (n: string) => ({
   amount: n,
@@ -249,9 +250,13 @@ it.each([
     parseAgentBounties(projection({ ...record(), public_url: url }), at),
   ).toEqual([]);
 });
-it.each([429, 500, 302])(
+it.each([
+  [429, "agentbounties_http_4xx"],
+  [500, "agentbounties_http_5xx"],
+  [302, "agentbounties_redirect"],
+] as const)(
   "upstream %i fails safely without redirect following",
-  async (status) => {
+  async (status, category) => {
     const f = vi.fn().mockImplementation(
       async () =>
         new Response("unavailable", {
@@ -259,9 +264,12 @@ it.each([429, 500, 302])(
           headers: { location: "http://169.254.169.254" },
         }),
     );
-    await expect(publicDiscoveryGet("agentbounties", f)).rejects.toThrow(
-      "upstream_unavailable",
+    const error = await publicDiscoveryGet("agentbounties", f).catch(
+      (caught: unknown) => caught,
     );
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe("upstream_unavailable");
+    expect(agentBountiesDiagnosticCategory(error)).toBe(category);
     expect(f.mock.calls.length).toBeLessThanOrEqual(2);
     for (const [url, init] of f.mock.calls) {
       expect(url).toBe(discoveryEndpoints.agentbounties);
@@ -277,16 +285,92 @@ it.each([429, 500, 302])(
   },
 );
 it.each([
-  ["wrong type", "{}", "text/html"],
-  ["malformed", "{", "application/json"],
-  ["oversized", "x".repeat(1000001), "application/json"],
-])("rejects %s upstream payload", async (_, body, type) => {
+  [
+    "wrong type",
+    "{}",
+    "text/html",
+    "agentbounties_invalid_content_type",
+  ],
+  ["malformed", "{", "application/json", "agentbounties_invalid_json"],
+  [
+    "oversized",
+    "x".repeat(1000001),
+    "application/json",
+    "agentbounties_payload_too_large",
+  ],
+] as const)("rejects %s upstream payload", async (_, body, type, category) => {
   const f = vi
     .fn()
     .mockResolvedValue(
       new Response(body, { headers: { "content-type": type } }),
     );
-  await expect(publicDiscoveryGet("agentbounties", f)).rejects.toThrow();
+  const error = await publicDiscoveryGet("agentbounties", f).catch(
+    (caught: unknown) => caught,
+  );
+  expect(agentBountiesDiagnosticCategory(error)).toBe(category);
+});
+it("classifies feed and projection validation failures without logging payloads", async () => {
+  const invalidFeed = vi.fn().mockResolvedValue(
+    Response.json({
+      version: "https://jsonfeed.org/version/1",
+      items: [],
+    }),
+  );
+  expect(
+    agentBountiesDiagnosticCategory(
+      await publicDiscoveryGet("agentbounties", invalidFeed).catch(
+        (caught: unknown) => caught,
+      ),
+    ),
+  ).toBe("agentbounties_feed_schema_changed");
+
+  expect(() => parseAgentBounties({ items: [] }, at)).toThrow(
+    "upstream_unavailable",
+  );
+  try {
+    parseAgentBounties({ items: [] }, at);
+  } catch (error) {
+    expect(agentBountiesDiagnosticCategory(error)).toBe(
+      "agentbounties_projection_schema_changed",
+    );
+  }
+  for (const [raw, category] of [
+    [
+      { ...projection(), degraded: true },
+      "agentbounties_projection_degraded",
+    ],
+    [
+      { ...projection(), generated_at: "2020-01-01T00:00:00.000Z" },
+      "agentbounties_projection_stale",
+    ],
+  ] as const) {
+    try {
+      parseAgentBounties(raw, at);
+      throw new Error("expected diagnostic");
+    } catch (error) {
+      expect(agentBountiesDiagnosticCategory(error)).toBe(category);
+    }
+  }
+});
+it("logs only a fixed Agent Bounties category while public health stays generic", async () => {
+  vi.stubEnv("DISCOVERY_MODE", "live");
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+  const connector = createConnector(
+    agentBountiesDefinition,
+    new MemorySnapshotCache(),
+    vi.fn().mockResolvedValue(
+      new Response("not json", {
+        headers: { "content-type": "text/html" },
+      }),
+    ),
+  );
+  const snapshot = await connector.discover({ limit: 30 });
+  expect(snapshot.health.lastErrorCode).toBe("upstream_unavailable");
+  expect(warning).toHaveBeenCalledWith("connector_discovery", {
+    connectorId: "agentbounties",
+    errorCategory: "agentbounties_invalid_content_type",
+  });
+  expect(JSON.stringify(warning.mock.calls)).not.toContain("not json");
 });
 it("conditional polling reuses shared metadata and never fetches the state projection on 304", async () => {
   vi.useFakeTimers();
@@ -616,8 +700,12 @@ it("upstream timeout fails closed without retrying or selecting another URL", as
   const fetcher = vi
     .fn()
     .mockRejectedValue(new DOMException("timeout", "TimeoutError"));
-  await expect(publicDiscoveryGet("agentbounties", fetcher)).rejects.toThrow(
-    "upstream_unavailable",
+  const error = await publicDiscoveryGet("agentbounties", fetcher).catch(
+    (caught: unknown) => caught,
+  );
+  expect((error as Error).message).toBe("upstream_unavailable");
+  expect(agentBountiesDiagnosticCategory(error)).toBe(
+    "agentbounties_timeout",
   );
   expect(fetcher).toHaveBeenCalledTimes(1);
   expect(fetcher.mock.calls[0][0]).toBe(discoveryEndpoints.agentbounties);

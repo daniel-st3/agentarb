@@ -25,6 +25,7 @@ import {
   agentBountiesDefinition,
   parseAgentBounties,
 } from "./connectors/agent-bounties";
+import { agentBountiesDiagnosticCategory } from "./diagnostics";
 export interface MarketplaceIntelligenceConnector {
   id: string;
   name: string;
@@ -218,7 +219,7 @@ export function createConnector(
             error: false,
           });
           return { ...snapshot, records: records.slice(0, input.limit) };
-        } catch {
+        } catch (error) {
           const failures = (entry?.failures ?? 0) + 1;
           entry = {
             ...entry,
@@ -232,7 +233,10 @@ export function createConnector(
           await cache.set(def.id, entry);
           console.warn("connector_discovery", {
             connectorId: def.id,
-            errorCategory: "upstream_unavailable",
+            errorCategory:
+              def.id === "agentbounties"
+                ? agentBountiesDiagnosticCategory(error)
+                : "upstream_unavailable",
           });
           return view();
         }
