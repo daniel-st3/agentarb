@@ -68,6 +68,7 @@ export function VisualLab({ locale }: { locale: Locale }) {
   return (
     <div
       className={styles.lab}
+      data-visual-lab="v2"
       data-motion={motionReduced ? "reduced" : "system"}
       data-lab-mode={mode}
     >

@@ -18,6 +18,11 @@ test("visual lab is isolated, truthful and keyboard reachable", async ({ page },
   await Promise.all([opportunities, catalog]);
 
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  await expect(page).toHaveTitle(/V2 visual laboratory · SignalForge/);
+  await expect(page.locator('link[rel~="icon"]')).toHaveAttribute("href", /icon\.svg/);
+  const icon = await page.request.get("/icon.svg");
+  expect(icon.ok()).toBe(true);
+  expect(icon.headers()["content-type"]).toContain("image/svg+xml");
   await expect(page.locator(".site-nav").locator('a[href*="/lab/v2"]')).toHaveCount(0);
   await expect(page.getByText("V2 VISUAL LAB — NOT PRODUCTION UI")).toBeVisible();
   expect(
@@ -68,10 +73,10 @@ test("degraded and empty states are explicit and locale-safe", async ({ page }) 
   await page.getByLabel("VACÍO", { exact: true }).check();
   await expect(page.getByText("No hay una oportunidad observada en esta instantánea acotada.").first()).toBeVisible();
   await page.goto("/fr/lab/v2");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Trois instruments pour une seule vérité économique.");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Quatre instruments pour une seule vérité économique.");
 });
 
-test("the Forge is a reversible, lab-only causal instrument", async ({ page }) => {
+test("the Forge is a reversible, lab-only causal instrument", async ({ page }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   const at = "2026-09-15T12:00:00.000Z";
@@ -174,10 +179,19 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }) =
     body: '{"error":"Unavailable"}',
   }));
 
+  const opportunities = page.waitForResponse((response) =>
+    response.url().includes("/api/v1/opportunities?mode=observed") && response.status() === 200,
+  );
+  const catalog = page.waitForResponse((response) =>
+    response.url().includes("/api/v1/catalog?listingType=service_offer") && response.status() === 200,
+  );
   await page.goto("/en/lab/v2");
+  await Promise.all([opportunities, catalog]);
+  await expect(page.getByText("Extract and synthesize a bounded public dataset").first()).toBeVisible();
   const forgeTab = page.getByRole("tab", { name: "D", exact: true });
   await forgeTab.focus();
   await page.keyboard.press("Enter");
+  await expect(forgeTab).toHaveAttribute("aria-selected", "true");
   const forge = page.locator('[data-forge-stage]');
   await expect(forge).toBeVisible();
   await expect(page.locator('[data-observation-id="agentbounties:forge-e2e"]')).toHaveCount(1);
@@ -187,6 +201,36 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }) =
   await expect(forge).not.toContainText("100000");
   await expect(forge).toContainText("0.1 USDC");
   await expect(forge).toContainText("CAPITAL ≠ EXPENSE");
+
+  if (info.project.name === "desktop") {
+    for (const viewport of [
+      { width: 1440, height: 1000 },
+      { width: 1728, height: 1117 },
+      { width: 1920, height: 1080 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForFunction(() => document.fonts.status === "loaded");
+      const collisions = await page.evaluate(() => {
+        const heading = document.querySelector<HTMLElement>("[data-forge-heading]")?.getBoundingClientRect();
+        if (!heading) return ["missing-heading"];
+        return [...document.querySelectorAll<HTMLElement>("[data-forge-market-mark]")]
+          .filter((mark) => {
+            const rect = mark.getBoundingClientRect();
+            return rect.left < heading.right && rect.right > heading.left && rect.top < heading.bottom && rect.bottom > heading.top;
+          })
+          .map((mark) => mark.dataset.observationId ?? "unknown");
+      });
+      expect(collisions).toEqual([]);
+    }
+    const economicsChapter = page.getByRole("button", { name: /04\s+ECONOMICS/i });
+    await economicsChapter.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-forge-stage="economics"]')).toBeVisible();
+  } else {
+    await page.setViewportSize({ width: 430, height: 932 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
 
   await page.getByRole("button", { name: /apply explicit lab scenario/i }).click();
   await expect(forge).toHaveAttribute("data-scenario-active", "true");

@@ -3,7 +3,7 @@ import type { Locale } from "@/i18n/routing";
 const copy = {
   en: {
     lab: "V2 VISUAL LAB — NOT PRODUCTION UI",
-    title: "Three instruments for one economic truth.",
+    title: "Four instruments for one economic truth.",
     intro: "A controlled study of how SignalForge could make evidence, route competition, and conditional economics visible.",
     concept: "Concept",
     state: "Data state",
@@ -77,7 +77,7 @@ const copy = {
   },
   es: {
     lab: "LABORATORIO VISUAL V2 — NO ES LA INTERFAZ DE PRODUCCIÓN",
-    title: "Tres instrumentos para una sola verdad económica.",
+    title: "Cuatro instrumentos para una sola verdad económica.",
     intro: "Un estudio controlado de cómo SignalForge puede hacer visibles la evidencia, la competencia entre rutas y la economía condicional.",
     concept: "Concepto",
     state: "Estado de datos",
@@ -151,7 +151,7 @@ const copy = {
   },
   fr: {
     lab: "LABORATOIRE VISUEL V2 — PAS L’INTERFACE DE PRODUCTION",
-    title: "Trois instruments pour une seule vérité économique.",
+    title: "Quatre instruments pour une seule vérité économique.",
     intro: "Une étude contrôlée de la manière dont SignalForge peut rendre visibles les preuves, la compétition des itinéraires et l’économie conditionnelle.",
     concept: "Concept",
     state: "État des données",
