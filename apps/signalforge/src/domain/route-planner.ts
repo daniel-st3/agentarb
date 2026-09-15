@@ -37,7 +37,7 @@ export const ExecutionRouteContractSchema = z
     objective: z.string(),
     objectiveFrame: ObjectiveFrameSchema,
     status: z.enum(["planned", "simulated", "partial", "failed"]),
-    executionMode: z.literal("demo_simulation"),
+    executionMode: z.enum(["demo_simulation", "planning_only"]),
     executionStatus: z
       .literal("execution_not_enabled")
       .default("execution_not_enabled"),
@@ -106,7 +106,7 @@ export const ExecutionRouteContractSchema = z
       .optional(),
     provenance: z
       .object({
-        isSimulated: z.literal(true),
+        isSimulated: z.boolean(),
         servicesCalled: z.literal(false),
         paymentsMade: z.literal(false),
         note: z.string(),

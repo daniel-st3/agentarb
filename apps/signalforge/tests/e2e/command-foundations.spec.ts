@@ -12,15 +12,18 @@ test("local preview never calls decomposition while typing; keyboard compiles a 
   page.on("request", (r) => {
     if (r.url().endsWith("/api/frame")) modelCalls++;
   });
-  await page.goto("/");
+  await page.goto("/forge");
   const input = page.getByRole("textbox", { name: "Agent objective" });
   await input.fill("Create a due diligence route for evaluating a startup");
-  await expect(page.locator(".preview-type")).toHaveText("due diligence");
+  // AnimatePresence can retain the exiting label for one render, even at zero duration.
+  await expect(page.locator(".preview-type")).toHaveText(["due diligence"]);
   await expect(page.locator(".preview-chain")).toContainText("VERIFY");
   await input.fill(
     "Parse and validate a long public document into structured data",
   );
-  await expect(page.locator(".preview-type")).toHaveText("document extraction");
+  await expect(page.locator(".preview-type")).toHaveText([
+    "document extraction",
+  ]);
   expect(modelCalls).toBe(0);
   await page
     .getByLabel("Routing policy", { exact: true })
@@ -44,10 +47,16 @@ test("local preview never calls decomposition while typing; keyboard compiles a 
 });
 test("placeholder changes only while empty and unfocused", async ({ page }) => {
   await page.clock.install();
-  await page.goto("/");
+  await page.goto("/forge");
   const input = page.getByRole("textbox", { name: "Agent objective" });
+  // Wait for hydration/event state before advancing timers on slower CI runners.
+  await input.focus();
+  await expect(input).toHaveAttribute("data-placeholder-overlay", "false");
+  await input.blur();
+  await expect(input).toHaveAttribute("data-placeholder-overlay", "true");
   const first = await input.getAttribute("placeholder");
   await page.clock.fastForward(7100);
+  await expect(input).not.toHaveAttribute("placeholder", first!);
   const second = await input.getAttribute("placeholder");
   expect(first).not.toBe(second);
   await input.focus();
@@ -62,7 +71,7 @@ test("reduced motion and missing observations retain an honest usable command su
   page,
 }, info) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/forge");
   await expect(page.locator(".observed-supply")).toContainText(
     "LIVE CATALOG UNAVAILABLE",
   );

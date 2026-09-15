@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
+vi.mock("server-only",()=>({}));
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { handlePlan, handleRun } from "../src/server/http";
@@ -51,7 +52,9 @@ describe("deployed boundary", () => {
       "src/app/api/v1/catalog/route.ts",
       "src/app/api/v1/network/status/route.ts",
       "src/app/api/v1/openapi/route.ts",
+      "src/app/api/v1/opportunities/claim-readiness/route.ts",
       "src/app/api/v1/opportunities/evaluate/route.ts",
+      "src/app/api/v1/opportunities/route.ts",
       "src/app/api/v1/routes/plan/route.ts",
     ]);
   });

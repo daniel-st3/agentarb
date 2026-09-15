@@ -35,17 +35,18 @@ export const agentCardSchema = z.object({
 export const agentCard = agentCardSchema.parse({
   name: "SignalForge",
   description:
-    "A discovery and routing intelligence layer for the agent economy. Converts objectives into budget-constrained route contracts; no external execution.",
-  version: "1.0.0",
+    "SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. Source-reported paid opportunities, exact economic provenance and explicit unknowns; execution_not_enabled.",
+  version: "1.2.0",
   capabilities: { streaming: false, pushNotifications: false },
   defaultInputModes: ["application/json"],
   defaultOutputModes: ["application/json"],
   skills: [
+    {id:"arbitrage-underwriting",name:"Arbitrage underwriting",description:"Underwrite observed paid opportunities. Preserve USDC base units, published provider pricing, bounded user assumptions and unknown costs. Inspection only.",tags:["underwriting","observed-opportunities","execution_not_enabled"]},
     {
       id: "route-planning",
       name: "Capability route planning",
       description:
-        "Decompose objectives and compare deterministic budget-constrained demo routes.",
+        "Decompose objectives and inspect capability-matched observed catalog options. No provider execution or task quote is implied.",
       tags: ["planning", "discovery", "execution_not_enabled"],
     },
     {
@@ -67,6 +68,8 @@ export const agentCard = agentCardSchema.parse({
       catalog: "/api/v1/catalog",
       networkStatus: "/api/v1/network/status",
       opportunityEvaluation: "/api/v1/opportunities/evaluate",
+      opportunitySearch: "/api/v1/opportunities",
+      claimReadiness: "/api/v1/opportunities/claim-readiness",
       openapi: "/api/v1/openapi",
     },
     supportedSchemas: [
@@ -74,6 +77,9 @@ export const agentCard = agentCardSchema.parse({
       "ExecutionRouteContract/1.0",
       "CatalogService/1.0",
       "TaskOpportunity/1.0",
+      "ArbitrageEvaluation/2.0",
+      "ClaimReadinessPacket/1.1",
+      "UnderwritingReceipt/2.0",
     ],
     mcp: {
       endpoint: "/api/mcp",
@@ -83,6 +89,8 @@ export const agentCard = agentCardSchema.parse({
         "signalforge_search_catalog",
         "signalforge_get_listing",
         "signalforge_evaluate_opportunity",
+        "signalforge_search_opportunities",
+        "signalforge_get_claim_readiness",
       ],
     },
   },

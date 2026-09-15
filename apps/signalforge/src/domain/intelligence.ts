@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { capabilityIds } from "./objective";
+import { DemandStateSchema } from "./real-economics";
 export const FreshnessSchema = z.enum([
   "live",
   "cached_live",
@@ -108,6 +109,7 @@ export const CatalogServiceSchema = z
   .strict();
 export const TaskOpportunitySchema = z
   .object({
+    demandState: DemandStateSchema.optional(),
     ...common,
     listingType: z.literal("task_opportunity"),
     title: z.string().max(160),
@@ -214,7 +216,7 @@ export type CatalogQuery = z.infer<typeof CatalogQuerySchema>;
 export const NetworkResponseSchema = z
   .object({
     version: z.literal("1.0"),
-    records: z.array(ListingSchema).max(100),
+    records: z.array(ListingSchema).max(200),
     sources: z.array(ConnectorHealthSchema),
     cacheMode: z.enum(["shared", "non_durable_demo"]),
     warnings: z.array(z.string()),
@@ -228,6 +230,19 @@ export const NetworkStatusSchema = NetworkResponseSchema.omit({
   observedCount: z.number().int().nonnegative(),
   observedCapabilities: z.array(z.enum(capabilityIds)),
   rateLimitMode: z.enum(["distributed", "best_effort"]),
+  environmentNamespace: z
+    .enum(["production", "preview", "development", "test"])
+    .optional(),
+  providerPricing: z
+    .object({
+      provider: z.string(),
+      modelId: z.string(),
+      status: z.enum(["current", "expiring_soon", "expired", "unknown"]),
+      observedAt: z.string().datetime().nullable(),
+      validUntil: z.string().datetime().nullable(),
+    })
+    .strict()
+    .optional(),
 });
 export function matchListing(l: Listing, q: CatalogQuery) {
   const caps =

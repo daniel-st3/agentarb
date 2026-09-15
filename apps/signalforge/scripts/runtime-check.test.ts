@@ -34,6 +34,7 @@ it("configured server adapters pass real runtime gates with status-only output",
     if (!configured) throw new Error("shared_store_required");
     const { randomUUID, createHmac } = await import("node:crypto");
     const { Ratelimit } = await import("@upstash/ratelimit");
+    const { sharedStatePrefix } = await import("../src/server/environment");
     const redis = new Redis({
       ...configured,
       retry: false,
@@ -45,7 +46,7 @@ it("configured server adapters pass real runtime gates with status-only output",
       signal: () => AbortSignal.timeout(2500),
     });
     const probeId = randomUUID();
-    const probeKey = `sf:verify:v1:cache:${probeId}`;
+    const probeKey = `${sharedStatePrefix("verify", "v3")}:cache:${probeId}`;
     try {
       await redis.set(probeKey, { probe: "cache-roundtrip" }, { ex: 30 });
       status.cacheRoundTrip =
@@ -64,7 +65,7 @@ it("configured server adapters pass real runtime gates with status-only output",
       .digest("hex");
     const options = {
       limiter: Ratelimit.slidingWindow(2, "10 s"),
-      prefix: `sf:verify:v1:limit:${probeId}`,
+      prefix: `${sharedStatePrefix("verify", "v3")}:limit:${probeId}`,
       analytics: false,
       timeout: 2000,
     };
@@ -114,14 +115,32 @@ it("configured server adapters pass real runtime gates with status-only output",
           entry.lastAttempt,
       ),
     );
+    const demandIndex = definitions.findIndex((d) => d.id === "agentbounties");
+    const demand = entries[demandIndex]?.snapshot;
+    status.agentBountiesStatus = demand?.health.status ?? "unavailable";
+    status.agentBountiesRecords =
+      demand?.records.filter((record) => record.listingType === "task_opportunity")
+        .length ?? 0;
     status.cache = cache.mode;
   } catch {
     status.cache = "unavailable";
   }
   try {
+    const { getUsdcUsdObservation } = await import(
+      "../src/server/economics/fx"
+    );
+    const observation = await getUsdcUsdObservation();
+    status.fx = observation?.provenance ?? "unknown";
+    status.fxValid = Boolean(
+      observation && Date.parse(observation.validUntil) >= Date.now(),
+    );
+  } catch {
+    status.fx = "unavailable";
+  }
+  try {
     const { checkPlanningLimit } = await import("../src/server/planning-limit");
     // Both REST and MCP use these shared categories. Only HMAC keys reach Redis.
-    for (const category of ["planning", "catalog"] as const) {
+    for (const category of ["planning", "catalog", "underwriting"] as const) {
       const limited = await checkPlanningLimit(
         new Request("http://localhost/api/v1/catalog", {
           headers: { "x-forwarded-for": "192.0.2.240" },
@@ -167,10 +186,13 @@ it("configured server adapters pass real runtime gates with status-only output",
     status.cacheDelete !== true ||
     status.sharedCounter !== true ||
     status.sharedSnapshotMetadata !== true ||
+    status.fx !== "observed_market_rate" ||
+    status.fxValid !== true ||
     status.decomposition !== "groq" ||
     status.frameValid !== true ||
     !["allowed", "quota_enforced"].includes(String(status.planningLimiter)) ||
-    !["allowed", "quota_enforced"].includes(String(status.catalogLimiter))
+    !["allowed", "quota_enforced"].includes(String(status.catalogLimiter)) ||
+    !["allowed", "quota_enforced"].includes(String(status.underwritingLimiter))
   ) {
     throw new Error(
       "Configured runtime verification incomplete. See safe status categories above; do not push.",

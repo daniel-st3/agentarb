@@ -13,7 +13,19 @@ import {
   evaluateOpportunity,
 } from "./service";
 import { readBounded } from "../http";
-import { checkPlanningLimit } from "../planning-limit";
+import { checkPlanningLimit, quotaHeaders } from "../planning-limit";
+import { requestQuery } from "../request-query";
+import { ArbitrageInputSchema } from "@/domain/arbitrage";
+import {
+  underwriteOpportunity,
+  searchOpportunities,
+  OpportunityQuerySchema,
+} from "../arbitrage/service";
+import { signalForgeEnvironment } from "../environment";
+import {
+  providerPricingStatus,
+  REVIEWED_PROVIDER_PRICES,
+} from "@/domain/provider-pricing";
 export const ListingIdSchema = z
   .string()
   .min(3)
@@ -42,15 +54,23 @@ const headers = {
   "X-Content-Type-Options": "nosniff",
 };
 export function queryInput(url: string) {
-  const params = new URL(url).searchParams;
-  for (const key of params.keys())
-    if (params.getAll(key).length > 1) throw new Error("invalid");
-  return CatalogQuerySchema.parse(Object.fromEntries(params));
+  return CatalogQuerySchema.parse(requestQuery(url, true));
+}
+function opportunityQuery(url: string) {
+  return OpportunityQuerySchema.parse(requestQuery(url, true));
 }
 export async function catalogOperation(
-  kind: "search" | "listing" | "status" | "evaluate",
+  kind: "search" | "listing" | "status" | "evaluate" | "opportunities",
   input: unknown,
 ) {
+  if (kind === "opportunities") return searchOpportunities(input);
+  if (
+    kind === "evaluate" &&
+    typeof input === "object" &&
+    input !== null &&
+    "responseVersion" in input
+  )
+    return underwriteOpportunity(ArbitrageInputSchema.parse(input));
   if (kind === "search") {
     const result = await searchCatalog(CatalogQuerySchema.parse(input));
     return NetworkResponseSchema.extend({
@@ -77,6 +97,17 @@ export async function catalogOperation(
       ],
       rateLimitMode:
         status.cacheMode === "shared" ? "distributed" : "best_effort",
+      environmentNamespace: signalForgeEnvironment(),
+      providerPricing: {
+        provider: REVIEWED_PROVIDER_PRICES[0].provider,
+        modelId: REVIEWED_PROVIDER_PRICES[0].modelId,
+        status: providerPricingStatus(
+          REVIEWED_PROVIDER_PRICES[0].provider,
+          REVIEWED_PROVIDER_PRICES[0].modelId,
+        ),
+        observedAt: REVIEWED_PROVIDER_PRICES[0].observedAt,
+        validUntil: REVIEWED_PROVIDER_PRICES[0].validUntil,
+      },
     });
   }
   const id =
@@ -91,23 +122,61 @@ export async function catalogOperation(
     ? EvaluationSchema.parse(evaluateOpportunity(listing))
     : ListingSchema.parse(listing);
 }
+export async function handleClaimReadiness(request: Request) {
+  const limited = await checkPlanningLimit(request, "underwriting");
+  if (limited) return limited;
+  let input: z.infer<typeof ArbitrageInputSchema>;
+  try {
+    requestQuery(request.url);
+    input = ArbitrageInputSchema.parse(await readBounded(request));
+  } catch (error) {
+    const status =
+      error instanceof Error && error.message === "body_too_large" ? 413 : 400;
+    return Response.json(
+      { error: "Invalid claim-readiness request. No action occurred." },
+      { status, headers },
+    );
+  }
+  try {
+    const receipt = await underwriteOpportunity(input);
+    if (!receipt.claimReadiness) throw new Error("not_ready");
+    return Response.json(receipt.claimReadiness, {
+      headers: { ...headers, ...quotaHeaders(request) },
+    });
+  } catch (error) {
+    const status = error instanceof Error && error.message === "not_found" ? 404 : 503;
+    return Response.json(
+      { error: status === 404 ? "Opportunity not found in the current bounded catalog." : "Claim-readiness inspection is temporarily unavailable. No action occurred." },
+      { status, headers },
+    );
+  }
+}
 export async function handleCatalog(
   request: Request,
-  kind: "search" | "listing" | "status" | "evaluate",
+  kind: "search" | "listing" | "status" | "evaluate" | "opportunities",
   id?: string,
 ) {
-  const limited = await checkPlanningLimit(request, "catalog");
+  const limited = await checkPlanningLimit(
+    request,
+    kind === "evaluate" ? "underwriting" : "catalog",
+  );
   if (limited) return limited;
   let input: unknown;
   try {
+    if (kind !== "search" && kind !== "opportunities")
+      requestQuery(request.url);
     input =
       kind === "search"
         ? queryInput(request.url)
         : kind === "listing"
           ? ListingIdSchema.parse(id)
-          : kind === "evaluate"
-            ? EvaluationInputSchema.parse(await readBounded(request))
-            : {};
+          : kind === "opportunities"
+            ? opportunityQuery(request.url)
+            : kind === "evaluate"
+              ? z
+                  .union([ArbitrageInputSchema, EvaluationInputSchema])
+                  .parse(await readBounded(request))
+              : {};
   } catch (error) {
     return Response.json(
       { error: "Invalid catalog request." },
@@ -121,7 +190,9 @@ export async function handleCatalog(
     );
   }
   try {
-    return Response.json(await catalogOperation(kind, input), { headers });
+    return Response.json(await catalogOperation(kind, input), {
+      headers: { ...headers, ...quotaHeaders(request) },
+    });
   } catch (error) {
     return Response.json(
       {

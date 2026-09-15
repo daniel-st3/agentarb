@@ -8,7 +8,7 @@ test("landing command → local frame → deterministic route, with edit and met
   page,
 }, info) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/forge");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "What should your agent accomplish?",
   );
@@ -55,7 +55,7 @@ test("interrupted framing keeps the question and offers retry", async ({
       body: '{"type":"status","message":"Parsing objective…"}\n',
     }),
   );
-  await page.goto("/");
+  await page.goto("/forge");
   await page
     .getByRole("textbox", { name: "Agent objective" })
     .fill("Compare the research needs of two markets");

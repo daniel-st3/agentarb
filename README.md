@@ -1,10 +1,45 @@
 # SignalForge
 
-**Agent-routing intelligence: objectives → budget-constrained execution route contracts.**
+**SignalForge is an arbitrage underwriter and routing intelligence layer for agent work.**
+
+This branch is a **preview-only product increment**, not a production promotion. The production link below continues to serve the prior approved version until a human explicitly approves promotion.
+
+## Arbitrage Intelligence
+
+Can an agent fulfill a paid task economically, under a cost, capital and verification policy? SignalForge compares routes using exact integer arithmetic and returns conditionally profitable, marginal, uneconomic, unroutable, not eligible—or insufficient data. **It does not claim work or execute the route.**
+
+- **Real-first Radar:** `/en/opportunities` (also ES/FR) observes Agent Bounties' official read-only opportunity projection. It preserves exact USDC reward, refundable bond and required spend, plus funding, deadline and verification evidence. Source-ready is not a guarantee of eligibility or profit.
+- **Known economics, explicit gaps:** reviewed first-party Groq pricing supports a bounded workload ceiling; a short-lived public Coinbase observation can normalize USDC/USD. Operator assumptions are field-level `user_scenario` values. Stale/missing inputs stay unknown. No history or realized earnings are invented.
+- **No public fixtures:** default network and task results contain no demo records. `ENABLE_DEMO_DATA=true` deliberately restores historical Lab fixtures only outside Vercel Production; it is off by default.
+- **Integration:** existing opportunity evaluation remains compatible; opt into `responseVersion: "2.0"` for a validated `ArbitrageEvaluation`, canonical SHA-256 receipt, policy inputs and embedded route contracts.
+- **Route Forge:** the objective-first planner, client agent, research examples and original protocol contracts remain available.
+
+```mermaid
+flowchart LR
+  D[Paid opportunity + payout provenance] --> C[Required capabilities]
+  S[Observed supply metadata] --> C
+  L[Published pricing + explicit workload assumptions] --> R[Bounded cost envelope]
+  C --> R
+  R --> U[Integer economics + risk + policy]
+  U --> A[Decision + receipt + route contract]
+  A --> STOP[Execution disabled]
+```
+
+Quickstart against a running preview (substitute its origin for localhost):
+
+```bash
+curl http://127.0.0.1:3001/api/v1/opportunities/evaluate \
+  -H 'Content-Type: application/json' \
+  -d '{"opportunityId":"REPLACE_WITH_ID_FROM_OPPORTUNITIES","responseVersion":"2.0","policy":{"minimumMarginBps":2500},"scenario":{"successProbabilityBps":7000,"workload":{"maxInputTokens":8000,"maxOutputTokens":1500,"boundedCalls":2},"platformFeeUsdMicros":"0","proofGasFeeUsdMicros":"0","humanReviewCostUsdMicros":"0","additionalFulfillmentCostUsdMicros":"0","timeValueCostUsdMicros":"0","competitionRiskAdjustmentUsdMicros":"0","bondLossProbabilityBps":0}}'
+```
+
+First fetch `GET /api/v1/opportunities?mode=observed&limit=20` and use a returned ID. Results report `matchedCount` and `truncated`; underwriting uses the complete bounded server snapshot, not a client catalog page. MCP: `signalforge_search_opportunities` accepts `{"mode":"observed","limit":20}`; pass a returned ID to `signalforge_evaluate_opportunity` with `response_version:"2.0"`.
+
+[Real-data economics and security](docs/real-data-v1.md) · [Source access assessments](docs/live-sources.md) · [Historical Lab engine](docs/arbitrage-intelligence.md)
 
 [Production](https://signalforge-rose-two.vercel.app/en) · [Network](https://signalforge-rose-two.vercel.app/en/network) · [Agent integration proof](https://signalforge-rose-two.vercel.app/en/developers/try) · [Español](https://signalforge-rose-two.vercel.app/es) · [Français](https://signalforge-rose-two.vercel.app/fr)
 
-An agent can discover tools without knowing which combination fits its objective, budget or evidence requirements. SignalForge makes that decision inspectable: decompose an objective, compare capability routes deterministically, and return a typed contract with dependencies, alternatives and stop conditions. **It plans; it does not execute.**
+The underlying routing layer remains reusable: decompose an objective, compare capability combinations deterministically, and return dependencies, alternatives and stop conditions. Optional Groq interprets objectives only; no LLM performs the underwriting arithmetic or decides economic eligibility.
 
 ![Architecture: objective console and REST/MCP callers feed decomposition, catalog-aware planning and a contract inspected by an external client. Payments, marketplace writes and execution are disabled.](apps/signalforge/public/architecture.svg)
 
@@ -16,7 +51,7 @@ An agent can discover tools without knowing which combination fits its objective
 - Cent-based deterministic route competition: cost, capability coverage, reliability, latency and independent verification. Partial routes are explicit.
 - Zod-validated `ExecutionRouteContract`, REST planning, Streamable HTTP MCP tools and A2A-style discovery metadata.
 - A **separate client agent** that consumes REST/MCP, refuses unsafe/incomplete contracts and writes an exclusive-create local receipt.
-- Session-memory demonstrations, fictional research-output examples and shared Upstash cache/rate limiting when configured.
+- Shared Upstash public snapshots, connector health, refresh leases and salted caller quotas. Fictional examples require explicit non-production opt-in.
 
 Unlike a chatbot, the result is a structured capability/dependency contract—not an asserted answer. Unlike a directory, it compares combinations under constraints and explains exclusions.
 
@@ -50,10 +85,11 @@ Plain-text equivalent: objective → decomposition → catalog-aware planner →
 | APIs.guru | API specification metadata | No listed API invocation |
 | Models.dev | Model catalog and unit-qualified prices | No catalog model inference |
 | LiteLLM model-cost map | Model metadata and unit prices | No provider invocation |
+| Agent Bounties | Canonical-source hosted opportunity projection | No chain reads, claims, funding, submission or settlement |
 
 `live` means successful catalog observation, not verified service performance. `cached_live` retains its original timestamp. `seeded_catalog` is static metadata; `simulated_demo` is authored fixture data. Unavailable sources never become fabricated live results. Per-token or unknown prices are not per-task quotes. Observed options stay separate from selected **simulated** route providers.
 
-Coinbase Bazaar remains disabled pending redistribution authorization. Deployed task opportunities are controlled fixtures only. [Source assessments](docs/live-sources.md) · [Catalog notices](docs/catalog-notices.md).
+Coinbase Bazaar remains disabled pending redistribution authorization. Agent Bounties supplies observed tasks; source-reported funding is not independently verified on-chain. Community model catalogs are discovery metadata, not authoritative underwriting prices. [Source assessments](docs/live-sources.md) · [Catalog notices](docs/catalog-notices.md).
 
 ## REST quickstart
 
@@ -69,7 +105,7 @@ The response includes `route`, `decompositionSource` and warnings. The contract 
 
 Streamable HTTP: `https://signalforge-rose-two.vercel.app/api/mcp`.
 
-Tools: `signalforge_plan_route`, `signalforge_search_catalog`, `signalforge_get_listing`, `signalforge_evaluate_opportunity`.
+Tools: `signalforge_plan_route`, `signalforge_search_catalog`, `signalforge_get_listing`, `signalforge_evaluate_opportunity`, `signalforge_search_opportunities`, `signalforge_get_claim_readiness`.
 
 ```json
 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"signalforge_plan_route","arguments":{"objective":"Build a verified startup due-diligence route","budget_usd":0.25,"optimization_policy":"most_verified"}}}
@@ -120,7 +156,9 @@ Use the existing SignalForge project, root **`apps/signalforge`**, build `npm ru
 - `GROQ_API_KEY`: optional server-only objective decomposition.
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`: read/write Upstash REST configuration; Vercel KV aliases supported.
 - `RATE_LIMIT_SALT`: required for configured shared HMAC-derived caller keys. Raw IPs are not stored/logged.
-- `CACHE_MODE=durable`: require shared storage; absent/invalid configuration fails closed. Unconfigured auto mode is an explicitly non-durable demo. Configured credentials never silently downgrade to memory.
+- `CACHE_MODE=durable`: require shared storage; absent/invalid configuration fails closed. Public Vercel API access also fails closed without distributed limiter configuration. Explicit local memory mode supports hermetic development. Configured credentials never silently downgrade.
+- `VERCEL_ENV` supplies the trusted Redis namespace on Vercel. Optional `SIGNALFORGE_ENV` supports non-Vercel hosts; allowed values are production/preview/development/test and conflicts fail closed.
+- `ENABLE_DEMO_DATA=false`: default. An explicit true value enables historical fixtures only outside Vercel Production.
 
 Configure variables privately for intended Vercel environments. Upstash holds public catalog snapshots, health/cache metadata and hashed quota counters—not visitor objectives. Vercel filesystem writes are not durable storage; visitor routes remain session-memory only. [Durable setup](docs/durable-network.md) · [Security](docs/security.md).
 
@@ -139,6 +177,7 @@ npm run typecheck
 npm test
 npm run build
 npm run test:e2e
+npm run test:real-ui
 npm audit
 # Explicit opt-in: configured Groq + safe Redis probes, status-only output.
 npm run verify:runtime

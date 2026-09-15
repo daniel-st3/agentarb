@@ -278,11 +278,11 @@ function download(run: Run, format: "md" | "json") {
   anchor.click();
   URL.revokeObjectURL(url);
 }
-export function BriefView({ id }: { id: string }) {
+export function BriefView({ id, example }: { id: string; example?: Run }) {
   const t = useCopy();
 
   const { runs } = useResearchSession();
-  const run = runs.find((r) => r.request.id === id);
+  const run = runs.find((r) => r.request.id === id) ?? example;
   if (!run) return <EmptyRun />;
   if (!run.brief || !run.receipt)
     return (

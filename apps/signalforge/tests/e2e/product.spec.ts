@@ -34,13 +34,13 @@ test("landing narrative remains available without JavaScript", async ({
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:3002/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "What should your agent accomplish?",
+    "Find profitable routes",
   );
   await expect(
     page.getByRole("heading", { name: "Show what holds up." }),
   ).toBeVisible();
-  await expect(page.locator(".paper-report")).toContainText(
-    "DEMO OUTPUT — SIMULATED EVIDENCE",
+  await expect(page.locator(".arb-hero-route")).toContainText(
+    "SIMULATED / ARBITRAGE LAB",
   );
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await context.close();
@@ -75,15 +75,15 @@ test("question → plan → run → evidence → receipt, exports and session re
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "What should your agent accomplish?",
+      name: /Find profitable routes/,
     }),
   ).toBeVisible();
   await screenshot(page, `${info.project.name}-hero`);
   await page.screenshot({
     path: `${shots}/${info.project.name}-hero-viewport.png`,
   });
-  await page.locator(".paper-report").screenshot({
-    path: `${shots}/${info.project.name}-paper-report.png`,
+  await page.locator(".arb-hero-route").screenshot({
+    path: `${shots}/${info.project.name}-underwriting-example.png`,
     style: ".site-nav, .skip-link { visibility: hidden !important; }",
   });
   await page.goto("/forge");
@@ -132,7 +132,8 @@ test("question → plan → run → evidence → receipt, exports and session re
     .getByRole("button", { name: "Download route contract JSON" })
     .click();
   expect((await downloading).suggestedFilename()).toMatch(/\.json$/);
-  await page.getByRole("link", { name: "Archive", exact: true }).click();
+  if(info.project.name==="mobile")await page.locator(".arb-mobile-nav summary").click();
+  await page.getByRole("link", { name: "Archive", exact: true }).filter({visible:true}).click();
   await expect(page.locator(".route-archive-row")).toHaveCount(4);
   await screenshot(page, `${info.project.name}-history`);
   await page.reload();
@@ -287,7 +288,7 @@ test("editorial hero and a genuinely pinned, scrubbed route", async ({
   ).toHaveCount(0);
   expect(
     await page
-      .locator(".research-command")
+      .locator(".arb-hero")
       .evaluate((el) => getComputedStyle(el).borderRadius),
   ).toBe("0px");
   const start = await story.evaluate(

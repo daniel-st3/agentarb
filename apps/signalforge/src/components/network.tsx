@@ -16,6 +16,7 @@ import {
 import { capabilityIds } from "@/domain/objective";
 import { money } from "./ui";
 import { candidateSources } from "@/server/intelligence/connectors/candidates";
+import { useNetworkState } from "./network-state";
 const labels: Record<string, string> = {
   live: "LIVE OBSERVATION",
   cached_live: "CACHED LIVE",
@@ -206,14 +207,15 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
     </details>
   );
 }
-export function NetworkExplorer() {
+export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkResponse;initialFilters?:Record<string,string>}) {
   const t = useCopy();
+  const { status } = useNetworkState();
 
-  const [network, setNetwork] = useState<NetworkResponse | null>(null),
+  const [network, setNetwork] = useState<NetworkResponse | null>(initial??null),
     [error, setError] = useState(""),
-    [loading, setLoading] = useState(true),
+    [loading, setLoading] = useState(!initial),
     [ready, setReady] = useState(false),
-    [filters, setFilters] = useState<Record<string, string>>({});
+    [filters, setFilters] = useState<Record<string, string>>(initialFilters);
   useEffect(() => {
     const restore = () => {
       const raw = Object.fromEntries(
@@ -395,6 +397,13 @@ export function NetworkExplorer() {
                 : "NON-DURABLE DEMO CACHE · Best-effort per-instance rate limits and hourly refresh control. Production hardening requires a shared store.",
             )}
           </p>
+          {status?.providerPricing && (
+            <p className="field-help mono">
+              {t("PROVIDER PRICING")} / {status.providerPricing.provider} ·{" "}
+              {t(status.providerPricing.status.toUpperCase().replaceAll("_", " "))} ·{" "}
+              {t("VALID UNTIL")} {status.providerPricing.validUntil ?? t("UNKNOWN")}
+            </p>
+          )}
           <div className="network-filters">
             <label className="network-search">
               {t("Search this bounded sample")}

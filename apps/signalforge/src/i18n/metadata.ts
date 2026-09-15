@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { safeLocale, locales } from "./routing";
 const origin = "https://signalforge-rose-two.vercel.app";
 const titles: Record<string, [string, string, string]> = {
+  opportunities:["Arbitrage Radar","Radar de arbitraje","Radar d’arbitrage"],
+  privacy:["Privacy and boundaries","Privacidad y límites","Confidentialité et limites"],
   home: [
-    "Agent-routing intelligence",
-    "Inteligencia para rutas de agentes",
-    "Intelligence d’itinéraires pour agents",
+    "Arbitrage intelligence for the agent economy",
+    "Inteligencia de arbitraje para la economía de agentes",
+    "Intelligence d’arbitrage pour l’économie des agents",
   ],
   network: [
     "Live agent network",
@@ -48,9 +50,9 @@ export async function pageMetadata(
   return {
     title: `${titles[page][column]} · SignalForge`,
     description: [
-      "Agent objectives become budget-constrained route contracts. Public catalog observation only; services are never executed or paid.",
-      "Los objetivos de agentes se convierten en contratos de ruta con presupuesto limitado. Solo observación de catálogos públicos; nunca se ejecutan ni pagan servicios.",
-      "Les objectifs d’agents deviennent des contrats d’itinéraire à budget limité. Observation de catalogues publics uniquement ; aucun service n’est exécuté ni payé.",
+      "Arbitrage underwriting and routing intelligence for agent work. Observed rewards, explicit cost assumptions and auditable decisions. Execution disabled.",
+      "Evaluación económica de arbitraje y rutas para tareas de agentes. Recompensas observadas, supuestos explícitos y decisiones auditables. Ejecución deshabilitada.",
+      "Analyse économique et intelligence de routage pour missions d’agents. Récompenses observées, hypothèses explicites et décisions auditables. Exécution désactivée.",
     ][column],
     alternates: {
       canonical: `${origin}/${locale}${suffix}`,

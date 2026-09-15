@@ -19,7 +19,7 @@ export const candidateSources = [
     name: "OpenTask",
     accessMode: "unsupported",
     reason:
-      "Current public redistribution terms not verified for this increment. Legacy Python connector is not enabled here.",
+      "Public listing reuse is permitted by terms §5, but the current OpenAPI lists authenticated own-task discovery, not an unauthenticated public task feed. Disabled pending a documented public endpoint.",
   },
   {
     id: "execution-market",

@@ -14,13 +14,13 @@ export default function Page() {
     <article className="developers network-page container">
       <p className="eyebrow">{t("SIGNALFORGE / DEVELOPER INTERFACE")}</p>
       <h1>
-        {t("Give your agent")}
+        {t("Underwrite agent work.")}
         <br />
-        {t("a better route.")}
+        {t("Keep the evidence.")}
       </h1>
       <p className="network-intro">
         {t(
-          "A public discovery and demo planning API. No marketplace writes, service execution, or payments. Every contract states execution_not_enabled.",
+          "Observed opportunities, explicit economic gaps, and auditable receipts. No marketplace actions. Every contract states execution_not_enabled.",
         )}
       </p>
       <section>
@@ -31,7 +31,7 @@ export default function Page() {
         <pre>{curl}</pre>
         <p>
           {t(
-            "Returns ObjectiveFrame, ExecutionRouteContract, decompositionSource, observed supply, freshnessSummary, warnings, and executionStatus. Groq may decompose the objective; deterministic code selects the demo route.",
+            "Returns a capability contract and observed supply. Optional Groq interprets objectives; deterministic code preserves unknown costs and incomplete coverage.",
           )}
         </p>
         <p>
@@ -56,6 +56,11 @@ export default function Page() {
           <li>
             {t(
               "POST /api/v1/opportunities/evaluate — opportunityId and agentProfile: default_demo_profile.",
+            )}
+          </li>
+          <li>
+            {t(
+              "POST /api/v1/opportunities/claim-readiness — read-only economic and authorization inspection; claimAuthorized is always false.",
             )}
           </li>
           <li>
@@ -86,6 +91,7 @@ export default function Page() {
           <li>signalforge_search_catalog</li>
           <li>signalforge_get_listing</li>
           <li>signalforge_evaluate_opportunity</li>
+          <li>signalforge_get_claim_readiness</li>
         </ul>
         <p>
           {t(

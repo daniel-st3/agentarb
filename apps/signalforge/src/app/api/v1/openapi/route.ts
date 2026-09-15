@@ -7,27 +7,73 @@ import {
 } from "@/domain/intelligence";
 import { PlanningResponseSchema } from "@/domain/planning-response";
 import { checkPlanningLimit } from "@/server/planning-limit";
+import { requestQuery } from "@/server/request-query";
+import { ArbitrageInputSchema } from "@/domain/arbitrage";
+import {
+  ArbitrageReceiptSchema,
+  OpportunityQuerySchema,
+  OpportunitiesResponseSchema,
+} from "@/server/arbitrage/service";
+import {
+  EvaluationInputSchema,
+  EvaluationSchema,
+} from "@/server/intelligence/http";
+import { ClaimReadinessPacketSchema } from "@/domain/claim-readiness";
 export async function GET(request: Request) {
   const denied = await checkPlanningLimit(request, "catalog");
   if (denied) return denied;
+  try {
+    requestQuery(request.url);
+  } catch {
+    return Response.json(
+      { error: "Invalid schema request." },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
   return Response.json(
     {
       openapi: "3.1.0",
       info: {
-        title: "SignalForge discovery and demo planning",
-        version: "1.0.0",
+        title: "SignalForge discovery, planning and arbitrage underwriting",
+        version: "1.2.0",
         description:
-          "execution_not_enabled. No external task service execution or marketplace actions.",
+          "SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. Observed economics preserve unknowns. execution_not_enabled; no marketplace actions.",
       },
-      servers: [{ url: "https://signalforge-rose-two.vercel.app" }],
+      // Relative paths intentionally target the deployment serving this schema.
       components: {
         schemas: {
           PlanningResponse: z.toJSONSchema(PlanningResponseSchema),
+          ArbitrageReceipt: z.toJSONSchema(ArbitrageReceiptSchema),
+          Opportunities: z.toJSONSchema(OpportunitiesResponseSchema),
           Listing: z.toJSONSchema(ListingSchema),
           NetworkStatus: z.toJSONSchema(NetworkStatusSchema),
+          ClaimReadinessPacket: z.toJSONSchema(ClaimReadinessPacketSchema),
         },
       },
       paths: {
+        "/api/v1/opportunities": {
+          get: {
+            summary:
+              "Bounded observed demand search; Lab requires explicit non-production configuration",
+            parameters: Object.entries(OpportunityQuerySchema.shape).map(
+              ([name, schema]) => ({
+                name,
+                in: "query",
+                schema: z.toJSONSchema(schema),
+              }),
+            ),
+            responses: {
+              "200": {
+                description: "Demand records, separated by mode",
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/Opportunities" },
+                  },
+                },
+              },
+            },
+          },
+        },
         "/api/v1/routes/plan": {
           post: {
             summary: "Plan a demo capability route",
@@ -106,23 +152,53 @@ export async function GET(request: Request) {
               required: true,
               content: {
                 "application/json": {
-                  schema: {
-                    type: "object",
-                    additionalProperties: false,
-                    required: ["opportunityId"],
-                    properties: {
-                      opportunityId: { type: "string", maxLength: 240 },
-                      agentProfile: { const: "default_demo_profile" },
-                    },
+                  schema: z.toJSONSchema(
+                    z.union([EvaluationInputSchema, ArbitrageInputSchema]),
+                  ),
+                },
+              },
+            },
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: z.toJSONSchema(
+                      z.union([EvaluationSchema, ArbitrageReceiptSchema]),
+                    ),
                   },
+                },
+                description:
+                  "Unavailable margin or defensible projection with assumptions; no marketplace action",
+              },
+            },
+          },
+        },
+        "/api/v1/opportunities/claim-readiness": {
+          post: {
+            summary:
+              "Build a read-only claim-readiness packet; never claim or execute",
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: z.toJSONSchema(ArbitrageInputSchema),
                 },
               },
             },
             responses: {
               "200": {
                 description:
-                  "Unavailable margin or defensible projection with assumptions; no marketplace action",
+                  "Inspection packet with claimAuthorized=false and execution_not_enabled",
+                content: {
+                  "application/json": {
+                    schema: {
+                      $ref: "#/components/schemas/ClaimReadinessPacket",
+                    },
+                  },
+                },
               },
+              "400": { description: "Invalid input; no action occurred" },
+              "429": { description: "Rate limit" },
             },
           },
         },

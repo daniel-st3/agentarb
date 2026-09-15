@@ -10,6 +10,7 @@ Base: `https://signalforge-rose-two.vercel.app`. JSON only. No credentials or co
 | GET `/api/v1/catalog` | capability, source, listingType, freshness, actionability, priceModel, maxPriceUsd, query (120 chars), limit (1–50) | normalized bounded sample, matchedCount, truncated, source health |
 | GET `/api/v1/catalog/{id}` | URL-encoded ID from catalog; max 240 chars | one current normalized listing; 404 if missing |
 | POST `/api/v1/opportunities/evaluate` | opportunityId, agentProfile:`default_demo_profile` | assumptions, projectedMarginUsd:null when insufficient evidence, execution_not_enabled |
+| POST `/api/v1/opportunities/claim-readiness` | versioned underwriting input with a real observed opportunity ID | read-only ClaimReadinessPacket; claimAuthorized:false, execution_not_enabled |
 | GET `/api/v1/network/status` | none | source health, freshness, cache-mode warning; no raw records/secrets |
 | GET `/api/v1/openapi` | none | OpenAPI 3.1 documentation |
 
@@ -33,7 +34,7 @@ curl https://signalforge-rose-two.vercel.app/api/v1/routes/plan \
 
 curl https://signalforge-rose-two.vercel.app/api/v1/opportunities/evaluate \
   -H 'Content-Type: application/json' \
-  -d '{"opportunityId":"demo:opportunity-1","agentProfile":"default_demo_profile"}'
+  -d '{"opportunityId":"REPLACE_WITH_OBSERVED_ID","responseVersion":"2.0","policy":{"minimumMarginBps":2500}}'
 ```
 
 Response envelope (abbreviated, not an actual execution):
@@ -71,7 +72,7 @@ route providers remain separate simulated fixtures.
 
 ## Limits and errors
 
-Planning/decomposition/compile share 10 requests/client-key/rolling 10 minutes with Redis; memory fallback uses a conservative fixed 10-minute window. Catalog/MCP protocol requests share 60/10 minutes. MCP planning also consumes planning quota. `429` includes `Retry-After`; `400` invalid input, `413` body >16 KiB, `403` invalid Origin, `404` missing listing, `503` shared infrastructure or catalog unavailable. No stack traces or vendor error bodies.
+Planning/decomposition/compile share 10 requests/client-key/rolling 10 minutes with Redis; underwriting and claim-readiness inspection share the 20/10-minute class. Catalog/MCP protocol requests share 60/10 minutes. MCP tools also consume their operation-specific quota. `429` includes `Retry-After`; `400` invalid input, `413` body >16 KiB, `403` invalid Origin, `404` missing listing, `503` shared infrastructure or catalog unavailable. No stack traces or vendor error bodies.
 
 Without shared configuration, limits/cache leases are **per instance only**, reset on cold start, and are not launch-grade distributed protection. Configure the shared store before high-traffic use. Error responses and current API data use `Cache-Control: no-store` so a CDN cannot relabel old responses as live or bypass quota checks.
 

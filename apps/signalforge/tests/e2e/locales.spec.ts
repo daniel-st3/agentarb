@@ -31,7 +31,7 @@ for (const locale of ["es", "fr"] as const)
     page.on("request", (r) => {
       if (r.url().endsWith("/api/frame")) frameCalls++;
     });
-    await page.goto(`/${locale}`);
+    await page.goto(`/${locale}/forge`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       locale === "es"
         ? "¿Qué debería lograr tu agente?"

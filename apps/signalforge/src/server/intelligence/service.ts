@@ -19,6 +19,12 @@ import { apisGuruDefinition, parseApisGuru } from "./connectors/apis-guru";
 import { modelsDevDefinition, parseModelsDev } from "./connectors/models-dev";
 import { litellmDefinition, parseLiteLlm } from "./connectors/litellm";
 import { snapshotCache, type SnapshotCache } from "./cache";
+import { demoDataEnabled } from "../demo-mode";
+import { refreshDemandEligibility } from "@/domain/real-economics";
+import {
+  agentBountiesDefinition,
+  parseAgentBounties,
+} from "./connectors/agent-bounties";
 export interface MarketplaceIntelligenceConnector {
   id: string;
   name: string;
@@ -32,12 +38,14 @@ export interface MarketplaceIntelligenceConnector {
   discover(input: { limit: number }): Promise<DiscoverySnapshot>;
 }
 export const definitions = [
+  agentBountiesDefinition,
   mcpDefinition,
   apisGuruDefinition,
   modelsDevDefinition,
   litellmDefinition,
 ];
 const parsers = {
+  agentbounties: parseAgentBounties,
   mcp: parseMcpRegistry,
   apisguru: parseApisGuru,
   modelsdev: parseModelsDev,
@@ -94,6 +102,9 @@ export function createConnector(
             ...snapshot,
             records: snapshot.records.slice(0, input.limit).map((l) => ({
               ...l,
+              ...(l.listingType === "task_opportunity" && l.demandState
+                ? { demandState: refreshDemandEligibility(l.demandState, l.deadline, time) }
+                : {}),
               freshness: "cached_live",
               dataQuality: {
                 ...l.dataQuality,
@@ -149,10 +160,34 @@ export function createConnector(
       const attempt = new Date(time).toISOString();
       const refresh = async (): Promise<DiscoverySnapshot> => {
         try {
+          const metadata: {
+            etag?: string;
+            lastModified?: string;
+            notModified?: boolean;
+          } = {};
+          // A validator cannot keep an old observation alive indefinitely. Once
+          // retention expires, fetch the complete representation again.
+          const canRevalidate = entry?.snapshot &&
+            time - Date.parse(entry.snapshot.observedAt) < 86400000;
           const raw = await publicDiscoveryGet(
             def.id as keyof typeof parsers,
             fetcher,
+            canRevalidate ? entry ?? undefined : undefined,
+            metadata,
           );
+          if (metadata.notModified) {
+            if (!entry?.snapshot || !canRevalidate) throw new Error("invalid_payload");
+            entry = {
+              ...entry,
+              failures: 0,
+              error: false,
+              lastAttempt: attempt,
+              lastValidatedAt: attempt,
+              nextAttempt: time + def.refreshTtlSeconds * 1000,
+            };
+            await cache.set(def.id, entry);
+            return view();
+          }
           const records = parsers[def.id as keyof typeof parsers](raw, attempt);
           const snapshot = DiscoverySnapshotSchema.parse({
             connectorId: def.id,
@@ -171,6 +206,11 @@ export function createConnector(
             },
           });
           await cache.set(def.id, {
+            ...(metadata.etag ? { etag: metadata.etag } : {}),
+            ...(metadata.lastModified
+              ? { lastModified: metadata.lastModified }
+              : {}),
+            lastValidatedAt: attempt,
             snapshot,
             failures: 0,
             nextAttempt: time + def.refreshTtlSeconds * 1000,
@@ -304,7 +344,10 @@ export async function networkSnapshot() {
   );
   return NetworkResponseSchema.parse({
     version: "1.0",
-    records: [...snapshots.flatMap((s) => s.records), ...demoListings()],
+    records: [
+      ...snapshots.flatMap((s) => s.records),
+      ...(demoDataEnabled() ? demoListings() : []),
+    ],
     sources: snapshots.map((s) => s.health),
     cacheMode: cache.mode,
     warnings: [

@@ -1,5 +1,7 @@
 /** Reviewed UI copy. Protocol identifiers and provider names stay canonical. */
 import { routeCopy } from "./route-copy";
+import {arbitrageCopy} from "./arbitrage-copy";
+import {realCopy} from "./real-copy";
 import { narrativeCopy } from "./narrative-copy";
 import { detailCopy } from "./detail-copy";
 import { optionsCopy } from "./options-copy";
@@ -7,6 +9,8 @@ import { templateCopy } from "./template-copy";
 import { fixtureCopy } from "./fixture-copy";
 import { developerCopy } from "./developer-copy";
 export const translations: Array<[string, string, string]> = [
+  ...realCopy,
+  ...arbitrageCopy,
   ...routeCopy,
   ...developerCopy,
   ...reportCopy,

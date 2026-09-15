@@ -22,6 +22,7 @@ Tools:
 - `signalforge_search_catalog`: capability?, query?, listing_type?, max_price_usd?, freshness?, limit (1–50).
 - `signalforge_get_listing`: id from the current bounded catalog.
 - `signalforge_evaluate_opportunity`: opportunity_id from the catalog. No bid/claim/submit/settle behavior.
+- `signalforge_get_claim_readiness`: the same strict underwriting input; returns a read-only packet with `claimAuthorized:false` and `executionStatus:execution_not_enabled`. No claim tool exists.
 
 All tool inputs are strict Zod schemas. Descriptions are untrusted plain text. No arbitrary URL or credential field, payment tool or execution method is registered. MCP methods share the API service functions, quotas, cache, validation and safety boundaries.
 

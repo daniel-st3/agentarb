@@ -1,6 +1,12 @@
 # SignalForge — deployed application
 
-Agent-routing intelligence: objectives → budget-constrained execution route contracts.
+Arbitrage intelligence: paid opportunity → capability routes → deterministic economic decision. This branch is preview-only; production is not promoted.
+
+Start with `/en/opportunities` for observed Agent Bounties records and exact source economics. EN/ES/FR are supported. Empty or ineligible demand is never replaced with fixtures. Historical Lab examples require explicit `ENABLE_DEMO_DATA=true` outside Vercel Production.
+
+Versioned underwriting: `POST /api/v1/opportunities/evaluate` with a real returned opportunity ID and `responseVersion:"2.0"`. Omitting the version preserves the old conservative response. Discovery: `GET /api/v1/opportunities?mode=observed`. [Real-data economics, security and limitations](../../docs/real-data-v1.md).
+
+Real Economics v1 preserves Agent Bounties USDC base units, combines them only with a fresh sourced USDC/USD observation, and prices an explicit bounded workload against a reviewed current Groq price record. Conditional profit, margin, risk-adjusted EV and break-even values appear only after the operator supplies every missing assumption. The v2 receipt fingerprints the full canonical economic decision core; claim readiness v1.1 reports expected/worst-case total cost, completeness, capital and bond exposure separately. The receipt separates observed, published, market, user-scenario, derived and unknown fields. `POST /api/v1/opportunities/claim-readiness` and MCP tool `signalforge_get_claim_readiness` are inspection-only: `claimAuthorized=false` and `executionStatus=execution_not_enabled`.
 
 [Production](https://signalforge-rose-two.vercel.app/en) · [Root guide](../../README.md).
 

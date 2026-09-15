@@ -1,6 +1,33 @@
 # Live source assessments
 
-Verified 2026-08-30. These are engineering access assessments, not a legal opinion or a claim of endorsement. Only the four fixed catalog GETs below are enabled. No HTML scraping, target-service requests, account access, SDK wallet code, or marketplace participation.
+## Coinbase public USDC/USD spot observation
+
+- Official endpoint: `GET https://api.coinbase.com/v2/prices/USDC-USD/spot`.
+- Official documentation verified 2026-09-14: https://docs.cdp.coinbase.com/coinbase-app/track-apis/prices . The pricing endpoint is documented as public and does not require authentication.
+- Use: currency normalization evidence only. SignalForge sends no cookie, authorization, body or visitor input; the origin/path/pair are fixed and redirects fail.
+- Validation: HTTPS fixed origin, four-second timeout, 16 KiB response cap, JSON Content-Type, strict response schema and exact six-decimal parsing. Fresh cache target five minutes; unusable after ten minutes.
+- Limitation: a spot observation is short-lived market evidence, not a redemption guarantee or silent 1:1 USDC assumption. Stale/error data makes USD economics unknown.
+
+## Groq reviewed provider pricing
+
+- Official model page verified 2026-09-14: https://console.groq.com/docs/model/openai/gpt-oss-20b . Published price: $0.075 per million input tokens and $0.30 per million output tokens.
+- Use: exact bounded token/call workload ceiling only; never treated as a task quote or actual charge.
+- The reviewed table is isolated in `provider-pricing.ts`, expires closed, and is updated from first-party documentation. SignalForge does not scrape pricing pages at runtime.
+
+Catalogs verified 2026-08-30; Agent Bounties verified 2026-08-31. These are engineering access assessments, not a legal opinion or endorsement. Four fixed catalog sources and one fixed opportunity source are enabled. No HTML scraping, target-service requests, account access, wallet code or marketplace participation.
+
+## Agent Bounties — enabled, public opportunity projection
+
+- Official discovery: https://agentbounties.app/llms.txt and https://agentbounties.app/.well-known/agent-bounties.json
+- Typed API: https://api.agentbounties.app/api-docs/openapi.json
+- Official feed documentation: https://github.com/NSPG13/agent-bounties/blob/main/docs/opportunity-feeds.md
+- Terms: https://agentbounties.app/terms.html (effective 2026-08-23). Robots: https://agentbounties.app/robots.txt. The official documentation expressly offers unauthenticated read-only REST/A2A/feed distribution; terms distinguish the hosted projection from canonical confirmed events. We use these interfaces, not HTML scraping. Reassess if terms/access change.
+- Exact GET paths: /v1/opportunities/feed.json and /v1/opportunities on https://api.agentbounties.app, both with network=base-mainnet&view=ready_to_earn&source_type=canonical_base&work_state=claimable&payment_state=escrowed&limit=30.
+- Conditional JSON Feed polling at ten minutes uses ETag/Last-Modified. Only a changed feed triggers the richer REST projection because the feed omits competition/deadline fields. No REST validators were observed. A distributed lease and bounded stale cache prevent per-visitor polling.
+- Initial verification observed 22 records. Inventory varies. Many records describe standing funding competitions or closed scoring windows, not simple currently fulfillable AI tasks. We reject those economic eligibility states; ready_to_earn is not a profitability decision.
+- Source fields retained: canonical source ID, title/goal, work/payment states, payment commitment, structured reward/bond/external spend, competition mode, deadline/kind, verifier/readiness, evidence requirements/boundary, created/updated/generated times.
+- Exact monetary units are USDC base units with six decimals. Gross-margin and bonus displays are not underwriting inputs. Skill mapping is exact enum matching; unsupported text remains unknown.
+- Source-provided versus inferred: funding/amounts/deadlines are hosted source assertions; eligibility is deterministic SignalForge filtering. No on-chain query independently verifies the assertions. Display URLs are metadata only. The code never follows next_action, invokes tools, claims, submits, funds or signs.
 
 ## Official MCP Registry — enabled
 
@@ -60,10 +87,13 @@ The registry lives in `apps/signalforge/src/server/intelligence/connectors/candi
 |---|---|---|
 | OpenRouter models catalog | https://openrouter.ai/docs/guides/overview/models ; https://openrouter.ai/terms (July 29, 2026) | Public API docs describe model metadata, but terms include restrictions on copying service information and developing competing services. Redistribution permission for this control-plane catalog was not established; disabled without an API request. |
 | Coinbase Bazaar | https://docs.cdp.coinbase.com/x402/buyer/discover-services ; https://docs.cdp.coinbase.com/api-reference/v2/rest-api/x402-facilitator/list-x402-resources | Public discovery is explicitly documented without a key, but https://www.coinbase.com/legal/developer-platform/terms-of-service §9 restricts sharing API data with third parties without written authorization. Disabled; no catalog API request made. No payment, wallet or chain SDK installed. |
-| OpenTask | Legacy Python research remains in repository documentation | Current public redistribution/access terms not verified for this increment. Not enabled or presented as live. No task actions. |
+| OpenTask | https://opentask.ai/terms ; https://opentask.ai/docs ; https://opentask.ai/api/openapi | Re-reviewed 2026-08-31: terms §5 permit reuse of public listings; §9 prohibits scraping outside documented interfaces. Current OpenAPI exposes authenticated own-task discovery at GET /agent/tasks, not an unauthenticated public GET /tasks feed. Technical public-feed gate remains unmet. Disabled; no task API invoked. |
 | execution.market | Legacy `docs/verification-execution-market-testnet.md` | Historical technical discovery support is not proof of current redistribution permission. Disabled pending a separate current terms assessment; no execution or testnet interaction. |
 | External A2A Agent Cards | https://a2a-protocol.org/latest/definitions/ | Protocol documentation is not permission to fetch arbitrary agents. No individual peer is approved; no user-supplied URLs fetched. |
 | Circle marketplace / other x402 directories | No independently verified public redistribution interface in this increment | Unsupported; not fabricated as a third live integration. |
+| GitHub paid/bounty issues | https://docs.github.com/en/rest/issues/issues | Public issues can be read, but no curated allowlisted repository and structured bounty/fee/eligibility agreement has been established. Generic issues are not paid contracts. Under review; no connector enabled. |
+
+The Arbitrage Intelligence review does not enable any demand connector. Public OpenTask documentation was read through GET only; no credentials, account, bid, claim or task participation occurred. execution.market's documented public GET support (https://docs.execution.market/api/reference) does not resolve the listing-redistribution gate. Arbitrage Lab therefore uses seven separately labeled authored tasks, never synthetic “live” demand. The enabled four supply sources, fixed endpoints, TTLs, byte caps and payload schemas are unchanged.
 
 ## Freshness and legal-operational controls
 

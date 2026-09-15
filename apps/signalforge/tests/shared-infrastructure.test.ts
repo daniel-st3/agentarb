@@ -56,14 +56,38 @@ it("shared limit hashes normalized clients and uses sliding windows without anal
   expect(fake.limiterOptions[0]).toMatchObject({
     analytics: false,
     timeout: 2000,
+    prefix: "sf:test:limit:v3:planning",
     limiter: { count: 10, duration: "10 m" },
   });
   expect(fake.limiterOptions[2]).toMatchObject({
+    prefix: "sf:test:limit:v3:catalog",
     limiter: { count: 60, duration: "10 m" },
   });
   expect(fake.redisOptions[0]).toMatchObject({
     retry: false,
     signal: expect.any(Function),
+  });
+});
+it("captures the trusted environment for each shared quota class", async () => {
+  fake.limit.mockResolvedValue({
+    success: true,
+    remaining: 19,
+    reset: Date.now() + 600000,
+  });
+  vi.stubEnv("SIGNALFORGE_ENV", "preview");
+  const { checkPlanningLimit } = await import("../src/server/planning-limit");
+  expect(await checkPlanningLimit(request(), "underwriting")).toBeNull();
+  expect(fake.limiterOptions.at(-1)).toMatchObject({
+    prefix: "sf:preview:limit:v3:underwriting",
+    limiter: { count: 20, duration: "10 m" },
+  });
+  expect(JSON.stringify(fake.limiterOptions)).not.toContain("sf:production:");
+
+  vi.stubEnv("SIGNALFORGE_ENV", "production");
+  expect(await checkPlanningLimit(request("192.0.2.73"), "catalog")).toBeNull();
+  expect(fake.limiterOptions.at(-1)).toMatchObject({
+    prefix: "sf:production:limit:v3:catalog",
+    limiter: { count: 60, duration: "10 m" },
   });
 });
 it.each([
@@ -150,11 +174,11 @@ it("shared cache stores only validated source snapshots with expiry and atomic r
     error: false,
   };
   await cache.set("mcp", entry);
-  expect(fake.set).toHaveBeenCalledWith("sf:catalog:v1:mcp", entry, {
+  expect(fake.set).toHaveBeenCalledWith("sf:test:catalog:v3:mcp", entry, {
     ex: 172800,
   });
   expect(await cache.lease("mcp", 3600)).toBe(true);
-  expect(fake.set).toHaveBeenCalledWith("sf:catalog:v1:lease:mcp", "1", {
+  expect(fake.set).toHaveBeenCalledWith("sf:test:catalog:v3:lease:mcp", "1", {
     nx: true,
     ex: 3600,
   });
