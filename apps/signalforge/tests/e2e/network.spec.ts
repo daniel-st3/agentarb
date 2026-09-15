@@ -16,12 +16,24 @@ test("network is a labeled sample with safe filtering and opportunity evaluation
   await expect(
     page.getByText("NON-DURABLE DEMO CACHE", { exact: false }).first(),
   ).toBeVisible();
+  const filteredCatalog = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/v1/catalog?") &&
+      response.url().includes("listingType=task_opportunity") &&
+      response.status() === 200,
+  );
   await page
     .getByLabel("Listing type", { exact: true })
     .selectOption("task_opportunity");
-  await page
-    .getByText("Structure a public company profile", { exact: true })
-    .click();
+  await filteredCatalog;
+
+  const catalogResults = page.getByLabel("Catalog results", { exact: true });
+  await expect(catalogResults).toHaveAttribute("aria-busy", "false");
+  const opportunityRow = page.locator(".catalog-row").filter({
+    hasText: "Structure a public company profile",
+  });
+  await expect(opportunityRow).toBeVisible();
+  await opportunityRow.locator("summary").click();
   await expect(
     page.getByText("Budget negotiable after review", { exact: false }),
   ).toBeVisible();
