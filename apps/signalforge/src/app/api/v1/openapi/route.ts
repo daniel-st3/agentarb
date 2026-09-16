@@ -19,6 +19,10 @@ import {
   EvaluationSchema,
 } from "@/server/intelligence/http";
 import { ClaimReadinessPacketSchema } from "@/domain/claim-readiness";
+import {
+  ForgeUnderwritingInputSchema,
+  ForgeUnderwritingResponseSchema,
+} from "@/domain/forge-underwriting";
 export async function GET(request: Request) {
   const denied = await checkPlanningLimit(request, "catalog");
   if (denied) return denied;
@@ -48,6 +52,10 @@ export async function GET(request: Request) {
           Listing: z.toJSONSchema(ListingSchema),
           NetworkStatus: z.toJSONSchema(NetworkStatusSchema),
           ClaimReadinessPacket: z.toJSONSchema(ClaimReadinessPacketSchema),
+          ForgeUnderwritingInput: z.toJSONSchema(ForgeUnderwritingInputSchema),
+          ForgeUnderwritingResponse: z.toJSONSchema(
+            ForgeUnderwritingResponseSchema,
+          ),
         },
       },
       paths: {
@@ -99,6 +107,39 @@ export async function GET(request: Request) {
               "413": { description: "Body too large" },
               "429": { description: "Rate limit" },
               "503": { description: "Unavailable" },
+            },
+          },
+        },
+        "/api/v1/forge/underwrite": {
+          post: {
+            summary:
+              "Underwrite a user-defined task using explicit operator assumptions",
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/ForgeUnderwritingInput",
+                  },
+                },
+              },
+            },
+            responses: {
+              "200": {
+                description:
+                  "Server-authoritative conditional economics and receipt; execution disabled",
+                content: {
+                  "application/json": {
+                    schema: {
+                      $ref: "#/components/schemas/ForgeUnderwritingResponse",
+                    },
+                  },
+                },
+              },
+              "400": { description: "Invalid objective or assumptions" },
+              "413": { description: "Body too large" },
+              "429": { description: "Rate limit" },
+              "503": { description: "Protected service unavailable" },
             },
           },
         },

@@ -15,9 +15,9 @@ const titles: Record<string, [string, string, string]> = {
     "Réseau d’agents en direct",
   ],
   forge: [
-    "Agent objective console",
-    "Consola de objetivos del agente",
-    "Console d’objectifs de l’agent",
+    "Forge Lab · Underwrite Your Task",
+    "Forge Lab · Evalúa tu tarea",
+    "Forge Lab · Analysez votre mission",
   ],
   history: ["Route archive", "Archivo de rutas", "Archive des itinéraires"],
   developers: [
