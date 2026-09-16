@@ -222,11 +222,35 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
           .map((mark) => mark.dataset.observationId ?? "unknown");
       });
       expect(collisions).toEqual([]);
+      const splitTextSafety = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("[data-forge-heading] > *")].map((line) => ({
+        overflow: getComputedStyle(line).overflow,
+        text: line.textContent,
+      })));
+      expect(splitTextSafety.length).toBeGreaterThan(0);
+      expect(splitTextSafety.every((line) => line.overflow === "visible" && Boolean(line.text?.trim()))).toBe(true);
     }
+    const routeChapter = page.getByRole("button", { name: /03\s+ROUTE/i });
+    await routeChapter.click();
+    await expect(page.locator('[data-forge-stage="route"]')).toBeVisible();
+    expect(await page.locator("[data-forge-layer]").evaluateAll((layers) => layers.filter((layer) => {
+      const style = getComputedStyle(layer);
+      return style.visibility === "visible" && Number(style.opacity) > 0.99;
+    }).length)).toBe(1);
+    const routeVerdict = page.locator("[data-forge-route-verdict]").first();
+    await expect(routeVerdict).toHaveText("INSUFFICIENT DATA");
+    expect(await routeVerdict.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const parent = element.parentElement?.getBoundingClientRect();
+      return element.scrollWidth <= element.clientWidth + 1 && Boolean(parent) && rect.right <= parent!.right + 1;
+    })).toBe(true);
     const economicsChapter = page.getByRole("button", { name: /04\s+ECONOMICS/i });
     await economicsChapter.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-forge-stage="economics"]')).toBeVisible();
+    expect(await page.locator("[data-forge-layer]").evaluateAll((layers) => layers.filter((layer) => {
+      const style = getComputedStyle(layer);
+      return style.visibility === "visible" && Number(style.opacity) > 0.99;
+    }).length)).toBe(1);
   } else {
     await page.setViewportSize({ width: 430, height: 932 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -234,6 +258,10 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
 
   await page.getByRole("button", { name: /apply explicit lab scenario/i }).click();
   await expect(forge).toHaveAttribute("data-scenario-active", "true");
+  const challengeInstrument = page.locator("[data-challenge-instrument]");
+  await expect(challengeInstrument).toBeVisible();
+  await expect(challengeInstrument.getByText("RESULT", { exact: true })).toBeVisible();
+  await expect(challengeInstrument.getByRole("status").filter({ hasText: "INSUFFICIENT DATA" })).toBeVisible();
   const probability = page.locator("label").filter({ hasText: "Success probability" }).locator('input[type="range"]');
   await expect(probability).toHaveValue("70");
   await probability.fill("42");
@@ -260,4 +288,14 @@ test("the Forge reduced-motion mode exposes the resolved causal structure", asyn
   await expect(resolvedFlow.getByText("CAPITAL ≠ EXPENSE")).toBeVisible();
   await expect(page.locator('[data-forge-stage]')).toContainText("INSUFFICIENT DATA");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
+
+  for (const locale of ["es", "fr"]) {
+    await page.goto(`/${locale}/lab/v2`);
+    await page.getByLabel(locale === "es" ? "DESCONOCIDO" : "INCONNU", { exact: true }).check();
+    await page.getByRole("tab", { name: "D", exact: true }).click();
+    const verdict = page.locator("[data-forge-mobile-verdict]");
+    await expect(verdict).toBeVisible();
+    expect(await verdict.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
 });
