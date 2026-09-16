@@ -9,13 +9,19 @@ export function Navigation() {
   const t = useCopy(),
     path = usePathname(),
     open = useCommandPalette();
-  const links = [
-    ["/opportunities", "Radar"],
-    ["/network", "Network"],
-    ["/forge", "Route Forge"],
-    ["/developers/try", "Developers"],
-    ["/history", "Archive"],
-  ];
+  const links = path === "/"
+    ? [
+        ["/opportunities", "Market"],
+        ["/forge", "Forge"],
+        ["/developers/try", "Developers"],
+      ]
+    : [
+        ["/opportunities", "Radar"],
+        ["/network", "Network"],
+        ["/forge", "Route Forge"],
+        ["/developers/try", "Developers"],
+        ["/history", "Archive"],
+      ];
   return (
     <header className="site-nav">
       <div className="nav-inner">

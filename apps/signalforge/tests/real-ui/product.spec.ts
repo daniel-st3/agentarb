@@ -13,23 +13,12 @@ for (const width of [320, 360, 375, 390, 430, 768, 1024, 1280, 1440, 1920])
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/en");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Find profitable AI-agent work.",
+      "IS THE WORK WORTH DOING?",
     );
+    await expect(page.locator("[data-profit-engine]")).toBeVisible();
     await expect(page.locator(".route-narrative")).toHaveCount(0);
     await expect(page.locator("main")).not.toContainText("$1.20");
     await expect(page.locator("main")).not.toContainText("Arbitrage Lab");
-    const headingBox = await page.locator(".live-hero h1").boundingBox();
-    const snapshotBox = await page.locator(".live-market-note").boundingBox();
-    expect(headingBox).not.toBeNull();
-    expect(snapshotBox).not.toBeNull();
-    if (width >= 768) {
-      expect(snapshotBox!.x).toBeGreaterThan(headingBox!.x + headingBox!.width);
-      expect(Math.abs(snapshotBox!.y - headingBox!.y)).toBeLessThan(200);
-    } else {
-      expect(snapshotBox!.y).toBeGreaterThan(
-        headingBox!.y + headingBox!.height,
-      );
-    }
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -39,10 +28,7 @@ for (const width of [320, 360, 375, 390, 430, 768, 1024, 1280, 1440, 1920])
       path: `test-results/real-screenshots/hero-${width}.png`,
       fullPage: true,
     });
-    await page
-      .getByRole("link", { name: "Inspect paid work ↗" })
-      .first()
-      .click();
+    await page.locator('[data-profit-engine] a[href*="/opportunities"]').first().click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Price the work. Know the gaps.",
     );
@@ -63,8 +49,8 @@ for (const width of [320, 360, 375, 390, 430, 768, 1024, 1280, 1440, 1920])
     expect(errors).toEqual([]);
   });
 for (const [locale, title] of [
-  ["es", "Encuentra trabajo rentable para agentes."],
-  ["fr", "Trouvez des missions rentables pour agents."],
+  ["es", "¿VALE LA PENA HACER EL TRABAJO?"],
+  ["fr", "LE TRAVAIL EN VAUT-IL LA PEINE ?"],
 ])
   test(`${locale} real-first locale and reduced motion`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -124,6 +110,6 @@ test("no-JavaScript public hero stays readable", async ({ browser }) => {
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:3006/en");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.locator(".live-market-note")).toBeVisible();
+  await expect(page.locator("[data-profit-engine]")).toBeVisible();
   await context.close();
 });

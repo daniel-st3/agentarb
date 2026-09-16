@@ -7,41 +7,32 @@ test.beforeEach(async ({ page }, info) => {
 import { mkdir } from "node:fs/promises";
 const shots = "test-results/screenshots";
 
-test("short laptop windows keep the full route readable", async ({
+test("short laptop windows keep the Profit Engine readable", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop");
   await page.setViewportSize({ width: 1024, height: 720 });
   await page.goto("/");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  await page
-    .getByRole("heading", { name: "Show what holds up." })
-    .scrollIntoViewIfNeeded();
-  await expect(
-    page.getByRole("heading", { name: "Show what holds up." }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "IS THE WORK WORTH DOING?" })).toBeVisible();
+  await page.getByRole("heading", { name: "Continue with the evidence." }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole("heading", { name: "Continue with the evidence." })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
 });
-test("landing narrative remains available without JavaScript", async ({
+test("Profit Engine remains available without JavaScript", async ({
   browser,
 }, info) => {
   test.skip(info.project.name !== "desktop");
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:3002/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Find profitable routes",
-  );
-  await expect(
-    page.getByRole("heading", { name: "Show what holds up." }),
-  ).toBeVisible();
-  await expect(page.locator(".arb-hero-route")).toContainText(
-    "SIMULATED / ARBITRAGE LAB",
-  );
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("IS THE WORK WORTH DOING?");
+  await expect(page.getByRole("heading", { name: "Continue with the evidence." })).toBeVisible();
+  await expect(page.locator("main")).not.toContainText("SIMULATED / ARBITRAGE LAB");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await context.close();
 });
@@ -75,14 +66,14 @@ test("question → plan → run → evidence → receipt, exports and session re
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: /Find profitable routes/,
+      name: "IS THE WORK WORTH DOING?",
     }),
   ).toBeVisible();
   await screenshot(page, `${info.project.name}-hero`);
   await page.screenshot({
     path: `${shots}/${info.project.name}-hero-viewport.png`,
   });
-  await page.locator(".arb-hero-route").screenshot({
+  await page.locator("[data-profit-engine]").screenshot({
     path: `${shots}/${info.project.name}-underwriting-example.png`,
     style: ".site-nav, .skip-link { visibility: hidden !important; }",
   });
@@ -186,12 +177,8 @@ test("reduced motion retains usable route story and seeded brief", async ({
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page
-    .getByRole("heading", { name: "Show what holds up." })
-    .scrollIntoViewIfNeeded();
-  await expect(
-    page.getByRole("heading", { name: "Show what holds up." }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "IS THE WORK WORTH DOING?" })).toBeVisible();
+  await expect(page.locator("[data-profit-engine]")).toBeVisible();
   await page.goto("/forge/example-1/output");
   await expect(
     page.getByRole("heading", { name: "Intelligence brief: Northstar Search" }),
@@ -275,104 +262,33 @@ for (const width of [390, 768, 1024, 1440]) {
     }
   });
 }
-test("editorial hero and a genuinely pinned, scrubbed route", async ({
+test("empty live homepage remains truthful and unpinned", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "desktop");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
-  const story = page.locator(".route-narrative");
-  await expect(story).toHaveAttribute("data-enhanced", "true");
-  await expect(
-    page.locator(".hero-artifact, .use-case-grid, .feature-card"),
-  ).toHaveCount(0);
-  expect(
-    await page
-      .locator(".arb-hero")
-      .evaluate((el) => getComputedStyle(el).borderRadius),
-  ).toBe("0px");
-  const start = await story.evaluate(
-    (el) => el.getBoundingClientRect().top + scrollY - 72,
-  );
-  await page.evaluate(
-    (y) => window.scrollTo({ top: y, behavior: "instant" }),
-    start + 200,
-  );
-  await expect(story).toHaveAttribute("data-chapter", "1");
-  const first = await page.locator(".route-scene").boundingBox();
-  const initial = await page
-    .locator(".path-research")
-    .evaluate((el) => getComputedStyle(el).strokeDashoffset);
-  await page.evaluate(
-    (y) => window.scrollTo({ top: y, behavior: "instant" }),
-    start + 1440,
-  );
-  await expect(story).toHaveAttribute("data-chapter", "3");
-  await expect(
-    page.getByRole("heading", { name: "Select only what helps." }),
-  ).toBeVisible();
-  await expect
-    .poll(async () =>
-      parseFloat(
-        await page
-          .locator(".path-research")
-          .evaluate((el) => getComputedStyle(el).strokeDashoffset),
-      ),
-    )
-    .toBeLessThan(parseFloat(initial));
-  const middle = await page.locator(".route-scene").boundingBox();
-  expect(Math.abs(middle!.y - first!.y)).toBeLessThan(3);
-  await page.screenshot({ path: shots + "/desktop-route-midscroll.png" });
-  await page.evaluate(
-    (y) => window.scrollTo({ top: y, behavior: "instant" }),
-    start + 2320,
-  );
-  await expect(story).toHaveAttribute("data-chapter", "4");
-  await expect(
-    page.getByRole("heading", { name: "Show what holds up." }),
-  ).toBeVisible();
-  await expect(page.locator(".modeled-counter")).toHaveText("$0.21");
-  await expect(page.locator(".verification-final")).toBeVisible();
-  await expect(page.locator(".verification-start")).not.toBeVisible();
-  await page.screenshot({ path: shots + "/desktop-route-verified.png" });
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(story).not.toHaveAttribute("data-enhanced", "true");
+  await expect(page.locator("[data-profit-engine]")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "IS THE WORK WORTH DOING?" })).toBeVisible();
+  await expect(page.locator("main")).toContainText("No qualifying observed work");
+  await expect(page.locator("main")).not.toContainText("SIMULATED / ARBITRAGE LAB");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  await expect(page.locator(".verification-start")).toBeVisible();
-  await expect(page.locator(".verification-final")).toBeVisible();
-  for (const title of [
-    "Start with the boundary.",
-    "Not every source belongs.",
-    "Select only what helps.",
-    "Show what holds up.",
-  ]) {
-    await expect(page.getByRole("heading", { name: title })).toBeVisible();
-  }
+  await page.screenshot({ path: shots + "/desktop-profit-engine-empty.png" });
 });
-test("mobile route is a readable vertical story, with no pinning", async ({
+test("mobile Profit Engine is readable with no pinning", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "mobile");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  await expect(page.locator(".route-narrative")).not.toHaveAttribute(
-    "data-enhanced",
-    "true",
-  );
-  for (const title of [
-    "Start with the boundary.",
-    "Not every source belongs.",
-    "Select only what helps.",
-    "Show what holds up.",
-  ]) {
-    await page.getByRole("heading", { name: title }).scrollIntoViewIfNeeded();
-    await expect(page.getByRole("heading", { name: title })).toBeVisible();
-  }
+  await expect(page.getByRole("heading", { name: "IS THE WORK WORTH DOING?" })).toBeVisible();
+  await page.getByRole("heading", { name: "Continue with the evidence." }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole("heading", { name: "Continue with the evidence." })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page.screenshot({ path: shots + "/mobile-route-story.png" });
+  await page.screenshot({ path: shots + "/mobile-profit-engine.png", fullPage: true });
 });
