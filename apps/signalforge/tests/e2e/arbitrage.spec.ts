@@ -3,27 +3,13 @@ test.beforeEach(async ({ page }, info) => {
   await page.setExtraHTTPHeaders({
     "x-forwarded-for": `198.51.${info.project.name === "mobile" ? 211 : 210}.${info.title.length}`,
   });
-  await page.emulateMedia({ reducedMotion: "reduce" });
 });
-test("underwriting hero → Radar → policy sensitivity → auditable receipt", async ({
+test("Radar policy sensitivity → auditable receipt", async ({
   page,
 }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/en");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Find profitable routes",
-  );
-  await expect(page.locator(".arb-hero-route")).toContainText("$0.75");
-  await expect(page.locator(".arb-hero-route")).toContainText("SIMULATED");
-  await expect(page.locator(".paper-report")).toHaveCount(0);
-  await page.screenshot({
-    path: `test-results/screenshots/${info.project.name}-arbitrage-hero.png`,
-  });
-  await page
-    .getByRole("link", { name: "Open Arbitrage Lab ↗" })
-    .first()
-    .click();
+  await page.goto("/en/opportunities?mode=lab");
   await expect(
     page.getByRole("table", { name: "Opportunity radar" }),
   ).toBeVisible();

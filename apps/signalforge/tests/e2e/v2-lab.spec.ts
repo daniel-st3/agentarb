@@ -187,13 +187,13 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
   );
   await page.goto("/en/lab/v2");
   await Promise.all([opportunities, catalog]);
-  await expect(page.getByText("Extract and synthesize a bounded public dataset").first()).toBeVisible();
   const forgeTab = page.getByRole("tab", { name: "D", exact: true });
   await forgeTab.focus();
   await page.keyboard.press("Enter");
   await expect(forgeTab).toHaveAttribute("aria-selected", "true");
   const forge = page.locator('[data-forge-stage]');
   await expect(forge).toBeVisible();
+  await expect(forge).toContainText("Extract and synthesize a bounded public dataset");
   await expect(page.locator('[data-observation-id="agentbounties:forge-e2e"]')).toHaveCount(1);
   await expect(page.locator("[data-observation-id]")).toHaveCount(1);
   await expect(page.locator('[data-route-candidate-set="absent"]').first()).toContainText("RouteCandidateSet");
@@ -273,6 +273,29 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
   await expect(forge).toHaveAttribute("data-story-skipped", "false");
   await page.getByRole("tab", { name: "A", exact: true }).click();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
+
+  await page.goto("/en");
+  const profitEngine = page.locator("[data-profit-engine]");
+  const homeForge = page.locator('[data-surface="home"]');
+  await expect(page).toHaveTitle(/Underwrite AI-Agent Work/);
+  await expect(page.locator('link[rel~="icon"]')).toHaveAttribute("href", /icon\.svg/);
+  await expect(profitEngine).toBeVisible();
+  await expect(homeForge).toContainText("Extract and synthesize a bounded public dataset");
+  await expect(homeForge).toContainText("CAPITAL ≠ EXPENSE");
+  await expect(homeForge).toContainText("execution_not_enabled");
+  await expect(homeForge).not.toContainText("LAB STATE SIMULATION");
+  await expect(page.locator("[data-observation-id]")).toHaveCount(1);
+  await expect(page.getByRole("link", { name: "INSPECT LIVE WORK ↗" })).toHaveAttribute(
+    "href",
+    /opportunities\?id=agentbounties%3Aforge-e2e/,
+  );
+  await page.getByRole("button", { name: "SKIP STORY" }).click();
+  await expect(homeForge).toHaveAttribute("data-story-skipped", "true");
+  await page.getByRole("button", { name: "APPLY USER SCENARIO" }).click();
+  await expect(homeForge).toHaveAttribute("data-scenario-active", "true");
+  await expect(homeForge).toHaveAttribute("data-decision", "insufficient_data");
+  await expect(homeForge).toContainText("USER ASSUMPTION");
+  await expect(page.locator('.site-nav a[href*="/lab/v2"]')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });

@@ -5,14 +5,11 @@ test.beforeEach(async ({ page }, info) => {
   });
 });
 
-test("V3 evidence arrives once, remains truthful, and has a static equivalent", async ({
+test("evidence arrives once, remains truthful, and has a static equivalent", async ({
   page,
 }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
-  await expect(page.locator(".signal-field")).toHaveCount(2);
-  await expect(page.locator(".arb-hero-route")).toContainText("SIMULATED");
   await page.goto("/forge/example-1/output");
   const evidence = page.locator(".living-evidence");
   await evidence.scrollIntoViewIfNeeded();

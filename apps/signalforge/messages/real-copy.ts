@@ -1,4 +1,6 @@
 export const realCopy: Array<[string, string, string]> = [
+  ["Market", "Mercado", "Marché"],
+  ["Forge", "Forja", "Forge"],
   ["Claim readiness inspection", "Inspección de preparación para reclamar", "Inspection de préparation à la réclamation"],
   ["Authorization", "Autorización", "Autorisation"],
   ["REQUIRED / NOT GRANTED", "REQUERIDA / NO CONCEDIDA", "REQUISE / NON ACCORDÉE"],

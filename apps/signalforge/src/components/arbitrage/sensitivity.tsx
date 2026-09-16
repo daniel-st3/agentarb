@@ -6,14 +6,12 @@ import {
 } from "@/domain/arbitrage";
 import { findLab } from "@/domain/arbitrage-lab";
 import { useCopy } from "@/i18n/copy";
-import { useLocale } from "next-intl";
 export function Sensitivity({
   evaluation: e,
 }: {
   evaluation: ArbitrageEvaluation;
 }) {
   const t = useCopy(),
-    locale = useLocale(),
     spec = findLab(e.opportunityId)?.specification;
   if (
     !spec ||
@@ -50,11 +48,13 @@ export function Sensitivity({
       ).decision,
     };
   });
-  const money = (n: number) =>
-    new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "USD",
-    }).format(n / 100);
+  // SVG title hydration must be byte-stable across Node and browser ICU builds.
+  // The chart is explicitly USD-denominated, so a deterministic formatter is
+  // safer here than locale-dependent Intl output.
+  const money = (n: number) => {
+    const value = Math.abs(n);
+    return `${n < 0 ? "−" : ""}$${Math.floor(value / 100)}.${String(value % 100).padStart(2, "0")}`;
+  };
   const x = (n: number) => 24 + (252 * n) / upper,
     y = (profit: number) => 100 - (74 * (profit + total)) / upper;
   const current = e.payout.amountCents;
@@ -98,16 +98,13 @@ export function Sensitivity({
                   : "#c68d89"
             }
           >
-            <title>
-              {money(p.payout)} →{" "}
-              {t(
+            <title>{`${money(p.payout)} → ${t(
                 p.decision === "profitable"
                   ? "PROFITABLE"
                   : p.decision === "marginal"
                     ? "MARGINAL"
                     : "UNECONOMIC",
-              )}
-            </title>
+              )}`}</title>
           </circle>
         ))}
         {current !== null && current <= upper && (

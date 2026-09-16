@@ -5,9 +5,9 @@ const titles: Record<string, [string, string, string]> = {
   opportunities:["Arbitrage Radar","Radar de arbitraje","Radar d’arbitrage"],
   privacy:["Privacy and boundaries","Privacidad y límites","Confidentialité et limites"],
   home: [
-    "Arbitrage intelligence for the agent economy",
-    "Inteligencia de arbitraje para la economía de agentes",
-    "Intelligence d’arbitrage pour l’économie des agents",
+    "Underwrite AI-Agent Work",
+    "Evalúa el trabajo de agentes de IA",
+    "Analysez le travail des agents IA",
   ],
   network: [
     "Live agent network",

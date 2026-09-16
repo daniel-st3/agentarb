@@ -9,6 +9,7 @@ import { Flip } from "gsap/Flip";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 import { m, useReducedMotion } from "motion/react";
 import type { ArbitrageEvaluation, Decision } from "@/domain/arbitrage";
+import Link from "@/i18n/navigation";
 import type { LabCopy } from "./copy";
 import {
   fetchLabUnderwriting,
@@ -24,6 +25,14 @@ gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText, Flip, DrawSVGPlugin);
 
 const STAGES = ["capture", "capabilities", "route", "economics", "decision"] as const;
 type DerivedEconomics = NonNullable<ArbitrageEvaluation["realEconomics"]>["derived"];
+
+export type ForgeHomePresentation = {
+  eyebrow: string;
+  introduction: string;
+  inspectAction: string;
+  underwriteAction: string;
+  controlsLabel: string;
+};
 
 const MARKET_SLOTS = [
   [68, 21], [84, 18], [57, 43], [78, 46], [91, 42], [55, 68], [72, 73], [88, 67], [43, 84],
@@ -54,7 +63,15 @@ function decisionText(decision: Decision, copy: LabCopy) {
   return labels[decision] ?? decision.toUpperCase().replaceAll("_", " ");
 }
 
-export function ConceptD({ dataset, copy }: { dataset: LabDataset; copy: LabCopy }) {
+export function ConceptD({
+  dataset,
+  copy,
+  home,
+}: {
+  dataset: LabDataset;
+  copy: LabCopy;
+  home?: ForgeHomePresentation;
+}) {
   const subject = dataset.subject;
   const scope = useRef<HTMLElement>(null);
   const timeline = useRef<gsap.core.Timeline | null>(null);
@@ -214,10 +231,10 @@ export function ConceptD({ dataset, copy }: { dataset: LabDataset; copy: LabCopy
         .fromTo(verdictSplit.lines, { autoAlpha: 0.5, scaleX: 0.91, transformOrigin: "left center" }, { autoAlpha: 1, scaleX: 1, duration: 0.075, stagger: 0.018, ease: "power3.inOut" }, 0.88);
 
       const st = ScrollTrigger.create({
-        id: "v2-forge-story",
+        id: home ? "profit-engine-story" : "v2-forge-story",
         trigger: story,
         start: "top top",
-        end: "+=400%",
+        end: home ? "+=300%" : "+=400%",
         pin,
         scrub: 0.55,
         animation: tl,
@@ -237,7 +254,7 @@ export function ConceptD({ dataset, copy }: { dataset: LabDataset; copy: LabCopy
       };
     });
     return () => media.revert();
-  }, { scope, dependencies: [subject?.id, activeDecision, skipped, fontsReady, layoutRevision], revertOnUpdate: true });
+  }, { scope, dependencies: [subject?.id, activeDecision, skipped, fontsReady, layoutRevision, home], revertOnUpdate: true });
 
   const replay = () => {
     setSkipped(false);
@@ -250,7 +267,7 @@ export function ConceptD({ dataset, copy }: { dataset: LabDataset; copy: LabCopy
       replayTween.current?.kill();
       replayTween.current = gsap.to(tl, {
         progress: 1,
-        duration: 11,
+        duration: home ? 7 : 11,
         ease: "none",
         onUpdate: () => {
           const progress = tl.progress();
@@ -289,11 +306,16 @@ export function ConceptD({ dataset, copy }: { dataset: LabDataset; copy: LabCopy
   );
 
   return (
-    <section ref={scope} className={styles.conceptD} aria-labelledby="concept-d-title" data-scenario-active={scenarioActive} data-forge-stage={STAGES[stage]} data-story-skipped={skipped} data-decision={activeDecision}>
+    <section ref={scope} className={styles.conceptD} aria-labelledby="concept-d-title" data-surface={home ? "home" : "lab"} data-scenario-active={scenarioActive} data-forge-stage={STAGES[stage]} data-story-skipped={skipped} data-decision={activeDecision}>
       <header className={styles.dIntro}>
-        <p className={styles.sectionIndex}>D / {copy.forge} · SIGNALFORGE / LIVE UNDERWRITING</p>
-        <h2 id="concept-d-title">{copy.forgeIntro}</h2>
-        <div className={styles.dPlayback} aria-label="Story controls">
+        <p className={styles.sectionIndex}>{home?.eyebrow ?? `D / ${copy.forge} · SIGNALFORGE / LIVE UNDERWRITING`}</p>
+        {home ? <h1 id="concept-d-title">{copy.forgeTitle}</h1> : <h2 id="concept-d-title">{copy.forgeIntro}</h2>}
+        {home && <p className={styles.dHomeIntroduction}>{home.introduction}</p>}
+        {home && <div className={styles.dHomeActions}>
+          <Link href={`/opportunities?id=${encodeURIComponent(subject.id)}`}>{home.inspectAction} ↗</Link>
+          <Link href="/forge">{home.underwriteAction} →</Link>
+        </div>}
+        <div className={styles.dPlayback} aria-label={home?.controlsLabel ?? "Story controls"}>
           <button type="button" onClick={replay} disabled={motionReduced}>{copy.replay}</button>
           <button type="button" onClick={skip}>{copy.skip}</button>
         </div>

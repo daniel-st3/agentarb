@@ -115,9 +115,26 @@ test("homepage refresh opens the exact source opportunity in the Radar", async (
   };
   await page.route("**/api/v1/opportunities?*", (route) =>
     route.fulfill({
-      json: { records: [another, task], observedSupplyCount: 75 },
+      json: {
+        version: "2.0",
+        mode: "observed",
+        records: [another, task],
+        observedSupplyCount: 75,
+        matchedCount: 2,
+        truncated: false,
+        executionStatus: "execution_not_enabled",
+      },
     }),
   );
+  await page.route("**/api/v1/catalog?*", (route) => route.fulfill({
+    json: {
+      version: "1.0",
+      records: [],
+      matchedCount: 0,
+      truncated: false,
+      executionStatus: "execution_not_enabled",
+    },
+  }));
   const evaluated: string[] = [];
   await page.route("**/api/v1/opportunities/evaluate", (route) => {
     evaluated.push(route.request().postDataJSON().opportunityId);
@@ -128,8 +145,8 @@ test("homepage refresh opens the exact source opportunity in the Radar", async (
     });
   });
   await page.goto("/en");
-  await expect(page.locator(".live-market-note")).toContainText(another.title);
-  await page.getByRole("link", { name: "Inspect this opportunity →" }).click();
+  await expect(page.locator("[data-profit-engine]")).toContainText(another.title);
+  await page.getByRole("link", { name: "INSPECT LIVE WORK ↗" }).click();
   await expect(page).toHaveURL(/id=agentbounties%3Aanother-test/);
   await expect(page.locator("#opportunity-inspector h2")).toHaveText(
     another.title,
