@@ -50,6 +50,7 @@ describe("deployed boundary", () => {
       "src/app/api/run/route.ts",
       "src/app/api/v1/catalog/[id]/route.ts",
       "src/app/api/v1/catalog/route.ts",
+      "src/app/api/v1/forge/underwrite/route.ts",
       "src/app/api/v1/network/status/route.ts",
       "src/app/api/v1/openapi/route.ts",
       "src/app/api/v1/opportunities/claim-readiness/route.ts",

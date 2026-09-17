@@ -289,12 +289,18 @@ export function ConceptD({
 
   const goToStage = (index: number) => {
     if (motionReduced || skipped || !trigger.current) {
+      stageValue.current = index;
       setStage(index);
       return;
     }
     const st = trigger.current;
     const targetProgress = [0.08, 0.41, 0.58, 0.76, 0.94][index];
-    window.scrollTo({ top: st.start + (st.end - st.start) * targetProgress, behavior: "smooth" });
+    const targetScroll = st.start + (st.end - st.start) * targetProgress;
+    replayTween.current?.kill();
+    window.scrollTo({ top: targetScroll, behavior: "auto" });
+    ScrollTrigger.update();
+    stageValue.current = index;
+    setStage(index);
   };
 
   if (!subject) return (

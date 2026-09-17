@@ -24,25 +24,30 @@ export async function planRouteService(
   input: z.infer<typeof ObjectiveInputSchema>,
   signal: AbortSignal,
   frame?: z.infer<typeof ObjectiveFrameSchema>,
+  locale: "en" | "es" | "fr" = "en",
+  allowDemoOffers = demoDataEnabled(),
 ) {
   const result = frame
     ? null
-    : await frameWithProvider(input, () => {}, signal);
+    : await frameWithProvider(input, () => {}, signal, locale);
   const route = buildExecutionRoute(input, frame ?? result!.frame, {
-    ...(demoDataEnabled() ? {} : {offers:[]}),
+    ...(allowDemoOffers ? {} : { offers: [] }),
     id: `route_${randomUUID()}`,
     createdAt: new Date().toISOString(),
   });
-  if (!demoDataEnabled()) { route.executionMode = "planning_only"; route.provenance.isSimulated = false; route.provenance.note = "Observed catalog context only. No executable task quotes or provider authorization. Execution is disabled."; }
+  if (!allowDemoOffers) { route.executionMode = "planning_only"; route.provenance.isSimulated = false; route.provenance.note = "Observed catalog context only. No executable task quotes or provider authorization. Execution is disabled."; }
   const network = await networkSnapshot();
   const required = route.objectiveFrame.requiredCapabilities.map((c) => c.id);
-  route.observedSupply = observedCatalogOptions(network.records, required);
+  route.observedSupply = observedCatalogOptions(network.records, required).filter(
+    (option) =>
+      allowDemoOffers || ["live", "cached_live"].includes(option.freshness),
+  );
   return PlanningResponseSchema.parse({
     objectiveFrame: route.objectiveFrame,
     route: ExecutionRouteContractSchema.parse(route),
     ...(result ? { decompositionSource: result.source } : {}),
     freshnessSummary: network.sources,
-    warnings: [demoDataEnabled() ? warnings[0] : "Planning only. No service execution, task quotes or payments.", ...network.warnings],
+    warnings: [allowDemoOffers ? warnings[0] : "Planning only. No service execution, task quotes or payments.", ...network.warnings],
     executionStatus: "execution_not_enabled" as const,
   });
 }

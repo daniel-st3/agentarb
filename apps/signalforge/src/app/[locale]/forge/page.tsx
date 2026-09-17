@@ -1,5 +1,5 @@
 import { pageMetadata } from "@/i18n/metadata";
-import { ResearchCommand } from "@/components/research-command";
+import { ForgeLab } from "@/components/forge-lab/forge-lab";
 import { capabilityIds, ObjectiveInputSchema } from "@/domain/objective";
 export const generateMetadata = ({
   params,
@@ -27,7 +27,7 @@ export default async function Forge({
       ? listing
       : undefined;
   return (
-    <ResearchCommand
+    <ForgeLab
       key={initial + (reference ?? "")}
       initialObjective={
         initial +
