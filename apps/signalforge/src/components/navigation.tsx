@@ -5,10 +5,16 @@ import { Brand } from "./ui";
 import { NetworkIndicator } from "./network-state";
 import { useCommandPalette } from "./interactions/provider";
 import { LanguageSelector } from "./language-selector";
+import { useLocale } from "next-intl";
+import { useAuth } from "./account/auth-provider";
+import { accountCopy, type AccountLocale } from "./account/copy";
 export function Navigation() {
   const t = useCopy(),
     path = usePathname(),
     open = useCommandPalette();
+  const locale = useLocale() as AccountLocale;
+  const account = accountCopy[locale] ?? accountCopy.en;
+  const auth = useAuth();
   const links = path === "/"
     ? [
         ["/opportunities", "Market"],
@@ -46,6 +52,16 @@ export function Navigation() {
               </Link>
             ))}
             <NetworkIndicator />
+            {auth.user ? (
+              <details className="account-menu">
+                <summary aria-label={account.menu}>{auth.user.displayName?.split(" ")[0] ?? auth.user.email?.split("@")[0] ?? account.account}</summary>
+                <div>
+                  <Link href="/account/history">{account.analyses}</Link>
+                  <Link href="/account">{account.account}</Link>
+                  <button type="button" onClick={() => auth.signOut()}>{account.signOut}</button>
+                </div>
+              </details>
+            ) : <button className="nav-sign-in" type="button" onClick={auth.openAuth}>{account.signIn}</button>}
           </div>
           <details className="arb-mobile-nav">
             <summary>{t("Menu")}</summary>
@@ -62,6 +78,13 @@ export function Navigation() {
                   {t(label)}
                 </Link>
               ))}
+              {auth.user ? (
+                <>
+                  <Link href="/account/history">{account.analyses}</Link>
+                  <Link href="/account">{account.account}</Link>
+                  <button type="button" onClick={() => auth.signOut()}>{account.signOut}</button>
+                </>
+              ) : <button type="button" onClick={auth.openAuth}>{account.signIn}</button>}
             </div>
           </details>
         </nav>

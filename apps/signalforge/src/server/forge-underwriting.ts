@@ -13,6 +13,9 @@ import { readBounded } from "./http";
 import { checkPlanningLimit, quotaHeaders } from "./planning-limit";
 import { planRouteService } from "./route-http";
 import { hashReceipt } from "./arbitrage/service";
+import { randomUUID } from "node:crypto";
+import { persistForgeRun } from "./account/forge-runs";
+import { issueSaveAuthorization } from "./account/save-proof";
 
 const baseHeaders = {
   "Cache-Control": "no-store",
@@ -24,6 +27,7 @@ export async function underwriteForgeTask(
   signal: AbortSignal,
 ) {
   const input = ForgeUnderwritingInputSchema.parse(raw);
+  const clientRunId = input.clientRunId ?? randomUUID();
   const planning = await planRouteService(
     input.objective,
     signal,
@@ -54,17 +58,21 @@ export async function underwriteForgeTask(
     servicesCalled: false,
     paymentsMade: false,
   });
+  const receiptHash = hashReceipt(receiptCore);
   return ForgeUnderwritingResponseSchema.parse({
     version: "1.0",
+    clientRunId,
+    saveAuthorization: issueSaveAuthorization(clientRunId, receiptHash),
     planning,
     ...result,
     receipt: {
       core: receiptCore,
-      receiptHash: hashReceipt(receiptCore),
+      receiptHash,
       hashAlgorithm: "SHA-256/canonical-json-v2",
       receiptFingerprintIsSignature: false,
     },
     executionStatus: "execution_not_enabled",
+    persistence: { status: "guest", savedRunId: null },
   });
 }
 
@@ -74,7 +82,13 @@ export async function handleForgeUnderwriting(request: Request) {
   try {
     const input = ForgeUnderwritingInputSchema.parse(await readBounded(request));
     const result = await underwriteForgeTask(input, request.signal);
-    return Response.json(result, {
+    let persistence = result.persistence;
+    try {
+      persistence = await persistForgeRun({ ...input, clientRunId: result.clientRunId }, result);
+    } catch {
+      persistence = { status: "failed", savedRunId: null };
+    }
+    return Response.json({ ...result, persistence }, {
       headers: { ...baseHeaders, ...quotaHeaders(request) },
     });
   } catch (error) {

@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useLocale } from "next-intl";
 import { AnimatePresence, m } from "motion/react";
 import { ArrowUpRight, Download } from "lucide-react";
-import type { ForgeUnderwritingResponse } from "@/domain/forge-underwriting";
+import type { ForgeUnderwritingInput, ForgeUnderwritingResponse } from "@/domain/forge-underwriting";
 import { policies } from "@/domain/schema";
 import { forgeCopy, type ForgeCopy, type ForgeLocale } from "./copy";
 import styles from "./forge-lab.module.css";
+import { useAuth } from "@/components/account/auth-provider";
+import { accountCopy } from "@/components/account/copy";
+import { clearPendingForgeRun, getPendingForgeRun, setPendingForgeRun } from "@/components/account/pending-run";
 
 type FormState = {
   objective: string;
@@ -164,10 +167,15 @@ function LedgerRow({
 export function ForgeLab({ initialObjective = "" }: { initialObjective?: string }) {
   const locale = useLocale() as ForgeLocale;
   const copy = forgeCopy[locale] ?? forgeCopy.en;
+  const account = accountCopy[locale] ?? accountCopy.en;
+  const auth = useAuth();
   const [form, setForm] = useState(() => initialState(initialObjective));
   const [result, setResult] = useState<ForgeUnderwritingResponse | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [lastInput, setLastInput] = useState<ForgeUnderwritingInput | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const restored = useRef(false);
 
   const request = useMemo(
     () => ({
@@ -199,6 +207,31 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
     [form, locale],
   );
 
+  useEffect(() => {
+    if (restored.current) return;
+    const pendingRun = getPendingForgeRun();
+    if (!pendingRun) return;
+    restored.current = true;
+    void Promise.resolve().then(async () => {
+      setResult(pendingRun.result);
+      setLastInput(pendingRun.input);
+      if (!auth.user) return;
+      setSaveState("saving");
+      try {
+        const response = await fetch("/api/account/forge-runs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input: pendingRun.input, result: pendingRun.result, saveAuthorization: pendingRun.result.saveAuthorization }),
+        });
+        if (!response.ok) throw new Error("save_failed");
+        clearPendingForgeRun();
+        setSaveState("saved");
+      } catch {
+        setSaveState("failed");
+      }
+    });
+  }, [auth.user]);
+
   function field<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
@@ -220,17 +253,21 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
       return;
     }
     setPending(true);
+    setSaveState("idle");
     try {
+      const runRequest: ForgeUnderwritingInput = { ...request, clientRunId: crypto.randomUUID() };
       const response = await fetch("/api/v1/forge/underwrite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(request),
+        body: JSON.stringify(runRequest),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(copy.requestError);
       if (!isSafeForgeResponse(body))
         throw new Error(copy.requestError);
       setResult(body);
+      setLastInput(runRequest);
+      setSaveState(body.persistence.status === "saved" ? "saved" : body.persistence.status === "failed" ? "failed" : "idle");
       requestAnimationFrame(() =>
         document.getElementById("forge-objective")?.scrollIntoView({ block: "start" }),
       );
@@ -239,6 +276,12 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
     } finally {
       setPending(false);
     }
+  }
+
+  function saveGuestRun() {
+    if (!result || !lastInput) return;
+    setPendingForgeRun({ input: lastInput, result, returnTo: `/${locale}/forge`, createdAt: new Date().toISOString() });
+    auth.openAuth();
   }
 
   function downloadReceipt() {
@@ -495,6 +538,16 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
                         <header><span className={styles.label}>{copy.receipt}</span><button type="button" onClick={downloadReceipt}><Download size={14} aria-hidden="true" /> {copy.download}</button></header>
                         <code>{result.receipt.receiptHash}</code>
                         <small>{copy.fingerprint} · {result.receipt.hashAlgorithm}</small>
+                      </div>
+                      <div className={styles.savePanel}>
+                        {auth.user ? (
+                          <p role="status">{saveState === "saving" ? account.saving : saveState === "failed" ? account.saveFailed : account.saved}</p>
+                        ) : (
+                          <>
+                            <button type="button" onClick={saveGuestRun}>{account.save}</button>
+                            <p>{account.saveHelp}</p>
+                          </>
+                        )}
                       </div>
                     </div>
                   </section>

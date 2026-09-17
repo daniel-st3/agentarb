@@ -18,6 +18,7 @@ const OptionalMoneyTextSchema = z.union([MoneyTextSchema, z.literal("")]);
 
 export const ForgeUnderwritingInputSchema = z
   .object({
+    clientRunId: z.string().uuid().optional(),
     objective: ObjectiveInputSchema,
     locale: z.enum(["en", "es", "fr"]).default("en"),
     scenario: z
@@ -119,6 +120,8 @@ export const ForgeReceiptCoreSchema = z
 export const ForgeUnderwritingResponseSchema = z
   .object({
     version: z.literal("1.0"),
+    clientRunId: z.string().uuid(),
+    saveAuthorization: z.string().regex(/^[a-f0-9]{64}$/).optional(),
     planning: PlanningResponseSchema,
     scenario: ForgeEconomicScenarioSchema,
     routeEvidence: ForgeRouteEvidenceSchema,
@@ -136,6 +139,10 @@ export const ForgeUnderwritingResponseSchema = z
       })
       .strict(),
     executionStatus: z.literal("execution_not_enabled"),
+    persistence: z.object({
+      status: z.enum(["guest", "saved", "failed"]),
+      savedRunId: z.string().uuid().nullable(),
+    }).strict(),
   })
   .strict();
 

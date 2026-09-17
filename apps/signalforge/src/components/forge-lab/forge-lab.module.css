@@ -78,6 +78,9 @@
 .receipt button { min-height: 44px; border: 0; border-bottom: 1px solid var(--forge-orange); color: var(--forge-ink); background: transparent; font: .65rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .receipt small { color: var(--forge-muted); }
 .status { padding-block: 1rem; color: var(--forge-orange); font: .68rem var(--font-mono); letter-spacing: .08em; }
+.savePanel { display: grid; gap: .55rem; margin-block-start: 1rem; padding: 1.25rem 0; border-bottom: 1px solid var(--forge-line); }
+.savePanel button { justify-self: start; min-height: 44px; border: 1px solid var(--forge-orange); border-radius: 0; padding: .7rem 1rem; color: var(--forge-ink); background: transparent; font: .65rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.savePanel p { margin: 0; color: var(--forge-muted); font-size: .78rem; }
 .lab :focus-visible { outline-color: var(--forge-orange); }
 
 @media (max-width: 900px) {

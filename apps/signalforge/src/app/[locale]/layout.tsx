@@ -11,6 +11,9 @@ import { InteractionProvider } from "@/components/interactions/provider";
 import { PageChoreography } from "@/components/editorial/atmosphere";
 import { cachedNetworkView } from "@/server/intelligence/cached-view";
 import { NetworkStatusSchema } from "@/domain/intelligence";
+import { AuthProvider } from "@/components/account/auth-provider";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
+import { supabasePublicConfig } from "@/lib/supabase/config";
 export const generateMetadata = ({
   params,
 }: {
@@ -27,6 +30,7 @@ export default async function RootLayout({
   if (!hasLocale(locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getCopy();
+  const authUser = await getAuthenticatedUser();
   const cached = await cachedNetworkView();
   const { records, ...network } = cached ?? { records: [] };
   const observed = records.filter((r) =>
@@ -52,6 +56,15 @@ export default async function RootLayout({
   return (
     <>
       <NextIntlClientProvider locale={locale}>
+        <AuthProvider
+          configured={Boolean(supabasePublicConfig())}
+          initialUser={authUser ? {
+            id: authUser.id,
+            email: authUser.email ?? null,
+            displayName: typeof authUser.user_metadata?.full_name === "string" ? authUser.user_metadata.full_name : null,
+            avatarUrl: typeof authUser.user_metadata?.avatar_url === "string" ? authUser.user_metadata.avatar_url : null,
+          } : null}
+        >
         <InteractionProvider>
           <a className="skip-link" href="#main">
             {t("Skip to content")}
@@ -87,6 +100,7 @@ export default async function RootLayout({
             </p>
           </footer>
         </InteractionProvider>
+        </AuthProvider>
       </NextIntlClientProvider>
     </>
   );

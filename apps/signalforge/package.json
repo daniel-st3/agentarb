@@ -23,6 +23,8 @@
     "@ai-sdk/groq": "^4.0.35",
     "@gsap/react": "^2.1.2",
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.116.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.3",
     "ai": "^7.0.85",
