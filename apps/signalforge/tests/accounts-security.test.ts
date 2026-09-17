@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { safeAuthNext } from "../src/lib/auth-redirect";
 import { ForgeUnderwritingInputSchema, ForgeUnderwritingResponseSchema } from "../src/domain/forge-underwriting";
 import { issueSaveAuthorization, verifySaveAuthorization } from "../src/server/account/save-proof";
+import { classifyAuthRequestFailure } from "../src/components/account/auth-error";
 
 const migration = readFileSync("supabase/migrations/20260917023313_accounts_saved_runs_v1.sql", "utf8");
 
@@ -46,5 +47,12 @@ describe("accounts and saved-run boundaries", () => {
     expect(verifySaveAuthorization(runId, "b".repeat(64), proof)).toBe(false);
     expect(verifySaveAuthorization(crypto.randomUUID(), receipt, proof)).toBe(false);
     vi.unstubAllEnvs();
+  });
+
+  it("classifies hosted auth failures without inspecting email or response content", () => {
+    expect(classifyAuthRequestFailure({ status: 429, code: "over_email_send_rate_limit" })).toBe("rate_limited");
+    expect(classifyAuthRequestFailure({ status: 400, code: "email_address_not_authorized" })).toBe("delivery_restricted");
+    expect(classifyAuthRequestFailure({ status: 401, code: "invalid_api_key" })).toBe("configuration");
+    expect(classifyAuthRequestFailure({ status: 500, code: "unexpected_failure" })).toBe("unavailable");
   });
 });

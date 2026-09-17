@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { accountCopy, type AccountLocale } from "./copy";
+import { reportAuthRequestFailure, type AuthRequestFailure } from "./auth-error";
 
 export type AuthUser = { id: string; email: string | null; displayName: string | null; avatarUrl: string | null };
 type AuthContextValue = {
@@ -25,7 +26,7 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
   const [user, setUser] = useState(initialUser);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "pending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "pending" | "sent" | AuthRequestFailure>("idle");
   const dialog = useRef<HTMLDialogElement>(null);
 
   const closeAuth = useCallback(() => {
@@ -57,27 +58,27 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
 
   async function google() {
     const client = createSupabaseBrowserClient();
-    if (!client) return setStatus("error");
+    if (!client) return setStatus("configuration");
     setStatus("pending");
     const next = `/${locale}${pathname}`;
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
-    if (error) setStatus("error");
+    if (error) setStatus(reportAuthRequestFailure("google_oauth", error));
   }
 
   async function sendEmail(event: FormEvent) {
     event.preventDefault();
     const client = createSupabaseBrowserClient();
-    if (!client || !/^\S+@\S+\.\S+$/.test(email)) return setStatus("error");
+    if (!client || !/^\S+@\S+\.\S+$/.test(email)) return setStatus("unavailable");
     setStatus("pending");
     const next = `/${locale}${pathname}`;
     const { error } = await client.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
-    setStatus(error ? "error" : "sent");
+    setStatus(error ? reportAuthRequestFailure("email_otp", error) : "sent");
   }
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -111,7 +112,13 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
                 <input id="auth-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder={copy.emailPlaceholder} />
                 <button type="submit" disabled={status === "pending"}>{copy.send}</button>
               </form>
-              <p className="auth-status" role="status" aria-live="polite">{status === "sent" ? copy.sent : status === "error" ? copy.safeError : ""}</p>
+              <p className="auth-status" role="status" aria-live="polite">
+                {status === "sent" ? copy.sent
+                  : status === "rate_limited" ? copy.rateLimited
+                    : status === "delivery_restricted" ? copy.deliveryRestricted
+                      : status === "configuration" || status === "unavailable" ? copy.safeError
+                        : ""}
+              </p>
             </>
           )}
           <button className="auth-guest" type="button" onClick={closeAuth}>{copy.continueGuest}</button>
