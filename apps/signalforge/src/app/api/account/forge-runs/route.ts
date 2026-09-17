@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       !verifySaveAuthorization(body.result.clientRunId, body.result.receipt.receiptHash, body.saveAuthorization)) {
       return Response.json({ error: "The saved analysis could not be verified as a server result." }, { status: 409, headers: { ...noStore, ...quotaHeaders(request) } });
     }
-    const persistence = await persistForgeRun(body.input, body.result);
+    const persistence = await persistForgeRun(body.input, body.result, { expectAuthenticated: true });
     if (persistence.status === "guest") return Response.json({ error: "Authentication required." }, { status: 401, headers: noStore });
     return Response.json(persistence, { headers: { ...noStore, ...quotaHeaders(request) } });
   } catch (error) {

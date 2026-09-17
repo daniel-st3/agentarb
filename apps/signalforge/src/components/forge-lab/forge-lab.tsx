@@ -11,6 +11,7 @@ import styles from "./forge-lab.module.css";
 import { useAuth } from "@/components/account/auth-provider";
 import { accountCopy } from "@/components/account/copy";
 import { clearPendingForgeRun, getPendingForgeRun, setPendingForgeRun } from "@/components/account/pending-run";
+import { isConfirmedSavedRun, saveStateFromPersistence, type SaveState } from "@/components/account/save-status";
 
 type FormState = {
   objective: string;
@@ -174,7 +175,7 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [lastInput, setLastInput] = useState<ForgeUnderwritingInput | null>(null);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
   const restored = useRef(false);
 
   const request = useMemo(
@@ -223,7 +224,8 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ input: pendingRun.input, result: pendingRun.result, saveAuthorization: pendingRun.result.saveAuthorization }),
         });
-        if (!response.ok) throw new Error("save_failed");
+        const persistence: unknown = await response.json();
+        if (!response.ok || !isConfirmedSavedRun(persistence)) throw new Error("save_failed");
         clearPendingForgeRun();
         setSaveState("saved");
       } catch {
@@ -231,6 +233,28 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
       }
     });
   }, [auth.user]);
+
+  async function confirmAuthenticatedSave(
+    input: ForgeUnderwritingInput,
+    completed: ForgeUnderwritingResponse,
+  ) {
+    setSaveState("saving");
+    try {
+      const response = await fetch("/api/account/forge-runs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          input,
+          result: completed,
+          saveAuthorization: completed.saveAuthorization,
+        }),
+      });
+      const persistence: unknown = await response.json();
+      setSaveState(response.ok && isConfirmedSavedRun(persistence) ? "saved" : "failed");
+    } catch {
+      setSaveState("failed");
+    }
+  }
 
   function field<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -267,7 +291,11 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
         throw new Error(copy.requestError);
       setResult(body);
       setLastInput(runRequest);
-      setSaveState(body.persistence.status === "saved" ? "saved" : body.persistence.status === "failed" ? "failed" : "idle");
+      const serverSaveState = saveStateFromPersistence(body.persistence);
+      setSaveState(serverSaveState);
+      if (auth.user && serverSaveState !== "saved") {
+        void confirmAuthenticatedSave(runRequest, body);
+      }
       requestAnimationFrame(() =>
         document.getElementById("forge-objective")?.scrollIntoView({ block: "start" }),
       );
@@ -541,7 +569,9 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
                       </div>
                       <div className={styles.savePanel}>
                         {auth.user ? (
-                          <p role="status">{saveState === "saving" ? account.saving : saveState === "failed" ? account.saveFailed : account.saved}</p>
+                          saveState === "idle" ? null : (
+                            <p role="status">{saveState === "saving" ? account.saving : saveState === "failed" ? account.saveFailed : account.saved}</p>
+                          )
                         ) : (
                           <>
                             <button type="button" onClick={saveGuestRun}>{account.save}</button>

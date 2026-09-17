@@ -4,16 +4,29 @@ import { ForgeUnderwritingInputSchema, ForgeUnderwritingResponseSchema, type For
 import { hashReceipt } from "@/server/arbitrage/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/database";
+import { reportForgeRunPersistence } from "./persistence-diagnostics";
 
-export async function persistForgeRun(inputRaw: ForgeUnderwritingInput, resultRaw: ForgeUnderwritingResponse) {
+export async function persistForgeRun(
+  inputRaw: ForgeUnderwritingInput,
+  resultRaw: ForgeUnderwritingResponse,
+  options: { expectAuthenticated?: boolean } = {},
+) {
   const input = ForgeUnderwritingInputSchema.parse(inputRaw);
   const result = ForgeUnderwritingResponseSchema.parse(resultRaw);
   if (!input.clientRunId || input.clientRunId !== result.clientRunId) throw new Error("run_identity_mismatch");
   if (hashReceipt(result.receipt.core) !== result.receipt.receiptHash) throw new Error("receipt_fingerprint_mismatch");
   const client = await createSupabaseServerClient();
-  if (!client) return { status: "guest" as const, savedRunId: null };
+  if (!client) {
+    if (options.expectAuthenticated) reportForgeRunPersistence("forge_run_session_missing");
+    return { status: "guest" as const, savedRunId: null };
+  }
   const { data: auth, error: authError } = await client.auth.getUser();
-  if (authError || !auth.user) return { status: "guest" as const, savedRunId: null };
+  if (authError || !auth.user) {
+    if (authError || options.expectAuthenticated) {
+      reportForgeRunPersistence("forge_run_session_missing", { authError });
+    }
+    return { status: "guest" as const, savedRunId: null };
+  }
 
   const core = result.receipt.core;
   const storedResult = { ...result };
@@ -36,6 +49,10 @@ export async function persistForgeRun(inputRaw: ForgeUnderwritingInput, resultRa
     .upsert(row, { onConflict: "user_id,idempotency_key", ignoreDuplicates: false })
     .select("id")
     .single();
-  if (error || !data) throw new Error("forge_run_save_failed");
+  if (error || !data) {
+    reportForgeRunPersistence("forge_run_postgrest_rejected", { postgrestError: error });
+    throw new Error("forge_run_save_failed");
+  }
+  reportForgeRunPersistence("forge_run_saved");
   return { status: "saved" as const, savedRunId: data.id };
 }

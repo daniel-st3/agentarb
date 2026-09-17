@@ -6,6 +6,7 @@ import { ForgeUnderwritingInputSchema, ForgeUnderwritingResponseSchema } from ".
 import { issueSaveAuthorization, verifySaveAuthorization } from "../src/server/account/save-proof";
 import { classifyAuthRequestFailure } from "../src/components/account/auth-error";
 import { emailConfirmationRedirect } from "../src/lib/auth-email";
+import { isConfirmedSavedRun, saveStateFromPersistence } from "../src/components/account/save-status";
 
 const migration = readFileSync("supabase/migrations/20260917023313_accounts_saved_runs_v1.sql", "utf8");
 const nextConfig = readFileSync("next.config.ts", "utf8");
@@ -55,6 +56,21 @@ describe("accounts and saved-run boundaries", () => {
     expect(ForgeUnderwritingInputSchema.shape.clientRunId.safeParse(crypto.randomUUID()).success).toBe(true);
     expect(ForgeUnderwritingResponseSchema.shape.executionStatus.value).toBe("execution_not_enabled");
     expect(ForgeUnderwritingResponseSchema.shape.persistence.safeParse({ status: "saved", savedRunId: crypto.randomUUID() }).success).toBe(true);
+  });
+
+  it("never presents an unconfirmed or guest persistence result as saved", () => {
+    const savedRunId = crypto.randomUUID();
+    expect(isConfirmedSavedRun({ status: "saved", savedRunId })).toBe(true);
+    expect(saveStateFromPersistence({ status: "saved", savedRunId })).toBe("saved");
+    expect(saveStateFromPersistence({ status: "saved", savedRunId: null })).toBe("idle");
+    expect(saveStateFromPersistence({ status: "guest", savedRunId: null })).toBe("idle");
+    expect(saveStateFromPersistence({ status: "failed", savedRunId: null })).toBe("failed");
+  });
+
+  it("requires the guest conversion endpoint to return a confirmed saved row", () => {
+    const forge = readFileSync("src/components/forge-lab/forge-lab.tsx", "utf8");
+    expect(forge).toContain("response.ok && isConfirmedSavedRun(persistence)");
+    expect(forge).toContain('saveState === "idle" ? null');
   });
 
   it("attests the exact run and receipt without accepting client mutations", () => {
