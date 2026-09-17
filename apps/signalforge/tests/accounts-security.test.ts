@@ -5,6 +5,7 @@ import { safeAuthNext } from "../src/lib/auth-redirect";
 import { ForgeUnderwritingInputSchema, ForgeUnderwritingResponseSchema } from "../src/domain/forge-underwriting";
 import { issueSaveAuthorization, verifySaveAuthorization } from "../src/server/account/save-proof";
 import { classifyAuthRequestFailure } from "../src/components/account/auth-error";
+import { emailConfirmationRedirect } from "../src/lib/auth-email";
 
 const migration = readFileSync("supabase/migrations/20260917023313_accounts_saved_runs_v1.sql", "utf8");
 const nextConfig = readFileSync("next.config.ts", "utf8");
@@ -17,6 +18,22 @@ describe("accounts and saved-run boundaries", () => {
     expect(safeAuthNext("//attacker.example")).toBe("/en/forge");
     expect(safeAuthNext("/en\\@attacker.example")).toBe("/en/forge");
     expect(safeAuthNext("/unknown/forge")).toBe("/en/forge");
+  });
+
+  it("routes passwordless email through the server token-hash confirmation endpoint", () => {
+    expect(emailConfirmationRedirect("https://preview.example", "/fr/forge?saved=1")).toBe(
+      "https://preview.example/auth/confirm?next=%2Ffr%2Fforge%3Fsaved%3D1",
+    );
+    expect(emailConfirmationRedirect("https://preview.example", "https://attacker.example")).toBe(
+      "https://preview.example/auth/confirm?next=%2Fen%2Fforge",
+    );
+  });
+
+  it("keeps OAuth code exchange and email token-hash confirmation on separate routes", () => {
+    const provider = readFileSync("src/components/account/auth-provider.tsx", "utf8");
+    expect(provider).toContain('redirectTo: `${location.origin}/auth/callback?next=');
+    expect(provider).toContain("emailConfirmationRedirect(location.origin, next)");
+    expect(provider).not.toContain('emailRedirectTo: `${location.origin}/auth/callback');
   });
 
   it("enables RLS and declares explicit ownership policies for every mutation", () => {

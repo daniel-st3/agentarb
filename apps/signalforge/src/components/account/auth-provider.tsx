@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { emailConfirmationRedirect } from "@/lib/auth-email";
 import { accountCopy, type AccountLocale } from "./copy";
 import { reportAuthRequestFailure, type AuthRequestFailure } from "./auth-error";
 
@@ -76,7 +77,7 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
     const next = `/${locale}${pathname}`;
     const { error } = await client.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+      options: { emailRedirectTo: emailConfirmationRedirect(location.origin, next) },
     });
     setStatus(error ? reportAuthRequestFailure("email_otp", error) : "sent");
   }

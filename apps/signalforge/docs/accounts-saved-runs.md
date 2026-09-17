@@ -22,7 +22,13 @@ In Supabase Auth URL configuration, allow the immutable/current Preview origin p
 /auth/confirm
 ```
 
-For passwordless PKCE email, configure the email template to use the token hash and confirmation route as documented by Supabase. Keep responses generic to avoid account enumeration.
+For passwordless email in this SSR application, the **Magic Link** template must use the token hash and the request's allowlisted Preview redirect. Set the link target exactly to:
+
+```html
+<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">Log In</a>
+```
+
+`signInWithOtp` supplies an allowlisted `https://<current-origin>/auth/confirm?next=...` value as `RedirectTo`. The confirmation route verifies the one-time token server-side and writes the authenticated session cookies. Do not use `SiteURL` here: it would send Preview sign-ins to Production. Do not use the default `ConfirmationURL` for this SSR flow: it converts the email token into a PKCE code that depends on a verifier cookie from the browser that initiated the request. Keep responses generic to avoid account enumeration.
 
 Google requires a Google OAuth client configured in the Supabase dashboard. Add only the callback URL displayed by Supabase; do not put the Google client secret in Vercel or this repository.
 
