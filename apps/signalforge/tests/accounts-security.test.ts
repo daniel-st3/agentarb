@@ -7,6 +7,7 @@ import { issueSaveAuthorization, verifySaveAuthorization } from "../src/server/a
 import { classifyAuthRequestFailure } from "../src/components/account/auth-error";
 
 const migration = readFileSync("supabase/migrations/20260917023313_accounts_saved_runs_v1.sql", "utf8");
+const nextConfig = readFileSync("next.config.ts", "utf8");
 
 describe("accounts and saved-run boundaries", () => {
   it("allows only localized internal auth redirects", () => {
@@ -54,5 +55,12 @@ describe("accounts and saved-run boundaries", () => {
     expect(classifyAuthRequestFailure({ status: 400, code: "email_address_not_authorized" })).toBe("delivery_restricted");
     expect(classifyAuthRequestFailure({ status: 401, code: "invalid_api_key" })).toBe("configuration");
     expect(classifyAuthRequestFailure({ status: 500, code: "unexpected_failure" })).toBe("unavailable");
+  });
+
+  it("allows only the configured HTTPS Supabase origin through the browser CSP", () => {
+    expect(nextConfig).toContain("url.protocol === \"https:\"");
+    expect(nextConfig).toContain("url.hostname.endsWith(\".supabase.co\")");
+    expect(nextConfig).toContain("connect-src ${connectSrc}");
+    expect(nextConfig).not.toContain("connect-src *");
   });
 });
