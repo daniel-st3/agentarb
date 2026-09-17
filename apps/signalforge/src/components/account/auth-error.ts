@@ -15,11 +15,11 @@ export function classifyAuthRequestFailure(error: SafeAuthError): AuthRequestFai
 
 export function reportAuthRequestFailure(operation: "email_otp" | "google_oauth", error: SafeAuthError) {
   const failure = classifyAuthRequestFailure(error);
-  console.warn("signalforge.auth.request_failed", {
+  console.warn("signalforge.auth.request_failed", JSON.stringify({
     operation,
     failure,
     code: error.code ?? "unknown",
     status: error.status ?? null,
-  });
+  }));
   return failure;
 }
