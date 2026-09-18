@@ -21,6 +21,7 @@ export function ProfitEngine({
   const copy = useMemo(() => profitEngineCopy(locale), [locale]);
   const homePresentation = useMemo(() => ({
     eyebrow: copy.product.eyebrow,
+    headline: copy.product.headline,
     introduction: copy.product.introduction,
     inspectAction: copy.product.inspectAction,
     underwriteAction: copy.product.underwriteAction,
@@ -71,7 +72,7 @@ export function ProfitEngine({
         ) : (
           <section className={styles.emptyHero} aria-labelledby="profit-engine-title">
             <p>{copy.product.eyebrow}</p>
-            <h1 id="profit-engine-title">{copy.forge.forgeTitle}</h1>
+            <h1 id="profit-engine-title">{copy.product.headline}</h1>
             <div>
               <strong>{refreshState === "degraded" ? copy.product.unavailable : copy.product.empty}</strong>
               <span>{copy.product.emptyDetail}</span>

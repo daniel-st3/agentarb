@@ -19,6 +19,7 @@ const titles: Record<string, [string, string, string]> = {
     "Forge Lab · Evalúa tu tarea",
     "Forge Lab · Analysez votre mission",
   ],
+  pricing: ["Pricing", "Precios", "Tarifs"],
   history: ["Route archive", "Archivo de rutas", "Archive des itinéraires"],
   developers: [
     "Demo planning API & MCP",

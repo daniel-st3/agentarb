@@ -33,3 +33,43 @@ test("account history does not create an auth wall for the public product", asyn
   await page.goto("/en/network");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
+
+test("Forge fields expose concise keyboard help and truthful processing stages", async ({ page, isMobile }) => {
+  let releaseRequest: (() => void) | undefined;
+  const requestGate = new Promise<void>((resolve) => { releaseRequest = resolve; });
+  await page.route("**/api/v1/forge/underwrite", async (route) => {
+    await requestGate;
+    await route.continue();
+  });
+  await page.goto("/en/forge");
+  if (isMobile) await page.locator(".arb-mobile-nav summary").click();
+  await expect(page.getByRole("link", { name: "Forge", exact: true }).filter({ visible: true })).toBeVisible();
+  if (isMobile) await page.locator(".arb-mobile-nav summary").click();
+
+  await page.locator("summary").filter({ hasText: "Additional economic assumptions" }).click();
+  const helpButtons = page.getByRole("button", { name: "Field help", exact: true });
+  await expect(helpButtons).toHaveCount(12);
+  await helpButtons.first().focus();
+  await expect(page.getByRole("tooltip").first()).toBeVisible();
+
+  await page.getByLabel("Agent objective").fill("Compare three public AI APIs and independently verify the findings.");
+  await page.getByLabel("Success probability").fill("70");
+  await page.getByLabel("Human-review cost (USD) · USER ASSUMPTION").fill("1.00");
+  await page.getByRole("button", { name: "Underwrite task" }).click();
+  const progress = page.getByRole("region", { name: "Underwriting progress" });
+  await expect(progress).toBeVisible();
+  await expect(progress.getByText("Understanding objective")).toBeVisible();
+  await expect(progress.getByText("Compiling receipt")).toBeVisible();
+  releaseRequest?.();
+  await expect(page.locator("#forge-decision")).toBeVisible();
+});
+
+test("pricing is explicit about unavailable billing", async ({ page }) => {
+  await page.goto("/en/pricing");
+  await expect(page.getByRole("heading", { name: "Start with the economics." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Free" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pro" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Builder" })).toBeVisible();
+  await expect(page.getByText("COMING SOON")).toHaveCount(4);
+  await expect(page).not.toHaveURL(/checkout/);
+});

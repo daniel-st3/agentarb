@@ -13,7 +13,7 @@ for (const width of [320, 360, 375, 390, 430, 768, 1024, 1280, 1440, 1920])
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/en");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "IS THE WORK WORTH DOING?",
+      "Know if an AI task is worth running.",
     );
     await expect(page.locator("[data-profit-engine]")).toBeVisible();
     await expect(page.locator(".route-narrative")).toHaveCount(0);
@@ -49,8 +49,8 @@ for (const width of [320, 360, 375, 390, 430, 768, 1024, 1280, 1440, 1920])
     expect(errors).toEqual([]);
   });
 for (const [locale, title] of [
-  ["es", "¿VALE LA PENA HACER EL TRABAJO?"],
-  ["fr", "LE TRAVAIL EN VAUT-IL LA PEINE ?"],
+  ["es", "Sabe si vale la pena ejecutar una tarea de IA."],
+  ["fr", "Sachez si une tâche IA mérite d’être exécutée."],
 ])
   test(`${locale} real-first locale and reduced motion`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });

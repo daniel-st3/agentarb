@@ -4,9 +4,10 @@ import { labCopy, type LabCopy } from "@/components/v2-lab/copy";
 const productCopy = {
   en: {
     eyebrow: "SIGNALFORGE / AI-AGENT WORK UNDERWRITER",
-    introduction: "SignalForge underwrites AI-agent work before anything executes.",
+    headline: "Know if an AI task is worth running.",
+    introduction: "Describe a task. SignalForge maps what it needs, checks available AI services, estimates cost and risk, and tells you whether the economics make sense.",
     inspectAction: "INSPECT LIVE WORK",
-    underwriteAction: "UNDERWRITE YOUR OWN TASK",
+    underwriteAction: "ANALYZE A TASK",
     controlsLabel: "Profit Engine controls",
     liveWork: "LIVE OBSERVED WORK",
     cachedWork: "CACHED OBSERVED WORK",
@@ -31,9 +32,10 @@ const productCopy = {
   },
   es: {
     eyebrow: "SIGNALFORGE / EVALUADOR DE TRABAJO PARA AGENTES",
-    introduction: "SignalForge evalúa el trabajo de agentes de IA antes de que se ejecute.",
+    headline: "Sabe si vale la pena ejecutar una tarea de IA.",
+    introduction: "Describe una tarea. SignalForge identifica lo que necesita, revisa servicios de IA disponibles, estima costo y riesgo, y evalúa si la economía tiene sentido.",
     inspectAction: "EXAMINAR TRABAJO EN VIVO",
-    underwriteAction: "EVALUAR TU PROPIA TAREA",
+    underwriteAction: "ANALIZAR UNA TAREA",
     controlsLabel: "Controles del motor económico",
     liveWork: "TRABAJO OBSERVADO EN VIVO",
     cachedWork: "TRABAJO OBSERVADO EN CACHÉ",
@@ -58,9 +60,10 @@ const productCopy = {
   },
   fr: {
     eyebrow: "SIGNALFORGE / ANALYSEUR DU TRAVAIL AGENTIQUE",
-    introduction: "SignalForge analyse les missions d’agents IA avant toute exécution.",
+    headline: "Sachez si une tâche IA mérite d’être exécutée.",
+    introduction: "Décrivez une tâche. SignalForge identifie ses besoins, examine les services IA disponibles, estime coût et risque, puis évalue sa viabilité économique.",
     inspectAction: "EXAMINER LE TRAVAIL EN DIRECT",
-    underwriteAction: "ANALYSER VOTRE PROPRE MISSION",
+    underwriteAction: "ANALYSER UNE TÂCHE",
     controlsLabel: "Commandes du moteur économique",
     liveWork: "TRAVAIL OBSERVÉ EN DIRECT",
     cachedWork: "TRAVAIL OBSERVÉ EN CACHE",

@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/forge",
     "/network",
     "/opportunities",
+    "/pricing",
     "/privacy",
     "/developers",
     "/developers/try",

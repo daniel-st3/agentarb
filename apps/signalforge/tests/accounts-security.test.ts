@@ -73,6 +73,33 @@ describe("accounts and saved-run boundaries", () => {
     expect(forge).toContain('saveState === "idle" ? null');
   });
 
+  it("keeps the account menu controlled by route, outside click, Escape and item activation", () => {
+    const menu = readFileSync("src/components/account/account-menu.tsx", "utf8");
+    expect(menu).toContain("openAtPath === pathname");
+    expect(menu).toContain('document.addEventListener("pointerdown"');
+    expect(menu).toContain('event.key !== "Escape"');
+    expect(menu).toContain('onClick={close}');
+    expect(menu).toContain('role="menu"');
+    expect(menu).toContain('aria-haspopup="menu"');
+  });
+
+  it("uses actual streamed server milestones instead of timer-driven progress", () => {
+    const service = readFileSync("src/server/forge-underwriting.ts", "utf8");
+    const planner = readFileSync("src/server/route-http.ts", "utf8");
+    const forge = readFileSync("src/components/forge-lab/forge-lab.tsx", "utf8");
+    for (const stage of [
+      "understanding_objective",
+      "mapping_capabilities",
+      "checking_observed_supply",
+      "building_route_evidence",
+      "underwriting_economics",
+      "making_decision",
+      "compiling_receipt",
+    ]) expect(`${service}\n${planner}`).toContain(stage);
+    expect(forge).toContain('Accept: "application/x-ndjson"');
+    expect(forge).not.toMatch(/setTimeout\([^)]*progress/i);
+  });
+
   it("attests the exact run and receipt without accepting client mutations", () => {
     vi.stubEnv("RATE_LIMIT_SALT", "account-test-salt-that-is-at-least-thirty-two-characters");
     const runId = crypto.randomUUID(), receipt = "a".repeat(64);

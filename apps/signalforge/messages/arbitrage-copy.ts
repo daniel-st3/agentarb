@@ -117,12 +117,11 @@ export const arbitrageCopy: Array<[string, string, string]> = [
   ["Underwrite before", "Evalúa la economía antes", "Évaluez l’économie avant"],
   ["an agent acts.", "de que un agente actúe.", "qu’un agent agisse."],
   [
-    "Advanced Route Forge",
-    "Consola avanzada de rutas",
-    "Console avancée d’itinéraires",
+    "Advanced Forge",
+    "Forja avanzada",
+    "Forge avancée",
   ],
   ["Radar", "Radar", "Radar"],
-  ["Route Forge", "Consola de rutas", "Console d’itinéraires"],
   ["Menu", "Menú", "Menu"],
   [
     "Privacy and boundaries",

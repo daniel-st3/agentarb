@@ -8,6 +8,7 @@ import { LanguageSelector } from "./language-selector";
 import { useLocale } from "next-intl";
 import { useAuth } from "./account/auth-provider";
 import { accountCopy, type AccountLocale } from "./account/copy";
+import { AccountMenu } from "./account/account-menu";
 export function Navigation() {
   const t = useCopy(),
     path = usePathname(),
@@ -19,12 +20,14 @@ export function Navigation() {
     ? [
         ["/opportunities", "Market"],
         ["/forge", "Forge"],
+        ["/pricing", "Pricing"],
         ["/developers/try", "Developers"],
       ]
     : [
         ["/opportunities", "Radar"],
         ["/network", "Network"],
-        ["/forge", "Route Forge"],
+        ["/forge", "Forge"],
+        ["/pricing", "Pricing"],
         ["/developers/try", "Developers"],
         ["/history", "Archive"],
       ];
@@ -53,14 +56,11 @@ export function Navigation() {
             ))}
             <NetworkIndicator />
             {auth.user ? (
-              <details className="account-menu">
-                <summary aria-label={account.menu}>{auth.user.displayName?.split(" ")[0] ?? auth.user.email?.split("@")[0] ?? account.account}</summary>
-                <div>
-                  <Link href="/account/history">{account.analyses}</Link>
-                  <Link href="/account">{account.account}</Link>
-                  <button type="button" onClick={() => auth.signOut()}>{account.signOut}</button>
-                </div>
-              </details>
+              <AccountMenu
+                copy={account}
+                label={auth.user.displayName?.split(" ")[0] ?? auth.user.email?.split("@")[0] ?? account.account}
+                signOut={auth.signOut}
+              />
             ) : <button className="nav-sign-in" type="button" onClick={auth.openAuth}>{account.signIn}</button>}
           </div>
           <details className="arb-mobile-nav">
@@ -80,9 +80,9 @@ export function Navigation() {
               ))}
               {auth.user ? (
                 <>
-                  <Link href="/account/history">{account.analyses}</Link>
-                  <Link href="/account">{account.account}</Link>
-                  <button type="button" onClick={() => auth.signOut()}>{account.signOut}</button>
+                  <Link href="/account/history" onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}>{account.analyses}</Link>
+                  <Link href="/account" onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}>{account.account}</Link>
+                  <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void auth.signOut(); }}>{account.signOut}</button>
                 </>
               ) : <button type="button" onClick={auth.openAuth}>{account.signIn}</button>}
             </div>
