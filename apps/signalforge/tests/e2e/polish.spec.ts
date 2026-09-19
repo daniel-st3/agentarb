@@ -88,7 +88,7 @@ test("no-JavaScript evidence is complete and ambient SVGs are decorative", async
   for (const field of await page.locator(".signal-field").all())
     await expect(field).toHaveAttribute("aria-hidden", "true");
   await expect(
-    page.getByRole("link", { name: "Route Forge", exact: true }).first(),
+    page.getByRole("link", { name: "Forge", exact: true }).first(),
   ).toBeVisible();
   await context.close();
 });

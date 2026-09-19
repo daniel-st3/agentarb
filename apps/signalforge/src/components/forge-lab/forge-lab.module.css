@@ -25,8 +25,16 @@
 .form section { padding-block: 1.25rem; border-top: 1px solid var(--forge-line); }
 .form section:last-of-type { border-bottom: 1px solid var(--forge-line); }
 .label { display: block; margin-block-end: .85rem; color: var(--forge-muted); }
-.form label { display: grid; gap: .45rem; color: var(--forge-muted); font-size: .78rem; }
-.form textarea, .form input, .form select { width: 100%; min-height: 44px; border: 0; border-bottom: 1px solid var(--forge-line); border-radius: 0; padding: .7rem 0; color: var(--forge-ink); background: transparent; }
+.field { display: grid; gap: .25rem; border: 1px solid var(--forge-line); padding: .65rem .75rem .2rem; background: #171815; transition: border-color .16s ease, background-color .16s ease; }
+.field:focus-within { border-color: var(--forge-orange); background: #1b1c18; }
+.fieldHeading { display: flex; gap: .5rem; align-items: start; justify-content: space-between; min-height: 1.35rem; color: var(--forge-muted); font-size: .72rem; line-height: 1.35; }
+.fieldHeading > label { cursor: pointer; }
+.fieldHelp { position: relative; flex: 0 0 auto; }
+.fieldHelp button { display: grid; place-items: center; width: 28px; height: 28px; margin-block-start: -.3rem; border: 0; color: var(--forge-muted); background: transparent; cursor: help; }
+.fieldHelp button:hover, .fieldHelp button:focus-visible { color: var(--forge-orange); outline: 1px solid var(--forge-orange); outline-offset: -3px; }
+.fieldHelp [role="tooltip"] { position: absolute; inset: calc(100% + .35rem) 0 auto auto; z-index: 20; display: none; width: min(18rem, 70vw); border: 1px solid var(--forge-line); padding: .75rem; color: var(--forge-ink); background: #0c0d0b; box-shadow: 0 14px 35px rgb(0 0 0 / .32); font: .68rem/1.5 var(--font-mono); letter-spacing: 0; text-transform: none; }
+.fieldHelp:hover [role="tooltip"], .fieldHelp:focus-within [role="tooltip"] { display: block; }
+.form textarea, .form input, .form select { width: 100%; min-height: 44px; border: 0; border-bottom: 1px solid #4a4c46; border-radius: 0; padding: .7rem 0; color: var(--forge-ink); background: transparent; }
 .form textarea { min-height: 9.5rem; resize: vertical; font-family: var(--font-display); font-size: clamp(1.45rem, 2vw, 2.2rem); line-height: 1.12; }
 .form input:focus, .form textarea:focus, .form select:focus { border-color: var(--forge-orange); outline: 0; }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -39,6 +47,20 @@
 .submit:hover { color: var(--forge-bg); background: var(--forge-orange); }
 .privacy { margin-block-start: 1rem; font-size: .72rem; line-height: 1.55; }
 .error { margin-block-start: 1rem; padding-inline-start: .8rem; border-inline-start: 2px solid var(--forge-orange); color: #eaa18c; }
+
+.progress { display: grid; align-content: center; min-height: 38rem; border-block: 1px solid var(--forge-line); }
+.progress ol { margin: 0; padding: 0; list-style: none; }
+.progress li { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 1rem; align-items: center; min-height: 3.5rem; border-top: 1px solid var(--forge-line); color: #5f615c; font: .68rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.progress li:last-child { border-bottom: 1px solid var(--forge-line); }
+.progress li span { font-variant-numeric: tabular-nums; }
+.progress li[data-state="complete"] { color: var(--forge-muted); }
+.progress li[data-state="complete"] span::after { content: "  /"; color: var(--forge-green); }
+.progress li[data-state="active"] { color: var(--forge-ink); }
+.progress li[data-state="active"] span { color: var(--forge-orange); }
+.progress li[data-state="active"] strong { position: relative; }
+.progress li[data-state="active"] strong::after { content: ""; position: absolute; inset: auto 0 -.55rem 0; height: 1px; background: var(--forge-orange); transform-origin: left; animation: forge-progress-trace 1.1s ease-in-out infinite alternate; }
+.progress small { margin-block-start: 1.25rem; color: var(--forge-amber); font: .62rem/1.6 var(--font-mono); letter-spacing: .08em; }
+@keyframes forge-progress-trace { from { transform: scaleX(.12); } to { transform: scaleX(1); } }
 
 .output { min-width: 0; }
 .placeholder { display: grid; align-content: center; min-height: 38rem; border-block: 1px solid var(--forge-line); }
@@ -78,6 +100,9 @@
 .receipt button { min-height: 44px; border: 0; border-bottom: 1px solid var(--forge-orange); color: var(--forge-ink); background: transparent; font: .65rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .receipt small { color: var(--forge-muted); }
 .status { padding-block: 1rem; color: var(--forge-orange); font: .68rem var(--font-mono); letter-spacing: .08em; }
+.savePanel { display: grid; gap: .55rem; margin-block-start: 1rem; padding: 1.25rem 0; border-bottom: 1px solid var(--forge-line); }
+.savePanel button { justify-self: start; min-height: 44px; border: 1px solid var(--forge-orange); border-radius: 0; padding: .7rem 1rem; color: var(--forge-ink); background: transparent; font: .65rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.savePanel p { margin: 0; color: var(--forge-muted); font-size: .78rem; }
 .lab :focus-visible { outline-color: var(--forge-orange); }
 
 @media (max-width: 900px) {
@@ -103,4 +128,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lab *, .lab *::before, .lab *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .progress li[data-state="active"] strong::after { animation: none; transform: scaleX(1); }
 }

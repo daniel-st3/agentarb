@@ -13,6 +13,7 @@ import { readBounded } from "./http";
 import { checkPlanningLimit } from "./planning-limit";
 import { PlanningResponseSchema } from "@/domain/planning-response";
 import { demoDataEnabled } from "./demo-mode";
+import type { ForgeProgressStage } from "@/domain/forge-progress";
 const headers = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
@@ -26,22 +27,26 @@ export async function planRouteService(
   frame?: z.infer<typeof ObjectiveFrameSchema>,
   locale: "en" | "es" | "fr" = "en",
   allowDemoOffers = demoDataEnabled(),
+  onProgress?: (stage: ForgeProgressStage) => void,
 ) {
   const result = frame
     ? null
     : await frameWithProvider(input, () => {}, signal, locale);
+  onProgress?.("mapping_capabilities");
   const route = buildExecutionRoute(input, frame ?? result!.frame, {
     ...(allowDemoOffers ? {} : { offers: [] }),
     id: `route_${randomUUID()}`,
     createdAt: new Date().toISOString(),
   });
   if (!allowDemoOffers) { route.executionMode = "planning_only"; route.provenance.isSimulated = false; route.provenance.note = "Observed catalog context only. No executable task quotes or provider authorization. Execution is disabled."; }
+  onProgress?.("checking_observed_supply");
   const network = await networkSnapshot();
   const required = route.objectiveFrame.requiredCapabilities.map((c) => c.id);
   route.observedSupply = observedCatalogOptions(network.records, required).filter(
     (option) =>
       allowDemoOffers || ["live", "cached_live"].includes(option.freshness),
   );
+  onProgress?.("building_route_evidence");
   return PlanningResponseSchema.parse({
     objectiveFrame: route.objectiveFrame,
     route: ExecutionRouteContractSchema.parse(route),

@@ -1,13 +1,18 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useLocale } from "next-intl";
 import { AnimatePresence, m } from "motion/react";
-import { ArrowUpRight, Download } from "lucide-react";
-import type { ForgeUnderwritingResponse } from "@/domain/forge-underwriting";
+import { ArrowUpRight, Download, Info } from "lucide-react";
+import type { ForgeUnderwritingInput, ForgeUnderwritingResponse } from "@/domain/forge-underwriting";
+import { ForgeProgressStageSchema, forgeProgressStages, type ForgeProgressStage } from "@/domain/forge-progress";
 import { policies } from "@/domain/schema";
 import { forgeCopy, type ForgeCopy, type ForgeLocale } from "./copy";
 import styles from "./forge-lab.module.css";
+import { useAuth } from "@/components/account/auth-provider";
+import { accountCopy } from "@/components/account/copy";
+import { clearPendingForgeRun, getPendingForgeRun, setPendingForgeRun } from "@/components/account/pending-run";
+import { isConfirmedSavedRun, saveStateFromPersistence, type SaveState } from "@/components/account/save-status";
 
 type FormState = {
   objective: string;
@@ -107,6 +112,85 @@ const policyLabelKeys: Record<(typeof policies)[number], keyof ForgeCopy> = {
   fastest: "policyFastest",
 };
 
+const progressLabelKeys: Record<ForgeProgressStage, keyof ForgeCopy> = {
+  understanding_objective: "progressUnderstanding",
+  mapping_capabilities: "progressMapping",
+  checking_observed_supply: "progressSupply",
+  building_route_evidence: "progressRoute",
+  underwriting_economics: "progressEconomics",
+  making_decision: "progressDecision",
+  compiling_receipt: "progressReceipt",
+};
+
+function FieldHelp({ id, help, helpLabel }: { id: string; help: string; helpLabel: string }) {
+  const tooltipId = `${id}-help`;
+  return (
+    <span className={styles.fieldHelp}>
+      <button type="button" aria-label={helpLabel} aria-describedby={tooltipId}>
+        <Info size={13} aria-hidden="true" />
+      </button>
+      <span id={tooltipId} role="tooltip">{help}</span>
+    </span>
+  );
+}
+
+function FieldHeading({ id, label, help, helpLabel }: { id: string; label: string; help: string; helpLabel: string }) {
+  return (
+    <span className={styles.fieldHeading}>
+      <label htmlFor={id}>{label}</label>
+      <FieldHelp id={id} help={help} helpLabel={helpLabel} />
+    </span>
+  );
+}
+
+async function readForgeResponse(
+  response: Response,
+  onProgress: (stage: ForgeProgressStage) => void,
+): Promise<unknown> {
+  const mime = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+  if (mime !== "application/x-ndjson" || !response.body) return response.json();
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let completed: unknown;
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const event = JSON.parse(line) as { type?: string; stage?: unknown; data?: unknown; error?: string };
+      if (event.type === "progress") {
+        const stage = ForgeProgressStageSchema.safeParse(event.stage);
+        if (stage.success) onProgress(stage.data);
+      } else if (event.type === "result") completed = event.data;
+      else if (event.type === "error") throw new Error(event.error ?? "underwriting_failed");
+    }
+    if (done) break;
+  }
+  if (!completed) throw new Error("underwriting_incomplete");
+  return completed;
+}
+
+function UnderwritingProgress({ copy, active }: { copy: ForgeCopy; active: ForgeProgressStage | null }) {
+  const activeIndex = active ? forgeProgressStages.indexOf(active) : 0;
+  return (
+    <section className={styles.progress} aria-label={copy.progressLabel} aria-live="polite">
+      <p className={styles.label}>{copy.progressLabel}</p>
+      <ol>
+        {forgeProgressStages.map((stage, index) => (
+          <li key={stage} data-state={index < activeIndex ? "complete" : index === activeIndex ? "active" : "queued"}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{copy[progressLabelKeys[stage]]}</strong>
+          </li>
+        ))}
+      </ol>
+      <small>{copy.boundary}</small>
+    </section>
+  );
+}
+
 function isSafeForgeResponse(value: unknown): value is ForgeUnderwritingResponse {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Record<string, unknown>;
@@ -164,10 +248,16 @@ function LedgerRow({
 export function ForgeLab({ initialObjective = "" }: { initialObjective?: string }) {
   const locale = useLocale() as ForgeLocale;
   const copy = forgeCopy[locale] ?? forgeCopy.en;
+  const account = accountCopy[locale] ?? accountCopy.en;
+  const auth = useAuth();
   const [form, setForm] = useState(() => initialState(initialObjective));
   const [result, setResult] = useState<ForgeUnderwritingResponse | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [lastInput, setLastInput] = useState<ForgeUnderwritingInput | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [progressStage, setProgressStage] = useState<ForgeProgressStage | null>(null);
+  const restored = useRef(false);
 
   const request = useMemo(
     () => ({
@@ -199,6 +289,54 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
     [form, locale],
   );
 
+  useEffect(() => {
+    if (restored.current) return;
+    const pendingRun = getPendingForgeRun();
+    if (!pendingRun) return;
+    restored.current = true;
+    void Promise.resolve().then(async () => {
+      setResult(pendingRun.result);
+      setLastInput(pendingRun.input);
+      if (!auth.user) return;
+      setSaveState("saving");
+      try {
+        const response = await fetch("/api/account/forge-runs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input: pendingRun.input, result: pendingRun.result, saveAuthorization: pendingRun.result.saveAuthorization }),
+        });
+        const persistence: unknown = await response.json();
+        if (!response.ok || !isConfirmedSavedRun(persistence)) throw new Error("save_failed");
+        clearPendingForgeRun();
+        setSaveState("saved");
+      } catch {
+        setSaveState("failed");
+      }
+    });
+  }, [auth.user]);
+
+  async function confirmAuthenticatedSave(
+    input: ForgeUnderwritingInput,
+    completed: ForgeUnderwritingResponse,
+  ) {
+    setSaveState("saving");
+    try {
+      const response = await fetch("/api/account/forge-runs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          input,
+          result: completed,
+          saveAuthorization: completed.saveAuthorization,
+        }),
+      });
+      const persistence: unknown = await response.json();
+      setSaveState(response.ok && isConfirmedSavedRun(persistence) ? "saved" : "failed");
+    } catch {
+      setSaveState("failed");
+    }
+  }
+
   function field<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
@@ -220,17 +358,26 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
       return;
     }
     setPending(true);
+    setProgressStage(null);
+    setSaveState("idle");
     try {
+      const runRequest: ForgeUnderwritingInput = { ...request, clientRunId: crypto.randomUUID() };
       const response = await fetch("/api/v1/forge/underwrite", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(request),
+        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
+        body: JSON.stringify(runRequest),
       });
-      const body = await response.json();
+      const body = await readForgeResponse(response, setProgressStage);
       if (!response.ok) throw new Error(copy.requestError);
       if (!isSafeForgeResponse(body))
         throw new Error(copy.requestError);
       setResult(body);
+      setLastInput(runRequest);
+      const serverSaveState = saveStateFromPersistence(body.persistence);
+      setSaveState(serverSaveState);
+      if (auth.user && serverSaveState !== "saved") {
+        void confirmAuthenticatedSave(runRequest, body);
+      }
       requestAnimationFrame(() =>
         document.getElementById("forge-objective")?.scrollIntoView({ block: "start" }),
       );
@@ -238,7 +385,14 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
       setError(cause instanceof Error ? cause.message : copy.requestError);
     } finally {
       setPending(false);
+      setProgressStage(null);
     }
+  }
+
+  function saveGuestRun() {
+    if (!result || !lastInput) return;
+    setPendingForgeRun({ input: lastInput, result, returnTo: `/${locale}/forge`, createdAt: new Date().toISOString() });
+    auth.openAuth();
   }
 
   function downloadReceipt() {
@@ -294,9 +448,10 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
           >
             <section>
               <span className={styles.label}>01 / {copy.task}</span>
-              <label>
-                {copy.objective}
+              <div className={styles.field}>
+                <FieldHeading id="forge-objective-input" label={copy.objective} help={copy.objectiveHelp} helpLabel={copy.help} />
                 <textarea
+                  id="forge-objective-input"
                   aria-label="Agent objective"
                   required
                   minLength={12}
@@ -305,14 +460,15 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
                   onChange={(event) => field("objective", event.target.value)}
                   placeholder={copy.objectivePlaceholder}
                 />
-              </label>
+              </div>
             </section>
             <section>
               <span className={styles.label}>02 / {copy.constraints}</span>
               <div className={styles.pair}>
-                <label>
-                  {copy.budget}
+                <div className={styles.field}>
+                  <FieldHeading id="forge-budget" label={copy.budget} help={copy.budgetHelp} helpLabel={copy.help} />
                   <input
+                    id="forge-budget"
                     type="number"
                     min="0"
                     max="10"
@@ -321,10 +477,11 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
                     value={form.budget}
                     onChange={(event) => field("budget", event.target.value)}
                   />
-                </label>
-                <label>
-                  {copy.policy}
+                </div>
+                <div className={styles.field}>
+                  <FieldHeading id="forge-policy" label={copy.policy} help={copy.policyHelp} helpLabel={copy.help} />
                   <select
+                    id="forge-policy"
                     aria-label="Routing policy"
                     value={form.policy}
                     onChange={(event) => field("policy", event.target.value as FormState["policy"])}
@@ -333,40 +490,40 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
                       <option key={policy} value={policy}>{copy[policyLabelKeys[policy]]}</option>
                     ))}
                   </select>
-                </label>
+                </div>
               </div>
             </section>
             <section>
               <span className={styles.label}>03 / {copy.economics}</span>
               <div className={styles.pair}>
-                <label>
-                  {copy.payout}
-                  <input type="number" min="0" step="0.01" value={form.payout} onChange={(event) => field("payout", event.target.value)} />
-                </label>
-                <label>
-                  {copy.fulfillment}
-                  <input type="number" min="0" step="0.01" value={form.fulfillment} onChange={(event) => field("fulfillment", event.target.value)} />
-                </label>
+                <div className={styles.field}>
+                  <FieldHeading id="forge-payout" label={copy.payout} help={copy.payoutHelp} helpLabel={copy.help} />
+                  <input id="forge-payout" type="number" min="0" step="0.01" value={form.payout} onChange={(event) => field("payout", event.target.value)} />
+                </div>
+                <div className={styles.field}>
+                  <FieldHeading id="forge-fulfillment" label={copy.fulfillment} help={copy.fulfillmentHelp} helpLabel={copy.help} />
+                  <input id="forge-fulfillment" type="number" min="0" step="0.01" value={form.fulfillment} onChange={(event) => field("fulfillment", event.target.value)} />
+                </div>
               </div>
               <div className={`${styles.pair} ${styles.probability}`}>
-                <label>
-                  {copy.probability} · {copy.userAssumption}
-                  <input type="number" min="0" max="100" step="1" required value={form.probability} onChange={(event) => field("probability", event.target.value)} />
-                </label>
+                <div className={styles.field}>
+                  <FieldHeading id="forge-probability" label={`${copy.probability} · ${copy.userAssumption}`} help={copy.probabilityHelp} helpLabel={copy.help} />
+                  <input id="forge-probability" type="number" min="0" max="100" step="1" required value={form.probability} onChange={(event) => field("probability", event.target.value)} />
+                </div>
                 <output>{form.probability ? `${form.probability}%` : "—"}</output>
               </div>
-              <label>
-                {copy.review} · {copy.userAssumption}
-                <input type="number" min="0" step="0.01" required value={form.review} onChange={(event) => field("review", event.target.value)} />
-              </label>
+              <div className={styles.field}>
+                <FieldHeading id="forge-review" label={`${copy.review} · ${copy.userAssumption}`} help={copy.reviewHelp} helpLabel={copy.help} />
+                <input id="forge-review" type="number" min="0" step="0.01" required value={form.review} onChange={(event) => field("review", event.target.value)} />
+              </div>
               <details>
                 <summary>{copy.advanced}</summary>
                 <div className={styles.advanced}>
-                  <label>{copy.verification}<input type="number" min="0" step="0.01" required value={form.verification} onChange={(event) => field("verification", event.target.value)} /></label>
-                  <label>{copy.platform}<input type="number" min="0" step="0.01" required value={form.platform} onChange={(event) => field("platform", event.target.value)} /></label>
-                  <label>{copy.failure}<input type="number" min="0" step="0.01" required value={form.failure} onChange={(event) => field("failure", event.target.value)} /></label>
-                  <label>{copy.refundable}<input type="number" min="0" step="0.01" value={form.refundable} onChange={(event) => field("refundable", event.target.value)} /></label>
-                  <label>{copy.margin}<input type="number" min="0" max="100" step="1" required value={form.margin} onChange={(event) => field("margin", event.target.value)} /></label>
+                  <div className={styles.field}><FieldHeading id="forge-verification" label={copy.verification} help={copy.verificationHelp} helpLabel={copy.help} /><input id="forge-verification" type="number" min="0" step="0.01" required value={form.verification} onChange={(event) => field("verification", event.target.value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-platform" label={copy.platform} help={copy.platformHelp} helpLabel={copy.help} /><input id="forge-platform" type="number" min="0" step="0.01" required value={form.platform} onChange={(event) => field("platform", event.target.value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-failure" label={copy.failure} help={copy.failureHelp} helpLabel={copy.help} /><input id="forge-failure" type="number" min="0" step="0.01" required value={form.failure} onChange={(event) => field("failure", event.target.value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-refundable" label={copy.refundable} help={copy.refundableHelp} helpLabel={copy.help} /><input id="forge-refundable" type="number" min="0" step="0.01" value={form.refundable} onChange={(event) => field("refundable", event.target.value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-margin" label={copy.margin} help={copy.marginHelp} helpLabel={copy.help} /><input id="forge-margin" type="number" min="0" max="100" step="1" required value={form.margin} onChange={(event) => field("margin", event.target.value)} /></div>
                 </div>
               </details>
             </section>
@@ -379,7 +536,9 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
           </form>
 
           <div className={styles.output} aria-live="polite" aria-busy={pending}>
-            {!result ? (
+            {pending ? (
+              <UnderwritingProgress copy={copy} active={progressStage} />
+            ) : !result ? (
               <div className={styles.placeholder}>
                 <span aria-hidden="true">→</span>
                 <p>{copy.edit}</p>
@@ -495,6 +654,18 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
                         <header><span className={styles.label}>{copy.receipt}</span><button type="button" onClick={downloadReceipt}><Download size={14} aria-hidden="true" /> {copy.download}</button></header>
                         <code>{result.receipt.receiptHash}</code>
                         <small>{copy.fingerprint} · {result.receipt.hashAlgorithm}</small>
+                      </div>
+                      <div className={styles.savePanel}>
+                        {auth.user ? (
+                          saveState === "idle" ? null : (
+                            <p role="status">{saveState === "saving" ? account.saving : saveState === "failed" ? account.saveFailed : account.saved}</p>
+                          )
+                        ) : (
+                          <>
+                            <button type="button" onClick={saveGuestRun}>{account.save}</button>
+                            <p>{account.saveHelp}</p>
+                          </>
+                        )}
                       </div>
                     </div>
                   </section>

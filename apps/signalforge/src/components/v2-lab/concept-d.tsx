@@ -28,6 +28,7 @@ type DerivedEconomics = NonNullable<ArbitrageEvaluation["realEconomics"]>["deriv
 
 export type ForgeHomePresentation = {
   eyebrow: string;
+  headline: string;
   introduction: string;
   inspectAction: string;
   underwriteAction: string;
@@ -315,7 +316,7 @@ export function ConceptD({
     <section ref={scope} className={styles.conceptD} aria-labelledby="concept-d-title" data-surface={home ? "home" : "lab"} data-scenario-active={scenarioActive} data-forge-stage={STAGES[stage]} data-story-skipped={skipped} data-decision={activeDecision}>
       <header className={styles.dIntro}>
         <p className={styles.sectionIndex}>{home?.eyebrow ?? `D / ${copy.forge} · SIGNALFORGE / LIVE UNDERWRITING`}</p>
-        {home ? <h1 id="concept-d-title">{copy.forgeTitle}</h1> : <h2 id="concept-d-title">{copy.forgeIntro}</h2>}
+        {home ? <h1 id="concept-d-title">{home.headline}</h1> : <h2 id="concept-d-title">{copy.forgeIntro}</h2>}
         {home && <p className={styles.dHomeIntroduction}>{home.introduction}</p>}
         {home && <div className={styles.dHomeActions}>
           <Link href={`/opportunities?id=${encodeURIComponent(subject.id)}`}>{home.inspectAction} ↗</Link>
@@ -334,7 +335,7 @@ export function ConceptD({
       <div className={`${styles.dStory} ${skipped ? styles.dStorySkipped : ""}`} data-forge-story>
         <div className={styles.dPin} data-forge-pin aria-hidden="true">
           <div className={styles.dMarketField} data-forge-layer>
-            <h3 data-forge-heading>{copy.forgeTitle}</h3>
+            <h3 data-forge-heading>{home?.headline ?? copy.forgeTitle}</h3>
             <p>{copy.observedContext}</p>
             <svg className={styles.dMarketFrame} viewBox="0 0 1000 640" preserveAspectRatio="none" aria-hidden="true">
               <path data-forge-market-frame d="M510 72H948V520H510" />

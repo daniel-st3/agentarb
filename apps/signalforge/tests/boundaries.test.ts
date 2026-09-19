@@ -36,13 +36,16 @@ describe("deployed boundary", () => {
     expect(server).not.toMatch(
       /\bfetch\s*\(|axios|https\.request|http\.request/,
     );
-    expect(source).not.toMatch(
-      /localStorage|sessionStorage|document\.cookie|NEXT_PUBLIC_.*KEY/,
-    );
+    expect(source).not.toMatch(/localStorage|document\.cookie|NEXT_PUBLIC_.*(?:SECRET|SERVICE|PRIVATE)/);
+    const sessionStorageFiles = files("src")
+      .filter((f) => /\.tsx?$/.test(f) && readFileSync(f, "utf8").includes("sessionStorage"));
+    expect(sessionStorageFiles).toEqual(["src/components/account/pending-run.ts"]);
   });
   it("only declared discovery, planning, MCP and legacy local demo endpoints exist", () => {
     const routes = files("src/app/api").filter((f) => f.endsWith("route.ts"));
     expect(routes.sort()).toEqual([
+      "src/app/api/account/forge-runs/[id]/route.ts",
+      "src/app/api/account/forge-runs/route.ts",
       "src/app/api/frame/route.ts",
       "src/app/api/mcp/route.ts",
       "src/app/api/plan/route.ts",

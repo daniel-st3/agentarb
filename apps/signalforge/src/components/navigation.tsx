@@ -5,20 +5,29 @@ import { Brand } from "./ui";
 import { NetworkIndicator } from "./network-state";
 import { useCommandPalette } from "./interactions/provider";
 import { LanguageSelector } from "./language-selector";
+import { useLocale } from "next-intl";
+import { useAuth } from "./account/auth-provider";
+import { accountCopy, type AccountLocale } from "./account/copy";
+import { AccountMenu } from "./account/account-menu";
 export function Navigation() {
   const t = useCopy(),
     path = usePathname(),
     open = useCommandPalette();
+  const locale = useLocale() as AccountLocale;
+  const account = accountCopy[locale] ?? accountCopy.en;
+  const auth = useAuth();
   const links = path === "/"
     ? [
         ["/opportunities", "Market"],
         ["/forge", "Forge"],
+        ["/pricing", "Pricing"],
         ["/developers/try", "Developers"],
       ]
     : [
         ["/opportunities", "Radar"],
         ["/network", "Network"],
-        ["/forge", "Route Forge"],
+        ["/forge", "Forge"],
+        ["/pricing", "Pricing"],
         ["/developers/try", "Developers"],
         ["/history", "Archive"],
       ];
@@ -46,6 +55,13 @@ export function Navigation() {
               </Link>
             ))}
             <NetworkIndicator />
+            {auth.user ? (
+              <AccountMenu
+                copy={account}
+                label={auth.user.displayName?.split(" ")[0] ?? auth.user.email?.split("@")[0] ?? account.account}
+                signOut={auth.signOut}
+              />
+            ) : <button className="nav-sign-in" type="button" onClick={auth.openAuth}>{account.signIn}</button>}
           </div>
           <details className="arb-mobile-nav">
             <summary>{t("Menu")}</summary>
@@ -62,6 +78,13 @@ export function Navigation() {
                   {t(label)}
                 </Link>
               ))}
+              {auth.user ? (
+                <>
+                  <Link href="/account/history" onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}>{account.analyses}</Link>
+                  <Link href="/account" onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}>{account.account}</Link>
+                  <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void auth.signOut(); }}>{account.signOut}</button>
+                </>
+              ) : <button type="button" onClick={auth.openAuth}>{account.signIn}</button>}
             </div>
           </details>
         </nav>

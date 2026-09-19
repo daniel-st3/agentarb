@@ -16,12 +16,12 @@ export function Brand() {
         className="brand-signal"
       >
         <path
-          d="M25 5H13a7 7 0 0 0 0 14h7a4 4 0 0 1 0 8H7M7 27V5"
+          d="M4 7h7l9 9h8M4 16h24M4 25h7l9-9"
           stroke="currentColor"
-          strokeWidth="1.4"
+          strokeWidth="1.55"
+          strokeLinecap="square"
         />
-        <circle cx="25" cy="5" r="2" fill="#b7b5e9" />
-        <circle cx="7" cy="27" r="2" fill="currentColor" />
+        <rect x="17.5" y="13.5" width="5" height="5" fill="#e85f3b" />
       </svg>
       <span>
         {t("SignalForge")}

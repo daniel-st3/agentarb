@@ -14,7 +14,7 @@ test("short laptop windows keep the Profit Engine readable", async ({
   await page.setViewportSize({ width: 1024, height: 720 });
   await page.goto("/");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "IS THE WORK WORTH DOING?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Know if an AI task is worth running." })).toBeVisible();
   await page.getByRole("heading", { name: "Continue with the evidence." }).scrollIntoViewIfNeeded();
   await expect(page.getByRole("heading", { name: "Continue with the evidence." })).toBeVisible();
   expect(
@@ -30,7 +30,7 @@ test("Profit Engine remains available without JavaScript", async ({
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:3002/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("IS THE WORK WORTH DOING?");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Know if an AI task is worth running.");
   await expect(page.getByRole("heading", { name: "Continue with the evidence." })).toBeVisible();
   await expect(page.locator("main")).not.toContainText("SIMULATED / ARBITRAGE LAB");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
@@ -66,7 +66,7 @@ test("homepage → Forge Lab → conditional decision → receipt, with legacy e
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "IS THE WORK WORTH DOING?",
+      name: "Know if an AI task is worth running.",
     }),
   ).toBeVisible();
   await screenshot(page, `${info.project.name}-hero`);
@@ -137,7 +137,7 @@ test("reduced motion retains usable route story and seeded brief", async ({
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "IS THE WORK WORTH DOING?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Know if an AI task is worth running." })).toBeVisible();
   await expect(page.locator("[data-profit-engine]")).toBeVisible();
   await page.goto("/forge/example-1/output");
   await expect(
@@ -225,7 +225,7 @@ test("empty live homepage remains truthful and unpinned", async ({
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   await expect(page.locator("[data-profit-engine]")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "IS THE WORK WORTH DOING?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Know if an AI task is worth running." })).toBeVisible();
   await expect(page.locator("main")).toContainText("No qualifying observed work");
   await expect(page.locator("main")).not.toContainText("SIMULATED / ARBITRAGE LAB");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
@@ -238,7 +238,7 @@ test("mobile Profit Engine is readable with no pinning", async ({
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "IS THE WORK WORTH DOING?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Know if an AI task is worth running." })).toBeVisible();
   await page.getByRole("heading", { name: "Continue with the evidence." }).scrollIntoViewIfNeeded();
   await expect(page.getByRole("heading", { name: "Continue with the evidence." })).toBeVisible();
   expect(
