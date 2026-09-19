@@ -77,7 +77,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
             <p className="pricing-amount">{price}<small>{index === 0 ? "" : text.month}</small></p>
             <p>{detail}</p>
             {index === 0 ? <Link href="/forge">{text.action} →</Link> : <strong>{text.soon}</strong>}
-            <small>{index === 0 ? text.available : text.soon}</small>
+            {index === 0 && <small>{text.available}</small>}
           </article>
         ))}
       </div>

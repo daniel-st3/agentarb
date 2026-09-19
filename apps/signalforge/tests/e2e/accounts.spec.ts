@@ -70,6 +70,6 @@ test("pricing is explicit about unavailable billing", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Free" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Pro" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Builder" })).toBeVisible();
-  await expect(page.getByText("COMING SOON")).toHaveCount(4);
+  await expect(page.getByText("COMING SOON")).toHaveCount(2);
   await expect(page).not.toHaveURL(/checkout/);
 });
