@@ -156,21 +156,29 @@ export function PageChoreography({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   useGSAP(
     () => {
+      const root = ref.current!;
       const media = gsap.matchMedia();
       media.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.from(".composer-heading, .workspace-title, .history-heading", {
-          opacity: 0.6,
-          y: 8,
-          duration: 0.32,
-          ease: "power2.out",
-        });
-        gsap.from(".arrival-line", {
-          scaleX: 0,
-          transformOrigin: "left",
-          duration: 0.4,
-        });
+        const headings = root.querySelectorAll<HTMLElement>(
+          ".composer-heading, .workspace-title, .history-heading",
+        );
+        if (headings.length > 0) {
+          gsap.from(headings, {
+            opacity: 0.6,
+            y: 8,
+            duration: 0.32,
+            ease: "power2.out",
+          });
+        }
+        const arrivalLine = root.querySelector<HTMLElement>(".arrival-line");
+        if (arrivalLine) {
+          gsap.from(arrivalLine, {
+            scaleX: 0,
+            transformOrigin: "left",
+            duration: 0.4,
+          });
+        }
       });
-      const root = ref.current!;
       const point = (e: PointerEvent) => {
         const link = (e.target as Element).closest<HTMLElement>(
           ".text-link, .editorial-action",

@@ -50,6 +50,20 @@ async function screenshot(page: Page, name: string) {
 test.beforeAll(async () => {
   await mkdir(shots, { recursive: true });
 });
+test("homepage choreography skips optional GSAP targets without warnings", async ({
+  page,
+}) => {
+  const warnings: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "warning" && message.text().includes("GSAP target"))
+      warnings.push(message.text());
+  });
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "Know if an AI task is worth running." }),
+  ).toBeVisible();
+  expect(warnings).toEqual([]);
+});
 test("homepage → Forge Lab → conditional decision → receipt, with legacy evidence exports intact", async ({
   page,
 }, info) => {
