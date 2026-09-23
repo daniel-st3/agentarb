@@ -18,7 +18,8 @@ function respond(statusCode: number, headers: Record<string, string>, chunks: Bu
       expect(options.method).toBe("GET");
       expect(options.headers["Accept-Encoding"]).toBe("identity");
       expect(options.headers).not.toHaveProperty("Cookie");
-      options.lookup("www.example.org", {}, (_error: unknown, address: string) => expect(address).toBe("8.8.8.8"));
+      options.lookup("www.example.org", { all: true }, (_error: unknown, addresses: { address: string; family: number }[]) =>
+        expect(addresses).toEqual([{ address: "8.8.8.8", family: 4 }]));
       const response = Readable.from(chunks) as Readable & { statusCode?: number; headers: Record<string, string> };
       response.statusCode = statusCode;
       response.headers = headers;

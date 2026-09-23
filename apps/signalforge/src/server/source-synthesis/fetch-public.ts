@@ -69,7 +69,10 @@ export async function fetchPublicSource(value: string, signal: AbortSignal) {
     const request = httpsRequest(url, {
       method: "GET", agent: false, signal: AbortSignal.any([signal, AbortSignal.timeout(6000)]),
       headers: { Accept: "text/html, text/plain", "Accept-Encoding": "identity", "User-Agent": "SignalForge/1.0 (+https://signalforge-rose-two.vercel.app)" },
-      lookup: (_host, _options, callback) => callback(null, pinned.address, 4),
+      lookup: (_host, options, callback) => {
+        if (options.all) callback(null, [{ address: pinned.address, family: 4 }]);
+        else callback(null, pinned.address, 4);
+      },
     }, async (response) => {
       try {
         if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300)
