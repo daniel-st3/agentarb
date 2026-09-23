@@ -28,7 +28,7 @@ export interface SnapshotCache {
   lease(
     key: string,
     seconds: number,
-    purpose?: "catalog" | "model-admission" | "fx",
+    purpose?: "catalog" | "model-admission" | "fx" | "execution",
   ): Promise<boolean>;
 }
 export class MemorySnapshotCache implements SnapshotCache {
@@ -50,7 +50,7 @@ export class MemorySnapshotCache implements SnapshotCache {
 export class RedisSnapshotCache implements SnapshotCache {
   mode = "shared" as const;
   private readonly environment: SignalForgeEnvironment;
-  private readonly prefixes: Record<"catalog" | "model-admission" | "fx", string>;
+  private readonly prefixes: Record<"catalog" | "model-admission" | "fx" | "execution", string>;
   constructor(
     private redis: Redis,
     environment: Record<string, string | undefined> = process.env,
@@ -61,6 +61,7 @@ export class RedisSnapshotCache implements SnapshotCache {
       catalog: sharedStatePrefix("catalog", "v3", trusted),
       "model-admission": sharedStatePrefix("model-admission", "v3", trusted),
       fx: sharedStatePrefix("fx", "v3", trusted),
+      execution: sharedStatePrefix("execution", "v1", trusted),
     };
   }
   async get(key: string) {
@@ -75,7 +76,7 @@ export class RedisSnapshotCache implements SnapshotCache {
   async lease(
     key: string,
     seconds: number,
-    purpose: "catalog" | "model-admission" | "fx" = "catalog",
+    purpose: "catalog" | "model-admission" | "fx" | "execution" = "catalog",
   ) {
     const prefix = this.prefixes[purpose];
     return (

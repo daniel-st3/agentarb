@@ -43,12 +43,12 @@ test("Forge fields expose concise keyboard help and truthful processing stages",
   });
   await page.goto("/en/forge");
   if (isMobile) await page.locator(".arb-mobile-nav summary").click();
-  await expect(page.getByRole("link", { name: "Forge", exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Forge", exact: true }).filter({ visible: true })).toBeVisible();
   if (isMobile) await page.locator(".arb-mobile-nav summary").click();
 
   await page.locator("summary").filter({ hasText: "Additional economic assumptions" }).click();
   const helpButtons = page.getByRole("button", { name: "Field help", exact: true });
-  await expect(helpButtons).toHaveCount(12);
+  await expect(helpButtons).toHaveCount(13);
   await helpButtons.first().focus();
   await expect(page.getByRole("tooltip").first()).toBeVisible();
 

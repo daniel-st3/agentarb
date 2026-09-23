@@ -28,7 +28,8 @@ const productCopy = {
     receipts: "AUDITABLE RECEIPTS",
     receiptsDetail: "Inspect deterministic decisions, provenance, and receipt fingerprints.",
     trust: "OBSERVED INPUTS · DETERMINISTIC POLICY · UNKNOWN STAYS UNKNOWN",
-    boundary: "DISCOVERY + UNDERWRITING ONLY · EXECUTION_NOT_ENABLED",
+    boundary: "UNDERWRITING + USER-AUTHORIZED PUBLIC-SOURCE SYNTHESIS · NO MARKETPLACE ACTIONS",
+    marketplaceBoundary: "MARKETPLACE ACTIONS DISABLED",
   },
   es: {
     eyebrow: "SIGNALFORGE / EVALUADOR DE TRABAJO PARA AGENTES",
@@ -56,7 +57,8 @@ const productCopy = {
     receipts: "RECIBOS AUDITABLES",
     receiptsDetail: "Examina decisiones deterministas, procedencia y huellas de recibos.",
     trust: "DATOS OBSERVADOS · POLÍTICA DETERMINISTA · LO DESCONOCIDO NO SE INVENTA",
-    boundary: "SOLO DESCUBRIMIENTO + EVALUACIÓN · EXECUTION_NOT_ENABLED",
+    boundary: "EVALUACIÓN + SÍNTESIS PÚBLICA AUTORIZADA · SIN ACCIONES DE MERCADO",
+    marketplaceBoundary: "ACCIONES DE MERCADO DESHABILITADAS",
   },
   fr: {
     eyebrow: "SIGNALFORGE / ANALYSEUR DU TRAVAIL AGENTIQUE",
@@ -84,7 +86,8 @@ const productCopy = {
     receipts: "REÇUS AUDITABLES",
     receiptsDetail: "Examinez les décisions déterministes, la provenance et les empreintes de reçus.",
     trust: "DONNÉES OBSERVÉES · POLITIQUE DÉTERMINISTE · L’INCONNU RESTE INCONNU",
-    boundary: "DÉCOUVERTE + ANALYSE UNIQUEMENT · EXECUTION_NOT_ENABLED",
+    boundary: "ANALYSE + SYNTHÈSE PUBLIQUE AUTORISÉE · AUCUNE ACTION DE MARCHÉ",
+    marketplaceBoundary: "ACTIONS DE MARCHÉ DÉSACTIVÉES",
   },
 } as const;
 

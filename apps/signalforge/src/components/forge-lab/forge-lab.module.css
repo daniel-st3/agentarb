@@ -48,7 +48,7 @@
 .privacy { margin-block-start: 1rem; font-size: .72rem; line-height: 1.55; }
 .error { margin-block-start: 1rem; padding-inline-start: .8rem; border-inline-start: 2px solid var(--forge-orange); color: #eaa18c; }
 
-.progress { display: grid; align-content: center; min-height: 38rem; border-block: 1px solid var(--forge-line); }
+.progress { display: grid; align-content: center; min-height: 26rem; border-block: 1px solid var(--forge-line); }
 .progress ol { margin: 0; padding: 0; list-style: none; }
 .progress li { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 1rem; align-items: center; min-height: 3.5rem; border-top: 1px solid var(--forge-line); color: #5f615c; font: .68rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .progress li:last-child { border-bottom: 1px solid var(--forge-line); }
@@ -63,7 +63,7 @@
 @keyframes forge-progress-trace { from { transform: scaleX(.12); } to { transform: scaleX(1); } }
 
 .output { min-width: 0; }
-.placeholder { display: grid; align-content: center; min-height: 38rem; border-block: 1px solid var(--forge-line); }
+.placeholder { display: grid; align-content: center; min-height: 23rem; border-block: 1px solid var(--forge-line); }
 .placeholder span { color: var(--forge-orange); font: 6rem/.8 var(--font-display); }
 .placeholder p { max-width: 34rem; margin-block-start: 1.5rem; }
 .chapters { position: sticky; top: 73px; z-index: 8; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--forge-bg); border-block: 1px solid var(--forge-line); }
@@ -103,6 +103,23 @@
 .savePanel { display: grid; gap: .55rem; margin-block-start: 1rem; padding: 1.25rem 0; border-bottom: 1px solid var(--forge-line); }
 .savePanel button { justify-self: start; min-height: 44px; border: 1px solid var(--forge-orange); border-radius: 0; padding: .7rem 1rem; color: var(--forge-ink); background: transparent; font: .65rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .savePanel p { margin: 0; color: var(--forge-muted); font-size: .78rem; }
+.synthesis { margin-block-start: 3rem; padding-block: 2rem; border-top: 1px solid var(--forge-orange); }
+.synthesis h2 { margin-block: .8rem 1rem; font-size: clamp(2rem, 4vw, 3.8rem); line-height: 1; }
+.synthesis > p { max-width: 42rem; color: var(--forge-muted); }
+.synthesisRoute { margin-block: 1.5rem; padding-block: 1rem; border-block: 1px solid var(--forge-line); color: var(--forge-ink) !important; font: .64rem/1.7 var(--font-mono); letter-spacing: .04em; }
+.synthesis form { display: grid; gap: .8rem; }
+.synthesis textarea { width: 100%; min-height: 7rem; border: 0; border-bottom: 1px solid var(--forge-line); padding: .75rem 0; color: var(--forge-ink); background: transparent; font: .76rem/1.65 var(--font-mono); resize: vertical; }
+.synthesis form > p { margin: 0; color: var(--forge-muted); font: .68rem/1.6 var(--font-mono); }
+.synthesis form > p strong { color: var(--forge-ink); font-variant-numeric: tabular-nums; }
+.synthesis form > button, .synthesisResult button { justify-self: start; min-height: 44px; border: 1px solid var(--forge-orange); padding: .75rem 1rem; color: var(--forge-ink); background: transparent; font: .68rem var(--font-mono); text-transform: uppercase; cursor: pointer; }
+.synthesis form > button:disabled { opacity: .45; cursor: not-allowed; }
+.synthesisResult { margin-block-start: 2rem; border-top: 1px solid var(--forge-line); }
+.synthesisResult h3, .synthesisResult h4 { margin-block: 1.5rem .8rem; font: .7rem var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
+.synthesisResult ol { padding-inline-start: 1.4rem; }
+.synthesisResult li { margin-block: 1rem; padding-block-end: 1rem; border-bottom: 1px solid var(--forge-line); }
+.synthesisResult li span { display: flex; gap: .5rem; }
+.synthesisResult a { color: var(--forge-orange); text-decoration: underline; }
+.synthesisFingerprint { overflow-wrap: anywhere; color: var(--forge-muted); font: .65rem var(--font-mono); }
 .lab :focus-visible { outline-color: var(--forge-orange); }
 
 @media (max-width: 900px) {
@@ -120,6 +137,8 @@
   .pair, .advanced { grid-template-columns: 1fr; }
   .probability { grid-template-columns: minmax(0, 1fr) 4rem; }
   .stage { grid-template-columns: 1fr; min-height: 0; }
+  .placeholder { min-height: 13rem; }
+  .progress { min-height: 21rem; }
   .objectiveMeta > div, .capability, .routeOption, .ledgerRow { grid-template-columns: 1fr; gap: .4rem; }
   .capability small, .routeOption small, .amount { text-align: start; }
   .rail { order: 3; }

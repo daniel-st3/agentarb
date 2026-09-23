@@ -41,7 +41,7 @@ for (const locale of ["es", "fr"] as const)
       locale === "es"
         ? "Crear una ruta de diligencia debida para una empresa"
         : "Créer un itinéraire de diligence raisonnable pour une entreprise";
-    await page.locator("textarea").fill(objective);
+    await page.locator("#forge-objective-input").fill(objective);
     expect(underwritingCalls).toBe(0);
     await page.getByLabel(locale === "es" ? /^Pago \/ recompensa/ : /^Rémunération/).fill("15.00");
     await page.getByLabel(locale === "es" ? /^Costo de cumplimiento/ : /^Coût de réalisation/).fill("2.00");
@@ -50,14 +50,15 @@ for (const locale of ["es", "fr"] as const)
     await page.screenshot({
       path: `test-results/screenshots/${info.project.name}-${locale}-hero.png`,
     });
-    await page.locator("textarea").press("Control+Enter");
+    await page.locator("#forge-objective-input").press("Control+Enter");
     await expect(page.locator("#forge-decision")).toBeVisible();
     expect(underwritingCalls).toBe(1);
     await expect(page.locator("#forge-objective")).toContainText(objective);
     await page.screenshot({
       path: `test-results/screenshots/${info.project.name}-${locale}-underwriting.png`,
     });
-    await expect(page.locator("main")).toContainText(locale === "es" ? "EJECUCIÓN DESHABILITADA" : "EXÉCUTION DÉSACTIVÉE");
+    await expect(page.locator("main")).toContainText(locale === "es" ? "LA EVALUACIÓN NO EJECUTA TAREAS" : "L’ANALYSE N’EXÉCUTE PAS DE TÂCHE");
+    await expect(page.locator("main")).toContainText(locale === "es" ? "LA SÍNTESIS REQUIERE AUTORIZACIÓN SEPARADA" : "LA SYNTHÈSE EXIGE UNE AUTORISATION DISTINCTE");
     await page.getByRole("button", { name: "English", exact: true }).click();
     await expect(page).toHaveURL(/\/en\/forge$/);
     await expect(page.getByRole("heading", { name: "Underwrite your own task." })).toBeVisible();

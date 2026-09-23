@@ -24,6 +24,12 @@ export type Database = {
         Update: { title?: string };
         Relationships: [];
       };
+      source_synthesis_runs: {
+        Row: { id: string; user_id: string; run_id: string; objective: string; receipt_payload: Json; receipt_hash: string; created_at: string };
+        Insert: { id?: string; user_id: string; run_id: string; objective: string; receipt_payload: Json; receipt_hash: string };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -31,4 +37,3 @@ export type Database = {
     CompositeTypes: Record<string, never>;
   };
 };
-

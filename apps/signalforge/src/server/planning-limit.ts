@@ -60,17 +60,18 @@ export function createPlanningLimiter(now = () => Date.now(), maximum = 10) {
 }
 const localPlanning = createPlanningLimiter(),
   localCatalog = createPlanningLimiter(undefined, 60),
-  localUnderwriting = createPlanningLimiter(undefined, 20);
+  localUnderwriting = createPlanningLimiter(undefined, 20),
+  localExecution = createPlanningLimiter(undefined, 5);
 const responseQuota = new WeakMap<Request, Record<string, string>>();
 export const quotaHeaders = (request: Request) =>
   responseQuota.get(request) ?? {};
 export const rateLimitPrefix = (
-  category: "planning" | "catalog" | "underwriting",
+  category: "planning" | "catalog" | "underwriting" | "execution",
   environment: Record<string, string | undefined> = process.env,
 ) => `${sharedStatePrefix("limit", "v3", environment)}:${category}`;
 export async function checkPlanningLimit(
   request: Request,
-  category: "planning" | "catalog" | "underwriting" = "planning",
+  category: "planning" | "catalog" | "underwriting" | "execution" = "planning",
 ): Promise<Response | null> {
   const origin = request.headers.get("origin");
   if (
@@ -87,6 +88,8 @@ export async function checkPlanningLimit(
       return (
         category === "planning"
           ? localPlanning
+          : category === "execution"
+            ? localExecution
           : category === "underwriting"
             ? localUnderwriting
             : localCatalog
@@ -117,7 +120,7 @@ export async function checkPlanningLimit(
         signal: () => AbortSignal.timeout(2500),
       }),
       limiter: Ratelimit.slidingWindow(
-        category === "planning" ? 10 : category === "underwriting" ? 20 : 60,
+        category === "planning" ? 10 : category === "underwriting" ? 20 : category === "execution" ? 5 : 60,
         "10 m",
       ),
       prefix: rateLimitPrefix(category, { SIGNALFORGE_ENV: environment }),
@@ -133,7 +136,7 @@ export async function checkPlanningLimit(
       throw new Error("unavailable");
     const quota = {
       "RateLimit-Limit": String(
-        category === "planning" ? 10 : category === "underwriting" ? 20 : 60,
+        category === "planning" ? 10 : category === "underwriting" ? 20 : category === "execution" ? 5 : 60,
       ),
       "RateLimit-Remaining": String(Math.max(0, result.remaining)),
       "RateLimit-Reset": String(

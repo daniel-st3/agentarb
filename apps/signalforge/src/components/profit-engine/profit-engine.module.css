@@ -41,7 +41,7 @@
 .emptyHero {
   display: grid;
   align-content: center;
-  min-height: min(52rem, calc(100svh - 104px));
+  min-height: min(34rem, calc(100svh - 104px));
   padding: 4rem clamp(1rem, 4vw, 4rem);
 }
 
@@ -54,11 +54,13 @@
 }
 
 .emptyHero h1 {
-  max-width: 7.2ch;
+  max-width: 12ch;
   margin-block: 1rem 2rem;
-  font-size: clamp(4.8rem, 10vw, 10.8rem);
-  line-height: 0.82;
+  font-size: clamp(4.5rem, 7.2vw, 7rem);
+  line-height: 0.88;
 }
+.heroIntroduction { max-width: 54rem; font-size: clamp(1rem, 1.3vw, 1.25rem); line-height: 1.5; color: var(--forge-ink) !important; font-family: var(--font-sans) !important; letter-spacing: 0 !important; }
+.marketNote { max-width: 45rem; margin-block-start: 1.8rem; padding-block: .85rem; border-top: 1px solid var(--forge-line); color: var(--forge-muted) !important; font-size: .68rem !important; line-height: 1.5; letter-spacing: .04em !important; }
 
 .emptyHero > div {
   display: grid;

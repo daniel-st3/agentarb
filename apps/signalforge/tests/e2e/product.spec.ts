@@ -109,7 +109,8 @@ test("homepage → Forge Lab → conditional decision → receipt, with legacy e
   await expect(page.locator("#forge-decision")).toBeVisible();
   await expect(page.locator("#forge-decision")).toContainText("No executable RouteCandidateSet exists");
   await screenshot(page, `${info.project.name}-plan`);
-  await expect(page.locator("main")).toContainText("EXECUTION DISABLED");
+  await expect(page.locator("main")).toContainText("UNDERWRITING DOES NOT RUN TASKS");
+  await expect(page.locator("main")).toContainText("SOURCE SYNTHESIS REQUIRES SEPARATE AUTHORIZATION");
   await screenshot(page, `${info.project.name}-contract`);
   const downloading = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download receipt JSON" }).click();

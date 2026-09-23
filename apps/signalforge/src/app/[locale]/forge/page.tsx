@@ -1,6 +1,7 @@
 import { pageMetadata } from "@/i18n/metadata";
 import { ForgeLab } from "@/components/forge-lab/forge-lab";
 import { capabilityIds, ObjectiveInputSchema } from "@/domain/objective";
+import { sourceSynthesisProviderCeilingUsdMicros } from "@/server/source-synthesis/service";
 export const generateMetadata = ({
   params,
 }: {
@@ -28,6 +29,7 @@ export default async function Forge({
       : undefined;
   return (
     <ForgeLab
+      sourceSynthesisCeilingUsdMicros={sourceSynthesisProviderCeilingUsdMicros()}
       key={initial + (reference ?? "")}
       initialObjective={
         initial +

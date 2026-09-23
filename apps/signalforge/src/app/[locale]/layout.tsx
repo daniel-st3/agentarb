@@ -77,27 +77,15 @@ export default async function RootLayout({
             </main>
           </NetworkState>
 
-          <footer className="site-footer container">
-            <span>
-              {t("SignalForge")}
-              <span className="brand-dot">.</span>
-            </span>
-            <p>{t("Discovery and planning only. Execution not enabled.")}</p>
-            <Link href="/privacy">{t("Privacy and boundaries")}</Link>
-            <Link
-              href="https://github.com/daniel-st3/agentarb"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t("Source on GitHub ↗")}
-            </Link>
-            <p className="maker-credit">
-              <Link href="https://github.com/daniel-st3/agentarb">
-                {t(
-                  "Designed and built by Daniel Rodríguez · AI systems, data, and product",
-                )}
-              </Link>
-            </p>
+          <footer className="site-footer site-footer-v1 container">
+            <div className="footer-identity"><span>{t("SignalForge")}<span className="brand-dot">.</span></span><p>{locale === "es" ? "Evaluación + ejecución acotada · sin pagos autónomos" : locale === "fr" ? "Analyse + exécution bornée · aucun paiement autonome" : "Underwriting + bounded execution · no autonomous payments"}</p></div>
+            <nav aria-label={locale === "es" ? "Navegación de pie de página" : locale === "fr" ? "Navigation de pied de page" : "Footer navigation"}>
+              <Link href="/forge">{t("Forge")}</Link>
+              <Link href="/pricing">{t("Pricing")}</Link>
+              <Link href="/developers/try">{t("Developers")}</Link>
+              <Link href="/privacy">{t("Privacy and boundaries")}</Link>
+              <a href="https://github.com/daniel-st3/agentarb" target="_blank" rel="noreferrer">GitHub ↗</a>
+            </nav>
           </footer>
         </InteractionProvider>
         </AuthProvider>

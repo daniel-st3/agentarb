@@ -1,6 +1,6 @@
 # SignalForge — deployed application
 
-Arbitrage intelligence: paid opportunity → capability routes → deterministic economic decision. This branch is preview-only; production is not promoted.
+SignalForge underwrites AI-agent work before anything executes. Visitors can use Forge, inspect the full result, and download an underwriting receipt without an account. Accounts add private saved-run history.
 
 Start with `/en/opportunities` for observed Agent Bounties records and exact source economics. EN/ES/FR are supported. Empty or ineligible demand is never replaced with fixtures. Historical Lab examples require explicit `ENABLE_DEMO_DATA=true` outside Vercel Production.
 
@@ -38,4 +38,4 @@ Vercel root: `apps/signalforge`. Human routes use `/en`, `/es`, `/fr`; old links
 
 No keys are needed for demo planning. Optional server-only Groq interprets objectives; Upstash supplies public-catalog cache and hashed shared limits. Use `.env.example` names, never `NEXT_PUBLIC_` credentials. [Setup](../../docs/durable-network.md).
 
-Every route: `execution_not_enabled`. Live catalog options are informational, not executable steps. No payments, task-service execution, marketplace writes or visitor database. [Safety](../../docs/security.md) · [GSAP/Motion ownership](../../docs/interaction-system.md).
+Underwriting, claim-readiness, and marketplace contracts retain `execution_not_enabled`. Live catalog options are informational, not executable steps. A separate, explicitly authorized Forge route can read 1–10 supplied public HTTPS pages and synthesize their contents with a bounded Groq call. Its receipt reports source evidence, usage, calculated-at-published-price cost where available, and structural—not independent—citation verification. The fixed authorized provider ceiling is $0.01 per run; no marketplace claims, arbitrary tool calls, wallets, purchases, or payments are enabled. Signed-in execution receipts require the additive `source_synthesis_runs` migration with owner-only RLS; guest results remain downloadable without persistence. [Safety](../../docs/security.md) · [GSAP/Motion ownership](../../docs/interaction-system.md).

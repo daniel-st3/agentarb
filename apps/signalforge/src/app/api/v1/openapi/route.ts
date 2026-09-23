@@ -23,6 +23,7 @@ import {
   ForgeUnderwritingInputSchema,
   ForgeUnderwritingResponseSchema,
 } from "@/domain/forge-underwriting";
+import { SourceSynthesisInputSchema, SourceSynthesisResponseSchema } from "@/domain/source-synthesis";
 export async function GET(request: Request) {
   const denied = await checkPlanningLimit(request, "catalog");
   if (denied) return denied;
@@ -38,10 +39,10 @@ export async function GET(request: Request) {
     {
       openapi: "3.1.0",
       info: {
-        title: "SignalForge discovery, planning and arbitrage underwriting",
-        version: "1.2.0",
+        title: "SignalForge underwriting and bounded source synthesis",
+        version: "1.3.0",
         description:
-          "SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. Observed economics preserve unknowns. execution_not_enabled; no marketplace actions.",
+          "SignalForge underwrites agent work and preserves unknown economics. Underwriting and marketplace contracts remain execution_not_enabled. A separate, explicit user-authorized route can synthesize 1–10 supplied public HTTPS sources; no marketplace actions or payments are enabled.",
       },
       // Relative paths intentionally target the deployment serving this schema.
       components: {
@@ -56,6 +57,8 @@ export async function GET(request: Request) {
           ForgeUnderwritingResponse: z.toJSONSchema(
             ForgeUnderwritingResponseSchema,
           ),
+          SourceSynthesisInput: z.toJSONSchema(SourceSynthesisInputSchema),
+          SourceSynthesisResponse: z.toJSONSchema(SourceSynthesisResponseSchema),
         },
       },
       paths: {
@@ -140,6 +143,21 @@ export async function GET(request: Request) {
               "413": { description: "Body too large" },
               "429": { description: "Rate limit" },
               "503": { description: "Protected service unavailable" },
+            },
+          },
+        },
+        "/api/v1/forge/synthesize": {
+          post: {
+            summary: "Run one explicitly authorized public-source synthesis task",
+            description: "Fixed Groq model, 1–10 user-supplied public HTTPS URLs, bounded text, no redirects or private-network access, one model call, no marketplace actions or payments. The receipt distinguishes observed token usage from a calculated published-price cost; it is not a bill or signature.",
+            requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/SourceSynthesisInput" } } } },
+            responses: {
+              "200": { description: "Source-bound synthesis and execution receipt", content: { "application/json": { schema: { $ref: "#/components/schemas/SourceSynthesisResponse" } } } },
+              "400": { description: "Invalid or unsafe request" },
+              "409": { description: "Duplicate run ID" },
+              "413": { description: "Body too large" },
+              "429": { description: "Execution quota" },
+              "503": { description: "Protected service or source unavailable" },
             },
           },
         },

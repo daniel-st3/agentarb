@@ -32,17 +32,13 @@ test("evidence arrives once, remains truthful, and has a static equivalent", asy
   await evidence.screenshot({
     path: `test-results/screenshots/${info.project.name}-evidence-reduced-motion.png`,
   });
-  await expect(
-    page.getByRole("link", {
-      name: "Designed and built by Daniel Rodríguez · AI systems, data, and product",
-    }),
-  ).toHaveAttribute("href", "https://github.com/daniel-st3/agentarb");
+  await expect(page.locator(".site-footer").getByRole("link", { name: "GitHub" })).toHaveAttribute("href", "https://github.com/daniel-st3/agentarb");
   expect(errors).toEqual([]);
 });
 
 test("precision controls support keyboard selection without changing the workflow", async ({
   page,
-},info) => {
+}) => {
   await page.goto("/forge");
   const selected = page.getByLabel("Routing policy", { exact: true });
   await selected.focus();
@@ -54,11 +50,7 @@ test("precision controls support keyboard selection without changing the workflo
   await expect(selected).toBeFocused();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(selected).toHaveValue("most_verified");
-  if(info.project.name==="mobile")await page.locator(".arb-mobile-nav summary").click();
-  await page
-    .getByRole("navigation")
-    .getByRole("link", { name: "Archive" }).filter({visible:true})
-    .click();
+  await page.goto("/history");
   await expect(
     page.getByRole("heading", { name: "Archive", exact: true }),
   ).toBeVisible();

@@ -13,6 +13,7 @@ import { useAuth } from "@/components/account/auth-provider";
 import { accountCopy } from "@/components/account/copy";
 import { clearPendingForgeRun, getPendingForgeRun, setPendingForgeRun } from "@/components/account/pending-run";
 import { isConfirmedSavedRun, saveStateFromPersistence, type SaveState } from "@/components/account/save-status";
+import { SourceSynthesisResponseSchema, type SourceSynthesisResponse } from "@/domain/source-synthesis";
 
 type FormState = {
   objective: string;
@@ -245,7 +246,80 @@ function LedgerRow({
   );
 }
 
-export function ForgeLab({ initialObjective = "" }: { initialObjective?: string }) {
+function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective: string; copy: ForgeCopy; ceiling: string | null; locale: ForgeLocale }) {
+  const [urls, setUrls] = useState("");
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState(false);
+  const [output, setOutput] = useState<SourceSynthesisResponse | null>(null);
+  const [completedObjective, setCompletedObjective] = useState("");
+  const [completedUrls, setCompletedUrls] = useState("");
+  const visibleOutput = completedObjective === objective && completedUrls === urls ? output : null;
+  const priceText = ceiling === null ? "UNKNOWN" : new Intl.NumberFormat(locale, { style: "currency", currency: "USD", minimumFractionDigits: 4, maximumFractionDigits: 6 }).format(Number(ceiling) / 1_000_000);
+
+  async function runTask(event: FormEvent) {
+    event.preventDefault();
+    const sources = urls.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+    if (!ceiling || objective.trim().length < 12 || sources.length < 1 || sources.length > 10) { setError(true); return; }
+    setRunning(true);
+    setError(false);
+    setOutput(null);
+    try {
+      const response = await fetch("/api/v1/forge/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ runId: crypto.randomUUID(), locale, objective, urls: sources, maxAuthorizedSpendUsdMicros: "10000", authorization: "run_task" }),
+      });
+      if (!response.ok) throw new Error("synthesis_failed");
+      setOutput(SourceSynthesisResponseSchema.parse(await response.json()));
+      setCompletedObjective(objective);
+      setCompletedUrls(urls);
+    } catch { setError(true); }
+    finally { setRunning(false); }
+  }
+
+  function downloadExecutionReceipt() {
+    if (!visibleOutput) return;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(visibleOutput.receipt, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `signalforge-execution-${visibleOutput.receipt.receiptHash.slice(0, 12)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return <section className={styles.synthesis} aria-labelledby="source-synthesis-title">
+    <span className={styles.tag}>{copy.synthesisTag}</span>
+    <h2 id="source-synthesis-title">{copy.synthesisTitle}</h2>
+    <p>{copy.synthesisIntro}</p>
+    <p className={styles.synthesisRoute}>{copy.synthesisRoute}</p>
+    <form onSubmit={runTask}>
+      <div className={styles.field}>
+        <FieldHeading id="forge-source-urls" label={copy.synthesisSources} help={copy.synthesisSourcesHelp} helpLabel={copy.help} />
+        <textarea id="forge-source-urls" value={urls} onChange={(event) => { setUrls(event.target.value); setOutput(null); }} placeholder="https://www.example.org/report" rows={4} maxLength={12000} disabled={running} required />
+      </div>
+      <p>{copy.synthesisEstimate} <strong>{priceText}</strong></p>
+      <p>{copy.synthesisAuthorization}</p>
+      <button type="submit" disabled={running || !ceiling || objective.trim().length < 12}>{running ? copy.synthesisWorking : copy.synthesisRun} ↗</button>
+    </form>
+    {error && <p role="alert" className={styles.error}>{copy.synthesisError}</p>}
+    {visibleOutput && <div className={styles.synthesisResult} aria-live="polite">
+      <h3>{copy.synthesisFindings}</h3>
+      <p>{visibleOutput.receipt.core.result.summary}</p>
+      <ol>{visibleOutput.receipt.core.result.findings.map((finding, index) => <li key={index}>
+        <p>{finding.statement}</p>
+        <span>{finding.sourceIds.map((sourceId) => <a key={sourceId} href={visibleOutput.receipt.core.sourceUrls[sourceId - 1]} target="_blank" rel="noreferrer">[{sourceId}]</a>)}</span>
+      </li>)}</ol>
+      {visibleOutput.receipt.core.result.limitations.length > 0 && <><h4>{copy.synthesisLimitations}</h4><ul>{visibleOutput.receipt.core.result.limitations.map((item) => <li key={item}>{item}</li>)}</ul></>}
+      <p>{copy.synthesisUsage}: {visibleOutput.receipt.core.usage.inputTokens ?? "UNKNOWN"} + {visibleOutput.receipt.core.usage.outputTokens ?? "UNKNOWN"} tokens · {visibleOutput.receipt.core.latencyMs} ms</p>
+      <p>{copy.synthesisCost}: {visibleOutput.receipt.core.cost.calculatedFromUsageUsdMicros === null ? "UNKNOWN" : new Intl.NumberFormat(locale, { style: "currency", currency: "USD", minimumFractionDigits: 4, maximumFractionDigits: 6 }).format(Number(visibleOutput.receipt.core.cost.calculatedFromUsageUsdMicros) / 1_000_000)}</p>
+      <p>{visibleOutput.persistence.status === "saved" ? copy.synthesisSaved : visibleOutput.persistence.status === "failed" ? copy.synthesisSaveFailed : copy.synthesisGuest}</p>
+      <p className={styles.synthesisFingerprint}>{visibleOutput.receipt.receiptHash} · {copy.synthesisFingerprint}</p>
+      <button type="button" onClick={downloadExecutionReceipt}><Download size={14} aria-hidden="true" /> {copy.synthesisReceipt}</button>
+    </div>}
+  </section>;
+}
+
+export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicros = null }: { initialObjective?: string; sourceSynthesisCeilingUsdMicros?: string | null }) {
   const locale = useLocale() as ForgeLocale;
   const copy = forgeCopy[locale] ?? forgeCopy.en;
   const account = accountCopy[locale] ?? accountCopy.en;
@@ -675,6 +749,7 @@ export function ForgeLab({ initialObjective = "" }: { initialObjective?: string 
             {pending && <p className={styles.status} role="status">{copy.working}</p>}
           </div>
         </div>
+        <SourceSynthesisPanel objective={form.objective} copy={copy} ceiling={sourceSynthesisCeilingUsdMicros} locale={locale} />
       </div>
     </div>
   );
