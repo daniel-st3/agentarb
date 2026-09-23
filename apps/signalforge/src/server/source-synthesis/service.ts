@@ -31,6 +31,9 @@ function logSynthesisFailure(stage: "source_fetch" | "model_generation" | "recei
     "source_dns_timeout", "source_dns_unsafe", "source_dns_unsupported", "source_http_unavailable",
     "source_mime_invalid", "source_encoding_invalid", "source_payload_too_large",
     "source_timeout", "source_text_insufficient", "invalid_citation",
+    "pricing_unavailable", "price_exceeds_authorization", "provider_unavailable",
+    "durable_store_required", "duplicate_execution", "source_input_too_large",
+    "model_capacity_unavailable",
   ]);
   const code = error instanceof Error && knownCodes.has(error.message) ? error.message : "upstream_or_validation_error";
   console.error("source_synthesis_failure", { stage, code });
