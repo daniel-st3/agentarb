@@ -30,7 +30,7 @@ export function ArbitrageHero() {
       <SignalField variant="hero" />
       <div className="arb-hero-copy">
         <p className="eyebrow">
-          {t("SIGNALFORGE / AGENT ECONOMY UNDERWRITER")}
+          {t("WORTHROUTE / AGENT ECONOMY UNDERWRITER")}
         </p>
         <h1 id="arb-title">
           {t("Find profitable routes")}

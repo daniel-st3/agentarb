@@ -1,8 +1,8 @@
 export const developerCopy: Array<[string, string, string]> = [
   [
-    "SIGNALFORGE / DEVELOPER INTERFACE",
-    "SIGNALFORGE / INTERFAZ PARA DESARROLLADORES",
-    "SIGNALFORGE / INTERFACE DÉVELOPPEUR",
+    "WORTHROUTE / DEVELOPER INTERFACE",
+    "WORTHROUTE / INTERFAZ PARA DESARROLLADORES",
+    "WORTHROUTE / INTERFACE DÉVELOPPEUR",
   ],
   ["Give your agent", "Dale a tu agente", "Offrez à votre agent"],
   ["a better route.", "una mejor ruta.", "un meilleur itinéraire."],

@@ -1,10 +1,10 @@
 export type ForgeLocale = "en" | "es" | "fr";
 
 const en = {
-  eyebrow: "SIGNALFORGE / FORGE LAB",
+  eyebrow: "WORTHROUTE / FORGE",
   title: "Underwrite your own task.",
   intro:
-    "Define the work and state the economics you know. SignalForge underwrites first; optional public-source synthesis requires a separate Run task action.",
+    "Define the work and state the economics you know. WorthRoute underwrites first; optional public-source synthesis requires a separate Run task action.",
   task: "TASK",
   objective: "Objective",
   help: "Field help",
@@ -14,7 +14,7 @@ const en = {
   budget: "Hard fulfillment budget (USD)",
   budgetHelp: "The maximum total fulfillment cost the route may accept. Example: 10.00.",
   policy: "Routing policy",
-  policyHelp: "Choose how SignalForge should prioritize observed route evidence: value, cost, verification, or speed.",
+  policyHelp: "Choose how WorthRoute should prioritize observed route evidence: value, cost, verification, or speed.",
   policyBestValue: "Best value",
   policyCheapest: "Cheapest",
   policyMostVerified: "Most verified",
@@ -48,6 +48,7 @@ const en = {
   progressDecision: "Making decision",
   progressReceipt: "Compiling receipt",
   submit: "Underwrite task",
+  synthesisEntry: "Research from public sources",
   recalculate: "Apply assumptions",
   working: "Compiling underwriting…",
   invalidInput: "Complete the objective, budget, success probability, and human-review cost.",
@@ -91,7 +92,7 @@ const en = {
   fingerprint: "Economic decision fingerprint · not a digital signature",
   noOptions: "No observed option was promoted into a route candidate.",
   edit: "Change the scenario and apply assumptions to recalculate on the server.",
-  synthesisTitle: "RUN A BOUNDED TASK",
+  synthesisTitle: "Research from public sources",
   synthesisTag: "USER-AUTHORIZED / PUBLIC SOURCES ONLY",
   synthesisFingerprint: "SHA-256 fingerprint, not a signature",
   synthesisUsage: "Observed model usage",
@@ -117,10 +118,10 @@ export type ForgeCopy = typeof en;
 
 const es: ForgeCopy = {
   ...en,
-  eyebrow: "SIGNALFORGE / LABORATORIO FORGE",
+  eyebrow: "WORTHROUTE / LABORATORIO FORGE",
   title: "Evalúa tu propia tarea.",
   intro:
-    "Define el trabajo y los datos económicos conocidos. SignalForge evalúa primero; la síntesis opcional de fuentes públicas requiere otra autorización.",
+    "Define el trabajo y los datos económicos conocidos. WorthRoute evalúa primero; la síntesis opcional de fuentes públicas requiere otra autorización.",
   task: "TAREA",
   objective: "Objetivo",
   help: "Ayuda del campo",
@@ -130,7 +131,7 @@ const es: ForgeCopy = {
   budget: "Presupuesto máximo de cumplimiento (USD)",
   budgetHelp: "El costo máximo total que puede aceptar la ruta. Ejemplo: 10.00.",
   policy: "Política de ruta",
-  policyHelp: "Elige cómo SignalForge prioriza la evidencia: valor, costo, verificación o velocidad.",
+  policyHelp: "Elige cómo WorthRoute prioriza la evidencia: valor, costo, verificación o velocidad.",
   policyBestValue: "Mejor valor",
   policyCheapest: "Más económica",
   policyMostVerified: "Más verificada",
@@ -164,6 +165,7 @@ const es: ForgeCopy = {
   progressDecision: "Tomando la decisión",
   progressReceipt: "Compilando el recibo",
   submit: "Evaluar tarea",
+  synthesisEntry: "Investigar con fuentes públicas",
   recalculate: "Aplicar supuestos",
   working: "Compilando evaluación…",
   invalidInput: "Completa el objetivo, presupuesto, probabilidad de éxito y costo de revisión humana.",
@@ -207,7 +209,7 @@ const es: ForgeCopy = {
   fingerprint: "Huella de la decisión económica · no es una firma digital",
   noOptions: "Ninguna opción observada se convirtió en candidata de ruta.",
   edit: "Modifica el escenario y aplica los supuestos para recalcular en el servidor.",
-  synthesisTitle: "EJECUTAR UNA TAREA ACOTADA",
+  synthesisTitle: "Investigar con fuentes públicas",
   synthesisTag: "AUTORIZACIÓN DEL USUARIO / SOLO FUENTES PÚBLICAS",
   synthesisFingerprint: "Huella SHA-256, no es una firma",
   synthesisUsage: "Uso observado del modelo",
@@ -231,10 +233,10 @@ const es: ForgeCopy = {
 
 const fr: ForgeCopy = {
   ...en,
-  eyebrow: "SIGNALFORGE / LABORATOIRE FORGE",
+  eyebrow: "WORTHROUTE / LABORATOIRE FORGE",
   title: "Analysez votre propre mission.",
   intro:
-    "Définissez le travail et les données économiques connues. SignalForge analyse d’abord ; la synthèse facultative de sources publiques exige une autorisation distincte.",
+    "Définissez le travail et les données économiques connues. WorthRoute analyse d’abord ; la synthèse facultative de sources publiques exige une autorisation distincte.",
   task: "MISSION",
   objective: "Objectif",
   help: "Aide du champ",
@@ -278,6 +280,7 @@ const fr: ForgeCopy = {
   progressDecision: "Décision en cours",
   progressReceipt: "Compilation du reçu",
   submit: "Analyser la mission",
+  synthesisEntry: "Rechercher dans des sources publiques",
   recalculate: "Appliquer les hypothèses",
   working: "Compilation de l’analyse…",
   invalidInput: "Renseignez l’objectif, le budget, la probabilité de réussite et le coût de revue humaine.",
@@ -321,7 +324,7 @@ const fr: ForgeCopy = {
   fingerprint: "Empreinte de la décision économique · pas une signature numérique",
   noOptions: "Aucune option observée n’a été transformée en candidate de route.",
   edit: "Modifiez le scénario puis appliquez les hypothèses pour recalculer côté serveur.",
-  synthesisTitle: "EXÉCUTER UNE TÂCHE BORNÉE",
+  synthesisTitle: "Rechercher dans des sources publiques",
   synthesisTag: "AUTORISATION UTILISATEUR / SOURCES PUBLIQUES UNIQUEMENT",
   synthesisFingerprint: "Empreinte SHA-256, pas une signature",
   synthesisUsage: "Utilisation du modèle observée",

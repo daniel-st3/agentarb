@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "@/i18n/navigation";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import Link, { useRouter } from "@/i18n/navigation";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import type { Locale } from "@/i18n/routing";
 import { ConceptD } from "@/components/v2-lab/concept-d";
+import { useNetworkState } from "@/components/network-state";
 import {
   fetchRealLabData,
   type LabDataset,
 } from "@/components/v2-lab/lab-model";
 import { profitEngineCopy } from "./copy";
 import styles from "./profit-engine.module.css";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function ProfitEngine({
   locale,
@@ -19,6 +25,10 @@ export function ProfitEngine({
   initialDataset: LabDataset;
 }) {
   const copy = useMemo(() => profitEngineCopy(locale), [locale]);
+  const router = useRouter();
+  const [quickObjective, setQuickObjective] = useState("");
+  const methodRef = useRef<HTMLDivElement>(null);
+  const { status: networkStatus } = useNetworkState();
   const homePresentation = useMemo(() => ({
     eyebrow: copy.product.eyebrow,
     headline: copy.product.headline,
@@ -45,6 +55,18 @@ export function ProfitEngine({
     return () => controller.abort();
   }, []);
 
+  useGSAP(() => {
+    const host = methodRef.current;
+    const trace = host?.querySelector<SVGPathElement>("[data-method-trace]");
+    if (!host || !trace || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.to(trace, {
+      strokeDashoffset: 0,
+      duration: 1.1,
+      ease: "power2.inOut",
+      scrollTrigger: { trigger: host, start: "top 82%", once: true },
+    });
+  }, { scope: methodRef, dependencies: [Boolean(dataset.subject)], revertOnUpdate: true });
+
   const subject = dataset.subject;
   const sourceState = refreshState === "loading"
     ? copy.product.loading
@@ -52,15 +74,23 @@ export function ProfitEngine({
       ? copy.product.unavailable
       : subject
         ? `${subject.sourceName} · ${subject.freshness}`
-        : copy.product.empty;
+      : copy.product.empty;
+
+  function openForge(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const objective = quickObjective.trim();
+    if (objective.length < 12) return;
+    router.push(`/forge?objective=${encodeURIComponent(objective)}`);
+  }
 
   return (
     <div className={styles.home} data-profit-engine data-refresh-state={refreshState}>
       <div className={styles.engine}>
         <aside className={styles.statusRail} aria-label={copy.product.liveWork}>
-          <span>{subject?.freshness === "live" ? copy.product.liveWork : subject ? copy.product.cachedWork : copy.product.sourceStatus}</span>
-          <strong role="status" aria-live="polite">{sourceState}</strong>
-          <small>{subject ? `${subject.title} · ${subject.reward.display ?? copy.forge.unknownValue}` : copy.product.marketplaceBoundary}</small>
+          <span className={styles.statusTitle}>{copy.product.marketPulse}</span>
+          <span><strong>{networkStatus?.observedCount ?? "—"}</strong> {copy.product.observedListings}</span>
+          <span><strong>{refreshState === "degraded" ? "—" : dataset.matchedCount}</strong> {copy.product.paidOpportunities}</span>
+          <span className={styles.statusDetail} role="status" aria-live="polite">{sourceState}</span>
         </aside>
 
         {subject ? (
@@ -71,14 +101,35 @@ export function ProfitEngine({
           />
         ) : (
           <section className={styles.emptyHero} aria-labelledby="profit-engine-title">
-            <p>{copy.product.eyebrow}</p>
-            <h1 id="profit-engine-title">{copy.product.headline}</h1>
-            <p className={styles.heroIntroduction}>{copy.product.introduction}</p>
-            <nav aria-label={copy.product.controlsLabel}>
-              <Link href="/forge">{copy.product.underwriteAction} →</Link>
-              <Link href="/opportunities">{copy.product.openRadar} ↗</Link>
-            </nav>
-            <p className={styles.marketNote}>{refreshState === "degraded" ? copy.product.unavailable : copy.product.empty}</p>
+            <div className={styles.heroMain}>
+              <p>{copy.product.eyebrow}</p>
+              <h1 id="profit-engine-title">{copy.product.headline}</h1>
+              <p className={styles.heroIntroduction}>{copy.product.introduction}</p>
+              <form className={styles.quickEntry} onSubmit={openForge}>
+                <label htmlFor="home-task-entry">{copy.product.quickLabel}</label>
+                <div>
+                  <input id="home-task-entry" type="text" minLength={12} maxLength={2000} required value={quickObjective} onChange={(event) => setQuickObjective(event.target.value)} placeholder={copy.product.quickPlaceholder} />
+                  <button type="submit">{copy.product.underwriteAction} ↗</button>
+                </div>
+                <small>{copy.product.quickHint}</small>
+              </form>
+              <nav aria-label={copy.product.controlsLabel}>
+                <Link href="/forge">{copy.product.openForge} →</Link>
+                <Link href="/opportunities">{copy.product.openRadar} ↗</Link>
+              </nav>
+            </div>
+            <div className={styles.heroMethod} ref={methodRef} aria-label={copy.product.methodLabel}>
+              <p>{copy.product.methodLabel}</p>
+              <svg className={styles.methodTrace} viewBox="0 0 24 210" aria-hidden="true" focusable="false"><path data-method-trace d="M12 8v194" /></svg>
+              {copy.product.methodSteps.map((step, index) => (
+                <div key={step.title}>
+                  <span>0{index + 1}</span>
+                  <strong>{step.title}</strong>
+                  <small>{step.detail}</small>
+                </div>
+              ))}
+              <p className={styles.marketNote}>{refreshState === "degraded" ? copy.product.unavailable : copy.product.empty}</p>
+            </div>
           </section>
         )}
       </div>
@@ -96,7 +147,7 @@ export function ProfitEngine({
         </nav>
       </section>
 
-      <section className={styles.trust} aria-label="SignalForge boundaries">
+      <section className={styles.trust} aria-label={copy.product.boundariesLabel}>
         <span>{copy.product.trust}</span>
         <strong>{copy.product.boundary}</strong>
         <Link href="/developers/try">REST / MCP / A2A ↗</Link>

@@ -299,7 +299,7 @@ export function BriefView({ id, example }: { id: string; example?: Run }) {
         <div className="brief-title" data-reveal>
           <div className="report-masthead">
             <span>
-              {t("SIGNALFORGE / RESEARCH BRIEF /")}{" "}
+              {t("WORTHROUTE / RESEARCH BRIEF /")}{" "}
               {t(
                 run.example
                   ? run.request.id.replace("example-", "00")
@@ -312,7 +312,7 @@ export function BriefView({ id, example }: { id: string; example?: Run }) {
             </span>
           </div>
           <Eyebrow>
-            {t("SIGNALFORGE /")}
+            WORTHROUTE /
             {t(run.example ? "EXAMPLE BRIEF" : "SESSION BRIEF")} /{" "}
             {t(policyLabels[run.request.optimizationPolicy])} {t("/ DEMO MODE")}
           </Eyebrow>

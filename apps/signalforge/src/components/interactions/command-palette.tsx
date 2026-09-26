@@ -100,7 +100,7 @@ export default function CommandPalette({ close }: { close: () => void }) {
         >
           <div className="launcher-heading">
             <span className="eyebrow">
-              {t("SIGNALFORGE / OBJECTIVE LAUNCHER")}
+              {t("WORTHROUTE / OBJECTIVE LAUNCHER")}
             </span>
             <button
               type="button"

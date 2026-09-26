@@ -6,25 +6,26 @@ export function Brand() {
   const t = useCopy();
 
   return (
-    <Link href="/" className="brand" aria-label={t("SignalForge home")}>
+    <Link href="/" className="brand" aria-label={t("WorthRoute home")}>
       <svg
         width="25"
         height="25"
-        viewBox="0 0 32 32"
+        viewBox="0 0 64 64"
         fill="none"
         aria-hidden="true"
         className="brand-signal"
       >
         <path
-          d="M4 7h7l9 9h8M4 16h24M4 25h7l9-9"
+          d="M8 15L17 49L32 27L47 49L56 15"
           stroke="currentColor"
-          strokeWidth="1.55"
+          strokeWidth="5"
           strokeLinecap="square"
+          strokeLinejoin="bevel"
         />
-        <rect x="17.5" y="13.5" width="5" height="5" fill="#e85f3b" />
+        <path d="M32 15l6 7-6 7-6-7z" fill="#e85f3b" />
       </svg>
       <span>
-        {t("SignalForge")}
+        WorthRoute
         <span className="brand-dot">.</span>
       </span>
     </Link>

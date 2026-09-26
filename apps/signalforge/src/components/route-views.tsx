@@ -379,7 +379,7 @@ export function ExecutionRouteView({ id }: { id: string }) {
     <Reveal className="workspace container execution-report">
       <header className="workspace-title" data-reveal>
         <p className="eyebrow">
-          {t("SIGNALFORGE / EXECUTION ROUTE /")}{" "}
+          {t("WORTHROUTE / EXECUTION ROUTE /")}{" "}
           {t(
             id.startsWith("example") ? id.replace("example-", "00") : "SESSION",
           )}

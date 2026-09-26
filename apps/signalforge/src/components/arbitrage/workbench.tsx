@@ -177,7 +177,7 @@ export function ArbitrageWorkbench({
   return (
     <div className="arb-workbench container">
       <header className="arb-heading">
-        <p className="eyebrow">{t("SIGNALFORGE / ARBITRAGE RADAR")}</p>
+        <p className="eyebrow">{t("WORTHROUTE / ARBITRAGE RADAR")}</p>
         <h1>{t("Does the spread survive?")}</h1>
         <p>
           {t(

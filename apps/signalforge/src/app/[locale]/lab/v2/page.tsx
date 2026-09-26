@@ -17,8 +17,8 @@ export async function generateMetadata({
     fr: "Laboratoire visuel V2",
   };
   return {
-    title: `${titles[locale]} · SignalForge`,
-    description: "An isolated SignalForge interaction study. Not production UI.",
+    title: `${titles[locale]} · WorthRoute`,
+    description: "An isolated WorthRoute interaction study. Not production UI.",
     robots: { index: false, follow: false, nocache: true },
   };
 }

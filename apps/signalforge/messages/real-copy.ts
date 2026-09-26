@@ -9,7 +9,7 @@ export const realCopy: Array<[string, string, string]> = [
   ["Authorization", "Autorización", "Autorisation"],
   ["REQUIRED / NOT GRANTED", "REQUERIDA / NO CONCEDIDA", "REQUISE / NON ACCORDÉE"],
   ["Missing inputs", "Datos faltantes", "Données manquantes"],
-  ["A public Coinbase spot-price endpoint may be queried for USDC/USD. SignalForge caches the rate, timestamp and source metadata, never account data. Operator economic assumptions are processed for the requested receipt and are not intentionally persisted. Manual outcome records remain schema-only in this milestone. Shared Redis keys are isolated by a trusted production, preview, development or test namespace.", "SignalForge puede consultar un endpoint público de precio spot de Coinbase para USDC/USD. Almacena en caché el tipo, la fecha y los metadatos de la fuente, nunca datos de cuenta. Los supuestos económicos del operador se procesan para el recibo solicitado y no se conservan intencionalmente. Los resultados manuales siguen siendo solo un esquema en este hito. Las claves Redis compartidas se aíslan mediante un espacio de nombres confiable de producción, vista previa, desarrollo o pruebas.", "SignalForge peut interroger un endpoint public de prix spot Coinbase pour USDC/USD. Le taux, l’horodatage et les métadonnées de source sont mis en cache, jamais les données de compte. Les hypothèses économiques de l’opérateur sont traitées pour le reçu demandé et ne sont pas conservées intentionnellement. Les résultats manuels restent limités au schéma dans ce jalon. Les clés Redis partagées sont isolées par un espace de noms fiable de production, prévisualisation, développement ou test."],
+  ["A public Coinbase spot-price endpoint may be queried for USDC/USD. WorthRoute caches the rate, timestamp and source metadata, never account data. Operator economic assumptions are processed for the requested receipt and are not intentionally persisted. Manual outcome records remain schema-only in this milestone. Shared Redis keys are isolated by a trusted production, preview, development or test namespace.", "WorthRoute puede consultar un endpoint público de precio spot de Coinbase para USDC/USD. Almacena en caché el tipo, la fecha y los metadatos de la fuente, nunca datos de cuenta. Los supuestos económicos del operador se procesan para el recibo solicitado y no se conservan intencionalmente. Los resultados manuales siguen siendo solo un esquema en este hito. Las claves Redis compartidas se aíslan mediante un espacio de nombres confiable de producción, vista previa, desarrollo o pruebas.", "WorthRoute peut interroger un endpoint public de prix spot Coinbase pour USDC/USD. Le taux, l’horodatage et les métadonnées de source sont mis en cache, jamais les données de compte. Les hypothèses économiques de l’opérateur sont traitées pour le reçu demandé et ne sont pas conservées intentionnellement. Les résultats manuels restent limités au schéma dans ce jalon. Les clés Redis partagées sont isolées par un espace de noms fiable de production, prévisualisation, développement ou test."],
   ["POST /api/v1/opportunities/claim-readiness — read-only economic and authorization inspection; claimAuthorized is always false.", "POST /api/v1/opportunities/claim-readiness — inspección económica y de autorización de solo lectura; claimAuthorized siempre es false.", "POST /api/v1/opportunities/claim-readiness — inspection économique et d’autorisation en lecture seule ; claimAuthorized est toujours false."],
   ["Complete the economics", "Completa la economía", "Complétez les paramètres économiques"],
   ["Apply assumptions", "Aplicar supuestos", "Appliquer les hypothèses"],
@@ -102,9 +102,9 @@ export const realCopy: Array<[string, string, string]> = [
     "La source n’a pas confirmé que la vérification est prête.",
   ],
   [
-    "Participation requires funding activity outside SignalForge’s permitted scope.",
-    "Participar requiere financiación fuera del alcance permitido de SignalForge.",
-    "La participation exige un financement hors du périmètre autorisé de SignalForge.",
+    "Participation requires funding activity outside WorthRoute’s permitted scope.",
+    "Participar requiere financiación fuera del alcance permitido de WorthRoute.",
+    "La participation exige un financement hors du périmètre autorisé de WorthRoute.",
   ],
   [
     "The complete task cannot be mapped to a supported fulfillment route.",
@@ -370,9 +370,9 @@ export const realCopy: Array<[string, string, string]> = [
     "Instantanés publics et confidentialité opérationnelle",
   ],
   [
-    "Upstash stores bounded public source snapshots, validator metadata, connector health, expiring refresh/model-admission leases and rate-limit counters. Caller keys are salted HMACs; SignalForge does not store raw IP addresses in these records.",
-    "Upstash almacena instantáneas públicas acotadas, validadores, salud de conectores, bloqueos temporales de actualización y acceso al modelo, y contadores de solicitudes. Las claves usan HMAC con sal; SignalForge no almacena IP sin procesar en estos registros.",
-    "Upstash conserve des instantanés publics bornés, des validateurs, l’état des connecteurs, des verrous temporaires de rafraîchissement et d’accès au modèle, et des compteurs de requêtes. Les identifiants sont des HMAC salés ; SignalForge n’y stocke pas d’adresses IP brutes.",
+    "Upstash stores bounded public source snapshots, validator metadata, connector health, expiring refresh/model-admission leases and rate-limit counters. Caller keys are salted HMACs; WorthRoute does not store raw IP addresses in these records.",
+    "Upstash almacena instantáneas públicas acotadas, validadores, salud de conectores, bloqueos temporales de actualización y acceso al modelo, y contadores de solicitudes. Las claves usan HMAC con sal; WorthRoute no almacena IP sin procesar en estos registros.",
+    "Upstash conserve des instantanés publics bornés, des validateurs, l’état des connecteurs, des verrous temporaires de rafraîchissement et d’accès au modèle, et des compteurs de requêtes. Les identifiants sont des HMAC salés ; WorthRoute n’y stocke pas d’adresses IP brutes.",
   ],
   [
     "Only optional objective decomposition sends your objective, context URL, budget, policy and language preference to Groq. The URL is text, not fetched. Marketplace descriptions never enter this model path. No tools, credentials or server configuration are included in the prompt.",
@@ -380,8 +380,8 @@ export const realCopy: Array<[string, string, string]> = [
     "Seule la décomposition facultative envoie à Groq votre objectif, URL de contexte, budget, politique et langue. L’URL est du texte, elle n’est pas consultée. Les descriptions de missions ne suivent jamais ce chemin. Aucun outil, identifiant secret ou paramètre serveur n’est inclus.",
   ],
   [
-    "SignalForge does not intentionally persist visitor objectives, scenarios or outcomes. Vercel may retain request metadata and operational logs; Groq may retain provider-side logs under its policies. Do not submit confidential text. No marketplace credentials, wallet credentials or private keys are requested; autonomous signing is not available.",
-    "SignalForge no persiste intencionalmente objetivos, escenarios ni resultados de visitantes. Vercel puede conservar metadatos y registros operativos; Groq puede conservar registros según sus políticas. No envíes texto confidencial. No se solicitan credenciales de mercados, carteras ni claves privadas; no existe firma autónoma.",
-    "SignalForge ne conserve volontairement ni objectifs, ni scénarios, ni résultats des visiteurs. Vercel peut conserver des métadonnées et journaux opérationnels ; Groq peut conserver des journaux selon ses politiques. N’envoyez pas de texte confidentiel. Aucun identifiant de place de marché, de portefeuille ou clé privée n’est demandé ; la signature autonome n’est pas disponible.",
+    "WorthRoute does not intentionally persist visitor objectives, scenarios or outcomes. Vercel may retain request metadata and operational logs; Groq may retain provider-side logs under its policies. Do not submit confidential text. No marketplace credentials, wallet credentials or private keys are requested; autonomous signing is not available.",
+    "WorthRoute no persiste intencionalmente objetivos, escenarios ni resultados de visitantes. Vercel puede conservar metadatos y registros operativos; Groq puede conservar registros según sus políticas. No envíes texto confidencial. No se solicitan credenciales de mercados, carteras ni claves privadas; no existe firma autónoma.",
+    "WorthRoute ne conserve volontairement ni objectifs, ni scénarios, ni résultats des visiteurs. Vercel peut conserver des métadonnées et journaux opérationnels ; Groq peut conserver des journaux selon ses politiques. N’envoyez pas de texte confidentiel. Aucun identifiant de place de marché, de portefeuille ou clé privée n’est demandé ; la signature autonome n’est pas disponible.",
   ],
 ];
