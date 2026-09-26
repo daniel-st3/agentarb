@@ -1,41 +1,38 @@
-# SignalForge — deployed application
+# SignalForge application
 
-SignalForge underwrites AI-agent work before anything executes. Visitors can use Forge, inspect the full result, and download an underwriting receipt without an account. Accounts add private saved-run history.
+This is the deployed Next.js app. Start with the [repository README](../../README.md) for the product tour and canonical Production link. The Vercel project root is `apps/signalforge`; `web/` is a separate legacy frontend.
 
-Start with `/en/opportunities` for observed Agent Bounties records and exact source economics. EN/ES/FR are supported. Empty or ineligible demand is never replaced with fixtures. Historical Lab examples require explicit `ENABLE_DEMO_DATA=true` outside Vercel Production.
+## Local development
 
-Versioned underwriting: `POST /api/v1/opportunities/evaluate` with a real returned opportunity ID and `responseVersion:"2.0"`. Omitting the version preserves the old conservative response. Discovery: `GET /api/v1/opportunities?mode=observed`. [Real-data economics, security and limitations](../../docs/real-data-v1.md).
-
-Real Economics v1 preserves Agent Bounties USDC base units, combines them only with a fresh sourced USDC/USD observation, and prices an explicit bounded workload against a reviewed current Groq price record. Conditional profit, margin, risk-adjusted EV and break-even values appear only after the operator supplies every missing assumption. The v2 receipt fingerprints the full canonical economic decision core; claim readiness v1.1 reports expected/worst-case total cost, completeness, capital and bond exposure separately. The receipt separates observed, published, market, user-scenario, derived and unknown fields. `POST /api/v1/opportunities/claim-readiness` and MCP tool `signalforge_get_claim_readiness` are inspection-only: `claimAuthorized=false` and `executionStatus=execution_not_enabled`.
-
-[Production](https://signalforge-rose-two.vercel.app/en) · [Root guide](../../README.md).
+Use Node 22.13+ and the committed lockfile:
 
 ```bash
 npm ci
 npm run dev -- --port 3001
+```
+
+Open `http://127.0.0.1:3001/en`. Human pages also support `/es` and `/fr`; protocol URLs remain unprefixed. The guest Forge flow works without Supabase. Copy names from [`.env.example`](.env.example), but keep values private. Local deterministic decomposition works without Groq; source synthesis needs `GROQ_API_KEY`. Hosted public APIs fail closed without shared Redis and a rate-limit salt. Never place a server credential in a `NEXT_PUBLIC_` variable.
+
+## Product and data boundaries
+
+- `src/app/[locale]` contains Forge, Market, Network, Pricing, account/history and developer pages. Guests can underwrite and download receipts; authenticated users can save private snapshots. Saved records reopen without rerunning the task.
+- `src/domain` owns deterministic contracts and economics. `src/server` owns source connectors, policy, shared caching, rate limits, Supabase-backed persistence and the bounded public-source fetch. UI code must not invent profit, route evidence or marketplace eligibility.
+- Agent Bounties and catalog connectors are read-only. A zero-result observed market is valid. Reviewed Groq prices and fresh USDC/USD observations are distinct from user assumptions; unknown fields stay unknown.
+- Underwriting and claim-readiness retain `execution_not_enabled`. The separate Forge **Run task** action can synthesize 1–10 supplied public HTTPS pages with one bounded Groq call and a $0.01 authorized model-spend ceiling. No marketplace claim, service execution, payment, wallet or arbitrary tool access is enabled. Citation links are structural evidence, not independent verification.
+- Receipt SHA-256 values are fingerprints, not signatures. Guest receipts download locally; signed-in runs use owner-scoped Supabase row-level security.
+
+## Interfaces and verification
+
+Read [OpenAPI](https://signalforge-rose-two.vercel.app/api/v1/openapi) for exact REST schemas, [MCP guidance](../../docs/mcp.md) for read-only agent tools, and the [external client example](examples/client-agent/README.md) for a consumer that validates and records route contracts without executing them.
+
+```bash
 npm run lint
 npm run typecheck
 npm test
 npm run build
-npm run test:e2e
+npm run test:e2e -- --workers=2
+npm run test:real-ui
 npm audit
-npm start -- --port 3001
 ```
 
-## External consumer proof
-
-```bash
-npm run demo:client-agent -- \
-  --objective "Build a verified startup due-diligence route" \
-  --budget 0.25 --policy most_verified --output ./route-receipt.json
-npm run demo:client-agent -- --transport mcp --output ./mcp-receipt.json
-npm run demo:client-agent -- --fixture unsafe-execution-enabled --output ./refusal-receipt.json
-```
-
-The last command intentionally exits 2. The client validates and records locally; it is not an executor. [Client guide](examples/client-agent/README.md).
-
-Vercel root: `apps/signalforge`. Human routes use `/en`, `/es`, `/fr`; old links redirect to English. Protocol URLs remain stable. [i18n](../../docs/i18n.md).
-
-No keys are needed for demo planning. Optional server-only Groq interprets objectives; Upstash supplies public-catalog cache and hashed shared limits. Use `.env.example` names, never `NEXT_PUBLIC_` credentials. [Setup](../../docs/durable-network.md).
-
-Underwriting, claim-readiness, and marketplace contracts retain `execution_not_enabled`. Live catalog options are informational, not executable steps. A separate, explicitly authorized Forge route can read 1–10 supplied public HTTPS pages and synthesize their contents with a bounded Groq call. Its receipt reports source evidence, usage, calculated-at-published-price cost where available, and structural—not independent—citation verification. The fixed authorized provider ceiling is $0.01 per run; no marketplace claims, arbitrary tool calls, wallets, purchases, or payments are enabled. Signed-in execution receipts require the additive `source_synthesis_runs` migration with owner-only RLS; guest results remain downloadable without persistence. [Safety](../../docs/security.md) · [GSAP/Motion ownership](../../docs/interaction-system.md).
+Keep live-source probes separate from hermetic tests. See [security](../../docs/security.md), [i18n](../../docs/i18n.md) and [real-data economics](../../docs/real-data-v1.md) before changing a policy, connector or economic formula.

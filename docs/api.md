@@ -1,4 +1,6 @@
-# SignalForge v1 discovery and demo planning API
+# SignalForge REST API
+
+SignalForge's live Forge experience and observed-market underwriting are distinct from the older `mode:demo` route-planning examples below. Demo contracts are compatibility/reference surfaces, not current paid opportunities or evidence of task execution. For current request and response schemas, use the deployment-local [OpenAPI](https://signalforge-rose-two.vercel.app/api/v1/openapi). The only enabled task execution is Forge's separately authorized, bounded public-source synthesis; marketplace actions and discovered-service execution remain disabled.
 
 Base: `https://signalforge-rose-two.vercel.app`. JSON only. No credentials or cookies required. Same-origin browsers; command-line/MCP clients may omit Origin. No CORS wildcard. A future browser-origin allowlist requires an explicit reviewed code change.
 
@@ -74,7 +76,7 @@ route providers remain separate simulated fixtures.
 
 Planning/decomposition/compile share 10 requests/client-key/rolling 10 minutes with Redis; underwriting and claim-readiness inspection share the 20/10-minute class. Catalog/MCP protocol requests share 60/10 minutes. MCP tools also consume their operation-specific quota. `429` includes `Retry-After`; `400` invalid input, `413` body >16 KiB, `403` invalid Origin, `404` missing listing, `503` shared infrastructure or catalog unavailable. No stack traces or vendor error bodies.
 
-Without shared configuration, limits/cache leases are **per instance only**, reset on cold start, and are not launch-grade distributed protection. Configure the shared store before high-traffic use. Error responses and current API data use `Cache-Control: no-store` so a CDN cannot relabel old responses as live or bypass quota checks.
+Hosted public APIs require shared durable protection and fail closed if it is unavailable. Local development can explicitly use per-instance memory mode; that mode is not launch-grade distributed protection. Error responses and current API data use `Cache-Control: no-store` so a CDN cannot relabel old responses as live or bypass quota checks.
 
 ## Browser/legacy surfaces
 

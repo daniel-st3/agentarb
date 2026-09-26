@@ -38,15 +38,15 @@ Use short imperative commits, such as `Harden observed underwriting` or `Add saf
 
 ## Security & Configuration
 
-Copy variable names from `.env.example`; store values only in `.env.local` or Vercel. Never commit secrets or create `NEXT_PUBLIC_` variants of server credentials. Do not add marketplace writes, claims, payments, wallets, arbitrary URL fetching, or execution paths.
+Copy variable names from `.env.example`; store values only in `.env.local` or Vercel. Never commit secrets or create `NEXT_PUBLIC_` variants of server credentials. Do not add marketplace writes, claims, payments, wallets, arbitrary URL fetching, or new execution paths without explicit authorization and a separate safety review. The existing bounded, user-authorized public-source synthesis route is the sole enabled execution path; underwriting contracts remain `execution_not_enabled`.
 
 ## SignalForge Production Baseline
 
-Current known-good Production branch: `claude/verify-bounty-api-facts-f6ccdu`.
+Production branch: `claude/verify-bounty-api-facts-f6ccdu`.
 
-Current known-good Production merge commit: `09cbe4f74abd895e697c10231023e019b69c8f2c`.
+Last verified product-release commit when this guide was updated: `245ce8ed74785503c751ea6d7ca59f8f3dc80c8b`. Verify the current branch head and Vercel deployment before release work; this reference is historical after later merges.
 
-SignalForge Real Economics v1 is live and must remain stable while V2 is developed separately. All V2 experimentation must happen on dedicated branches and Preview deployments.
+The V2 Profit Engine, Forge, guest-first accounts and bounded public-source synthesis are live. Keep Production stable; future experiments belong on dedicated branches and Preview deployments.
 
 Never merge, deploy, promote, modify Production environment variables, or change Production aliases unless explicitly instructed.
 
