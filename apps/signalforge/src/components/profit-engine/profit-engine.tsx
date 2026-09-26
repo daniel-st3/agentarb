@@ -60,7 +60,7 @@ export function ProfitEngine({
         <aside className={styles.statusRail} aria-label={copy.product.liveWork}>
           <span>{subject?.freshness === "live" ? copy.product.liveWork : subject ? copy.product.cachedWork : copy.product.sourceStatus}</span>
           <strong role="status" aria-live="polite">{sourceState}</strong>
-          <small>{subject ? `${subject.title} · ${subject.reward.display ?? copy.forge.unknownValue}` : copy.forge.execution}</small>
+          <small>{subject ? `${subject.title} · ${subject.reward.display ?? copy.forge.unknownValue}` : copy.product.marketplaceBoundary}</small>
         </aside>
 
         {subject ? (
@@ -73,14 +73,12 @@ export function ProfitEngine({
           <section className={styles.emptyHero} aria-labelledby="profit-engine-title">
             <p>{copy.product.eyebrow}</p>
             <h1 id="profit-engine-title">{copy.product.headline}</h1>
-            <div>
-              <strong>{refreshState === "degraded" ? copy.product.unavailable : copy.product.empty}</strong>
-              <span>{copy.product.emptyDetail}</span>
-            </div>
+            <p className={styles.heroIntroduction}>{copy.product.introduction}</p>
             <nav aria-label={copy.product.controlsLabel}>
-              <Link href="/opportunities">{copy.product.openRadar} ↗</Link>
               <Link href="/forge">{copy.product.underwriteAction} →</Link>
+              <Link href="/opportunities">{copy.product.openRadar} ↗</Link>
             </nav>
+            <p className={styles.marketNote}>{refreshState === "degraded" ? copy.product.unavailable : copy.product.empty}</p>
           </section>
         )}
       </div>

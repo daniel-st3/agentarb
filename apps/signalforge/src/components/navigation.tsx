@@ -16,21 +16,12 @@ export function Navigation() {
   const locale = useLocale() as AccountLocale;
   const account = accountCopy[locale] ?? accountCopy.en;
   const auth = useAuth();
-  const links = path === "/"
-    ? [
-        ["/opportunities", "Market"],
-        ["/forge", "Forge"],
-        ["/pricing", "Pricing"],
-        ["/developers/try", "Developers"],
-      ]
-    : [
-        ["/opportunities", "Radar"],
-        ["/network", "Network"],
-        ["/forge", "Forge"],
-        ["/pricing", "Pricing"],
-        ["/developers/try", "Developers"],
-        ["/history", "Archive"],
-      ];
+  const links = [
+    ["/opportunities", "Market"],
+    ["/forge", "Forge"],
+    ["/pricing", "Pricing"],
+    ["/developers/try", "Developers"],
+  ];
   return (
     <header className="site-nav">
       <div className="nav-inner">

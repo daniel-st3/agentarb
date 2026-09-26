@@ -21,7 +21,8 @@ test("Forge Lab produces a server-authoritative conditional result and receipt",
   await expect(page.locator("#forge-route")).toContainText("not task quotes");
   await expect(page.locator("#forge-economics")).toContainText("Refundable capital · not expense");
   await expect(page.getByRole("button", { name: "Download receipt JSON" })).toBeVisible();
-  await expect(page.locator("main")).toContainText("EXECUTION DISABLED");
+  await expect(page.locator("main")).toContainText("UNDERWRITING DOES NOT RUN TASKS");
+  await expect(page.locator("main")).toContainText("SOURCE SYNTHESIS REQUIRES SEPARATE AUTHORIZATION");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 

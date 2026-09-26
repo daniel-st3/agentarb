@@ -41,11 +41,12 @@ describe("deployed boundary", () => {
       .filter((f) => /\.tsx?$/.test(f) && readFileSync(f, "utf8").includes("sessionStorage"));
     expect(sessionStorageFiles).toEqual(["src/components/account/pending-run.ts"]);
   });
-  it("only declared discovery, planning, MCP and legacy local demo endpoints exist", () => {
+  it("only declared discovery, planning, account, and bounded synthesis endpoints exist", () => {
     const routes = files("src/app/api").filter((f) => f.endsWith("route.ts"));
     expect(routes.sort()).toEqual([
       "src/app/api/account/forge-runs/[id]/route.ts",
       "src/app/api/account/forge-runs/route.ts",
+      "src/app/api/account/source-synthesis-runs/[id]/route.ts",
       "src/app/api/frame/route.ts",
       "src/app/api/mcp/route.ts",
       "src/app/api/plan/route.ts",
@@ -53,6 +54,7 @@ describe("deployed boundary", () => {
       "src/app/api/run/route.ts",
       "src/app/api/v1/catalog/[id]/route.ts",
       "src/app/api/v1/catalog/route.ts",
+      "src/app/api/v1/forge/synthesize/route.ts",
       "src/app/api/v1/forge/underwrite/route.ts",
       "src/app/api/v1/network/status/route.ts",
       "src/app/api/v1/openapi/route.ts",
@@ -61,6 +63,10 @@ describe("deployed boundary", () => {
       "src/app/api/v1/opportunities/route.ts",
       "src/app/api/v1/routes/plan/route.ts",
     ]);
+    const fetcher = readFileSync("src/server/source-synthesis/fetch-public.ts", "utf8");
+    expect(fetcher).toContain('method: "GET"');
+    expect(fetcher).toContain("source_dns_unsafe");
+    expect(fetcher).toContain("source_payload_too_large");
   });
   it("invalid content types, malformed JSON, and oversized chunked inputs fail safely", async () => {
     const requests = [

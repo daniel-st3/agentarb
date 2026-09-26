@@ -20,7 +20,7 @@ export default function Page() {
       </h1>
       <p className="network-intro">
         {t(
-          "Observed opportunities, explicit economic gaps, and auditable receipts. No marketplace actions. Every contract states execution_not_enabled.",
+          "Observed opportunities and auditable receipts. Underwriting stays execution_not_enabled; one separate user-authorized public-source synthesis route is available. No marketplace actions or payments.",
         )}
       </p>
       <section>
@@ -39,6 +39,10 @@ export default function Page() {
             "Unknown prices and catalog-only offers do not become executable steps. A budget that cannot cover critical capabilities yields a partial contract.",
           )}
         </p>
+      </section>
+      <section>
+        <h2>{t("Bounded source synthesis")}</h2>
+        <p>{t("Public-source synthesis is opt-in: POST /api/v1/forge/synthesize with 1–10 public HTTPS URLs, a task objective, a unique run ID, and explicit run_task authorization. One bounded Groq call returns cited findings and a separate execution receipt. No marketplace work is executed.")}</p>
       </section>
       <section>
         <h2>{t("Inspect the supply network")}</h2>

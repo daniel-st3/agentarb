@@ -35,13 +35,14 @@ export const agentCardSchema = z.object({
 export const agentCard = agentCardSchema.parse({
   name: "SignalForge",
   description:
-    "SignalForge is an arbitrage underwriter and routing intelligence layer for agent work. Source-reported paid opportunities, exact economic provenance and explicit unknowns; execution_not_enabled.",
-  version: "1.2.0",
+    "SignalForge underwrites agent work with explicit economic provenance. Underwriting and marketplace routes remain execution_not_enabled; a separate user-authorized route can synthesize supplied public HTTPS sources without marketplace actions or payments.",
+  version: "1.3.0",
   capabilities: { streaming: false, pushNotifications: false },
   defaultInputModes: ["application/json"],
   defaultOutputModes: ["application/json"],
   skills: [
     {id:"arbitrage-underwriting",name:"Arbitrage underwriting",description:"Underwrite observed paid opportunities. Preserve USDC base units, published provider pricing, bounded user assumptions and unknown costs. Inspection only.",tags:["underwriting","observed-opportunities","execution_not_enabled"]},
+    {id:"public-source-synthesis",name:"Public-source synthesis",description:"After explicit Run task authorization, fetch 1–10 supplied public HTTPS pages and produce source-bound synthesis with one bounded model call. No marketplace actions or payments.",tags:["user-authorized","bounded-execution","public-sources"]},
     {
       id: "route-planning",
       name: "Capability route planning",
@@ -62,7 +63,7 @@ export const agentCard = agentCardSchema.parse({
     compatibility:
       "A2A-style discoverability only; A2A message/task transport is not implemented.",
     executionBoundary:
-      "execution_not_enabled. No bids, claims, submissions, payments, signing, or marketplace actions.",
+      "Underwriting and marketplace contracts: execution_not_enabled. Separate public-source synthesis requires explicit user authorization. No bids, claims, submissions, payments, signing, wallets, or marketplace actions.",
     api: {
       routePlanning: "/api/v1/routes/plan",
       catalog: "/api/v1/catalog",
@@ -70,6 +71,7 @@ export const agentCard = agentCardSchema.parse({
       opportunityEvaluation: "/api/v1/opportunities/evaluate",
       opportunitySearch: "/api/v1/opportunities",
       claimReadiness: "/api/v1/opportunities/claim-readiness",
+      sourceSynthesis: "/api/v1/forge/synthesize",
       openapi: "/api/v1/openapi",
     },
     supportedSchemas: [
@@ -80,6 +82,7 @@ export const agentCard = agentCardSchema.parse({
       "ArbitrageEvaluation/2.0",
       "ClaimReadinessPacket/1.1",
       "UnderwritingReceipt/2.0",
+      "SourceSynthesisReceipt/1.0",
     ],
     mcp: {
       endpoint: "/api/mcp",

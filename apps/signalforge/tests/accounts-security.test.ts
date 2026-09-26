@@ -30,11 +30,12 @@ describe("accounts and saved-run boundaries", () => {
     );
   });
 
-  it("keeps OAuth code exchange and email token-hash confirmation on separate routes", () => {
+  it("shows only configured email auth and retains token-hash confirmation", () => {
     const provider = readFileSync("src/components/account/auth-provider.tsx", "utf8");
-    expect(provider).toContain('redirectTo: `${location.origin}/auth/callback?next=');
+    expect(provider).not.toContain("signInWithOAuth");
     expect(provider).toContain("emailConfirmationRedirect(location.origin, next)");
     expect(provider).not.toContain('emailRedirectTo: `${location.origin}/auth/callback');
+    expect(readFileSync("src/app/auth/callback/route.ts", "utf8")).toContain("exchangeCodeForSession");
   });
 
   it("enables RLS and declares explicit ownership policies for every mutation", () => {

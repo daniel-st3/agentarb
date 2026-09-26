@@ -57,18 +57,6 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
     return () => data.subscription.unsubscribe();
   }, [router]);
 
-  async function google() {
-    const client = createSupabaseBrowserClient();
-    if (!client) return setStatus("configuration");
-    setStatus("pending");
-    const next = `/${locale}${pathname}`;
-    const { error } = await client.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
-    });
-    if (error) setStatus(reportAuthRequestFailure("google_oauth", error));
-  }
-
   async function sendEmail(event: FormEvent) {
     event.preventDefault();
     const client = createSupabaseBrowserClient();
@@ -106,8 +94,6 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
           <p>{copy.intro}</p>
           {!configured ? <p role="status" className="auth-status">{copy.unavailable}</p> : (
             <>
-              <button className="auth-google" type="button" onClick={google} disabled={status === "pending"}>{copy.google}</button>
-              <div className="auth-or"><span>{copy.or}</span></div>
               <form onSubmit={sendEmail}>
                 <label htmlFor="auth-email">{copy.email}</label>
                 <input id="auth-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder={copy.emailPlaceholder} />

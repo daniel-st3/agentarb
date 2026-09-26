@@ -13,16 +13,15 @@ export function SignInPrompt() {
   return <button className="account-primary" type="button" onClick={openAuth}>{copy.signIn}</button>;
 }
 
-export function DeleteAnalysis({ id, label, prompt, detail }: { id: string; label: string; prompt: string; detail: string }) {
+export function DeleteAnalysis({ id, label, prompt, detail, kind = "forge-runs" }: { id: string; label: string; prompt: string; detail: string; kind?: "forge-runs" | "source-synthesis-runs" }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   async function remove() {
     if (!confirm(`${prompt}\n\n${detail}`)) return;
     setPending(true);
-    const response = await fetch(`/api/account/forge-runs/${id}`, { method: "DELETE" });
+    const response = await fetch(`/api/account/${kind}/${id}`, { method: "DELETE" });
     if (response.ok) router.push("/account/history");
     else setPending(false);
   }
   return <button className="account-danger" type="button" onClick={remove} disabled={pending}>{label}</button>;
 }
-

@@ -4,7 +4,7 @@ const en = {
   eyebrow: "SIGNALFORGE / FORGE LAB",
   title: "Underwrite your own task.",
   intro:
-    "Define the work and state the economics you know. SignalForge maps capabilities, checks observed supply context, and calculates a conditional decision without executing anything.",
+    "Define the work and state the economics you know. SignalForge underwrites first; optional public-source synthesis requires a separate Run task action.",
   task: "TASK",
   objective: "Objective",
   help: "Field help",
@@ -54,7 +54,7 @@ const en = {
   requestError: "Underwriting is temporarily unavailable. Your scenario was preserved.",
   privacy:
     "Objective decomposition may send the objective to the configured model provider. Do not include secrets or private information.",
-  boundary: "UNDERWRITING ONLY · NO SERVICE CALLS · NO PAYMENTS · EXECUTION DISABLED",
+  boundary: "UNDERWRITING DOES NOT RUN TASKS · SOURCE SYNTHESIS REQUIRES SEPARATE AUTHORIZATION",
   observedContext: "Observed catalog context",
   observedContextHelp:
     "Capability-matched listings are evidence of observed supply only. Their catalog prices are not task quotes and no provider was selected.",
@@ -91,6 +91,26 @@ const en = {
   fingerprint: "Economic decision fingerprint · not a digital signature",
   noOptions: "No observed option was promoted into a route candidate.",
   edit: "Change the scenario and apply assumptions to recalculate on the server.",
+  synthesisTitle: "RUN A BOUNDED TASK",
+  synthesisTag: "USER-AUTHORIZED / PUBLIC SOURCES ONLY",
+  synthesisFingerprint: "SHA-256 fingerprint, not a signature",
+  synthesisUsage: "Observed model usage",
+  synthesisCost: "Cost calculated from measured tokens at published price; provider charge unknown",
+  synthesisIntro: "Research and synthesis from public sources is the one enabled execution route. It never calls catalog services, claims marketplace work, or pays anyone.",
+  synthesisSources: "Public HTTPS sources (one URL per line, 1–10)",
+  synthesisSourcesHelp: "Enter public pages to synthesize. Example: https://www.example.org/report. Private, local, redirected, oversized, and unsupported pages are rejected.",
+  synthesisRoute: "ROUTE · FETCH PUBLIC TEXT → GROQ SYNTHESIS → SOURCE-BOUND FINDINGS",
+  synthesisEstimate: "Expected model cost: unknown until sources are read. Published-price ceiling:",
+  synthesisAuthorization: "Max authorized model spend: $0.01 · one call · no purchases or marketplace writes.",
+  synthesisRun: "Run task",
+  synthesisWorking: "Reading public sources and synthesizing…",
+  synthesisError: "Source synthesis was not completed. Check the public URLs and try a new run.",
+  synthesisFindings: "Source-bound findings",
+  synthesisLimitations: "Limitations",
+  synthesisReceipt: "Download execution receipt",
+  synthesisSaved: "Execution saved to your history.",
+  synthesisSaveFailed: "Task complete. We couldn't save the execution to your history.",
+  synthesisGuest: "Guest result: download the receipt to keep it. Sign in for private history.",
 };
 
 export type ForgeCopy = typeof en;
@@ -100,7 +120,7 @@ const es: ForgeCopy = {
   eyebrow: "SIGNALFORGE / LABORATORIO FORGE",
   title: "Evalúa tu propia tarea.",
   intro:
-    "Define el trabajo y declara los datos económicos conocidos. SignalForge mapea capacidades, revisa el contexto observado y calcula una decisión condicional sin ejecutar nada.",
+    "Define el trabajo y los datos económicos conocidos. SignalForge evalúa primero; la síntesis opcional de fuentes públicas requiere otra autorización.",
   task: "TAREA",
   objective: "Objetivo",
   help: "Ayuda del campo",
@@ -150,7 +170,7 @@ const es: ForgeCopy = {
   requestError: "La evaluación no está disponible temporalmente. Tu escenario se conservó.",
   privacy:
     "La descomposición puede enviar el objetivo al proveedor de modelo configurado. No incluyas secretos ni información privada.",
-  boundary: "SOLO EVALUACIÓN · SIN LLAMADAS · SIN PAGOS · EJECUCIÓN DESHABILITADA",
+  boundary: "LA EVALUACIÓN NO EJECUTA TAREAS · LA SÍNTESIS REQUIERE AUTORIZACIÓN SEPARADA",
   observedContext: "Contexto de catálogo observado",
   observedContextHelp:
     "Los listados compatibles son solo evidencia de oferta observada. Sus precios no son cotizaciones de la tarea y no se seleccionó ningún proveedor.",
@@ -187,6 +207,26 @@ const es: ForgeCopy = {
   fingerprint: "Huella de la decisión económica · no es una firma digital",
   noOptions: "Ninguna opción observada se convirtió en candidata de ruta.",
   edit: "Modifica el escenario y aplica los supuestos para recalcular en el servidor.",
+  synthesisTitle: "EJECUTAR UNA TAREA ACOTADA",
+  synthesisTag: "AUTORIZACIÓN DEL USUARIO / SOLO FUENTES PÚBLICAS",
+  synthesisFingerprint: "Huella SHA-256, no es una firma",
+  synthesisUsage: "Uso observado del modelo",
+  synthesisCost: "Costo calculado con tokens medidos y precio publicado; cargo del proveedor desconocido",
+  synthesisIntro: "La investigación y síntesis de fuentes públicas es la única ruta de ejecución habilitada. No llama servicios del catálogo, reclama trabajos ni realiza pagos.",
+  synthesisSources: "Fuentes HTTPS públicas (una URL por línea, 1–10)",
+  synthesisSourcesHelp: "Indica páginas públicas para sintetizar. Ejemplo: https://www.example.org/report. Se rechazan páginas privadas, locales, redirigidas, demasiado grandes o no compatibles.",
+  synthesisRoute: "RUTA · LEER TEXTO PÚBLICO → SÍNTESIS CON GROQ → HALLAZGOS CON FUENTES",
+  synthesisEstimate: "Costo esperado del modelo: desconocido hasta leer las fuentes. Límite con precio publicado:",
+  synthesisAuthorization: "Gasto máximo autorizado del modelo: $0.01 · una llamada · sin compras ni acciones de mercado.",
+  synthesisRun: "Ejecutar tarea",
+  synthesisWorking: "Leyendo fuentes públicas y sintetizando…",
+  synthesisError: "La síntesis no se completó. Revisa las URL públicas e intenta una ejecución nueva.",
+  synthesisFindings: "Hallazgos con fuentes",
+  synthesisLimitations: "Limitaciones",
+  synthesisReceipt: "Descargar recibo de ejecución",
+  synthesisSaved: "Ejecución guardada en tu historial.",
+  synthesisSaveFailed: "Tarea completa. No pudimos guardar la ejecución en tu historial.",
+  synthesisGuest: "Resultado de invitado: descarga el recibo para conservarlo. Inicia sesión para tener historial privado.",
 };
 
 const fr: ForgeCopy = {
@@ -194,7 +234,7 @@ const fr: ForgeCopy = {
   eyebrow: "SIGNALFORGE / LABORATOIRE FORGE",
   title: "Analysez votre propre mission.",
   intro:
-    "Définissez le travail et déclarez les données économiques connues. SignalForge cartographie les capacités, examine le contexte observé et calcule une décision conditionnelle sans rien exécuter.",
+    "Définissez le travail et les données économiques connues. SignalForge analyse d’abord ; la synthèse facultative de sources publiques exige une autorisation distincte.",
   task: "MISSION",
   objective: "Objectif",
   help: "Aide du champ",
@@ -244,7 +284,7 @@ const fr: ForgeCopy = {
   requestError: "L’analyse est temporairement indisponible. Votre scénario a été conservé.",
   privacy:
     "La décomposition peut transmettre l’objectif au fournisseur de modèle configuré. N’incluez aucun secret ni donnée privée.",
-  boundary: "ANALYSE UNIQUEMENT · AUCUN APPEL · AUCUN PAIEMENT · EXÉCUTION DÉSACTIVÉE",
+  boundary: "L’ANALYSE N’EXÉCUTE PAS DE TÂCHE · LA SYNTHÈSE EXIGE UNE AUTORISATION DISTINCTE",
   observedContext: "Contexte de catalogue observé",
   observedContextHelp:
     "Les offres correspondantes sont uniquement des indices d’offre observée. Leurs prix ne sont pas des devis et aucun fournisseur n’a été sélectionné.",
@@ -281,6 +321,26 @@ const fr: ForgeCopy = {
   fingerprint: "Empreinte de la décision économique · pas une signature numérique",
   noOptions: "Aucune option observée n’a été transformée en candidate de route.",
   edit: "Modifiez le scénario puis appliquez les hypothèses pour recalculer côté serveur.",
+  synthesisTitle: "EXÉCUTER UNE TÂCHE BORNÉE",
+  synthesisTag: "AUTORISATION UTILISATEUR / SOURCES PUBLIQUES UNIQUEMENT",
+  synthesisFingerprint: "Empreinte SHA-256, pas une signature",
+  synthesisUsage: "Utilisation du modèle observée",
+  synthesisCost: "Coût calculé à partir des jetons mesurés et du tarif publié ; facturation réelle inconnue",
+  synthesisIntro: "La recherche et la synthèse de sources publiques constituent la seule route d’exécution active. Aucun service du catalogue, mission de marché ou paiement n’est engagé.",
+  synthesisSources: "Sources HTTPS publiques (une URL par ligne, 1 à 10)",
+  synthesisSourcesHelp: "Indiquez des pages publiques à synthétiser. Exemple : https://www.example.org/report. Les pages privées, locales, redirigées, trop volumineuses ou incompatibles sont refusées.",
+  synthesisRoute: "ROUTE · LIRE LE TEXTE PUBLIC → SYNTHÈSE GROQ → CONSTATS SOURCÉS",
+  synthesisEstimate: "Coût attendu du modèle : inconnu avant lecture des sources. Plafond au tarif publié :",
+  synthesisAuthorization: "Dépense modèle maximale autorisée : 0,01 $ · un appel · aucun achat ni action de marché.",
+  synthesisRun: "Exécuter la tâche",
+  synthesisWorking: "Lecture des sources publiques et synthèse…",
+  synthesisError: "La synthèse n’a pas abouti. Vérifiez les URL publiques et relancez une nouvelle tâche.",
+  synthesisFindings: "Constats sourcés",
+  synthesisLimitations: "Limites",
+  synthesisReceipt: "Télécharger le reçu d’exécution",
+  synthesisSaved: "Exécution enregistrée dans votre historique.",
+  synthesisSaveFailed: "Tâche terminée. Nous n’avons pas pu l’enregistrer dans votre historique.",
+  synthesisGuest: "Résultat invité : téléchargez le reçu pour le conserver. Connectez-vous pour un historique privé.",
 };
 
 export const forgeCopy: Record<ForgeLocale, ForgeCopy> = { en, es, fr };
