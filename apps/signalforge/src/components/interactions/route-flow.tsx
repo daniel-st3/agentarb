@@ -21,6 +21,16 @@ export function RouteFlow({ route }: { route: ExecutionRouteContract }) {
   const graph = routeFlow(route, t);
   const [selected, setSelected] = useState<FlowNode>(graph.objective);
   const { reduced, transition } = useInteractionTiming();
+  const inspection = (
+    <>
+      <p className="eyebrow">{t(kindLabels[selected.kind])}</p>
+      <h3>{t(selected.label)}</h3>
+      <p>{t(selected.detail)}</p>
+      <p className="flow-boundary">
+        {t("BOUNDARY / NOT CALLED / NOT PAID / EXECUTION DISABLED")}
+      </p>
+    </>
+  );
   function node(item: FlowNode) {
     return (
       <m.button
@@ -126,16 +136,13 @@ export function RouteFlow({ route }: { route: ExecutionRouteContract }) {
         aria-live="polite"
         aria-atomic="true"
       >
-        <AnimatePresence initial={false} mode="wait">
-          <ResultTransition key={selected.id}>
-            <p className="eyebrow">{t(kindLabels[selected.kind])}</p>
-            <h3>{t(selected.label)}</h3>
-            <p>{t(selected.detail)}</p>
-            <p className="flow-boundary">
-              {t("BOUNDARY / NOT CALLED / NOT PAID / EXECUTION DISABLED")}
-            </p>
-          </ResultTransition>
-        </AnimatePresence>
+        {reduced ? (
+          <div>{inspection}</div>
+        ) : (
+          <AnimatePresence initial={false} mode="wait">
+            <ResultTransition key={selected.id}>{inspection}</ResultTransition>
+          </AnimatePresence>
+        )}
       </div>
     </section>
   );
