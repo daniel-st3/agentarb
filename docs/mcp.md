@@ -1,5 +1,7 @@
 # MCP and agent discoverability
 
+These MCP tools expose read-only planning, catalog and underwriting inspection. A `signalforge_plan_route` demo contract is a legacy compatibility surface; it is not live task execution. The separately authorized public-source synthesis available in Forge is not an MCP tool. Marketplace claims, payments and discovered-service execution remain unavailable.
+
 ## Real Streamable HTTP MCP
 
 Endpoint: `https://signalforge-rose-two.vercel.app/api/mcp`

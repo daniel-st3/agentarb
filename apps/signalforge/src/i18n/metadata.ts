@@ -15,23 +15,23 @@ const titles: Record<string, [string, string, string]> = {
     "Réseau d’agents en direct",
   ],
   forge: [
-    "Forge Lab · Underwrite Your Task",
-    "Forge Lab · Evalúa tu tarea",
-    "Forge Lab · Analysez votre mission",
+    "Forge · Underwrite Your Task",
+    "Forge · Evalúa tu tarea",
+    "Forge · Analysez votre mission",
   ],
   pricing: ["Pricing", "Precios", "Tarifs"],
   history: ["Route archive", "Archivo de rutas", "Archive des itinéraires"],
   developers: [
-    "Demo planning API & MCP",
-    "API de planificación de demostración y MCP",
-    "API de planification de démonstration et MCP",
+    "Developer API & MCP",
+    "API para desarrolladores y MCP",
+    "API développeur et MCP",
   ],
   try: [
     "Agent integration proof",
     "Prueba de integración con agentes",
     "Preuve d’intégration avec des agents",
   ],
-  route: ["Execution route", "Ruta de ejecución", "Itinéraire d’exécution"],
+  route: ["Route contract", "Contrato de ruta", "Contrat de routage"],
   plan: ["Capability route", "Ruta de capacidades", "Itinéraire de capacités"],
   output: [
     "Simulated research output",
@@ -51,9 +51,9 @@ export async function pageMetadata(
   return {
     title: `${titles[page][column]} · SignalForge`,
     description: [
-      "Arbitrage underwriting and routing intelligence for agent work. Observed rewards, explicit cost assumptions and auditable decisions. Execution disabled.",
-      "Evaluación económica de arbitraje y rutas para tareas de agentes. Recompensas observadas, supuestos explícitos y decisiones auditables. Ejecución deshabilitada.",
-      "Analyse économique et intelligence de routage pour missions d’agents. Récompenses observées, hypothèses explicites et décisions auditables. Exécution désactivée.",
+      "Underwrite AI-agent work with observed evidence, explicit assumptions and auditable decisions. Optional public-source synthesis requires a separate user action; marketplace execution remains disabled.",
+      "Evalúa tareas de agentes de IA con evidencia observada, supuestos explícitos y decisiones auditables. La síntesis de fuentes públicas requiere una acción aparte; las acciones de mercado siguen deshabilitadas.",
+      "Analysez le travail des agents IA avec des preuves observées, des hypothèses explicites et des décisions auditables. La synthèse de sources publiques exige une action distincte ; les actions de marché restent désactivées.",
     ][column],
     alternates: {
       canonical: `${origin}/${locale}${suffix}`,
