@@ -38,5 +38,5 @@ test("public-source execution requires a separate action and yields a downloadab
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: /Download execution receipt/i }).click();
   const artifact = await download;
-  expect(artifact.suggestedFilename()).toMatch(/^signalforge-execution-b{12}\.json$/);
+  expect(artifact.suggestedFilename()).toMatch(/^valrun-execution-b{12}\.json$/);
 });
