@@ -68,7 +68,7 @@ export async function fetchPublicSource(value: string, signal: AbortSignal) {
   const body = await new Promise<{ bytes: Buffer; mime: string }>((resolve, reject) => {
     const request = httpsRequest(url, {
       method: "GET", agent: false, signal: AbortSignal.any([signal, AbortSignal.timeout(6000)]),
-      headers: { Accept: "text/html, text/plain", "Accept-Encoding": "identity", "User-Agent": "SignalForge/1.0 (+https://signalforge-rose-two.vercel.app)" },
+      headers: { Accept: "text/html, text/plain", "Accept-Encoding": "identity", "User-Agent": "WorthRoute/1.0 (+https://signalforge-rose-two.vercel.app)" },
       lookup: (_host, options, callback) => {
         if (options.all) callback(null, [{ address: pinned.address, family: 4 }]);
         else callback(null, pinned.address, 4);

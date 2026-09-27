@@ -1,6 +1,6 @@
 import { z } from "zod";
 export const agentCardSchema = z.object({
-  name: z.literal("SignalForge"),
+  name: z.literal("WorthRoute"),
   description: z.string(),
   version: z.string(),
   capabilities: z.object({
@@ -33,9 +33,9 @@ export const agentCardSchema = z.object({
   }),
 });
 export const agentCard = agentCardSchema.parse({
-  name: "SignalForge",
+  name: "WorthRoute",
   description:
-    "SignalForge underwrites agent work with explicit economic provenance. Underwriting and marketplace routes remain execution_not_enabled; a separate user-authorized route can synthesize supplied public HTTPS sources without marketplace actions or payments.",
+    "WorthRoute underwrites agent work with explicit economic provenance. Underwriting and marketplace routes remain execution_not_enabled; a separate user-authorized route can synthesize supplied public HTTPS sources without marketplace actions or payments.",
   version: "1.3.0",
   capabilities: { streaming: false, pushNotifications: false },
   defaultInputModes: ["application/json"],

@@ -18,11 +18,11 @@ test("visual lab is isolated, truthful and keyboard reachable", async ({ page },
   await Promise.all([opportunities, catalog]);
 
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  await expect(page).toHaveTitle(/V2 visual laboratory · SignalForge/);
-  await expect(page.locator('link[rel~="icon"]')).toHaveAttribute("href", /icon\.svg/);
-  const icon = await page.request.get("/icon.svg");
+  await expect(page).toHaveTitle(/V2 visual laboratory · WorthRoute/);
+  await expect(page.locator('link[rel~="icon"][href*="icon.png"]')).toHaveCount(1);
+  const icon = await page.request.get("/icon.png");
   expect(icon.ok()).toBe(true);
-  expect(icon.headers()["content-type"]).toContain("image/svg+xml");
+  expect(icon.headers()["content-type"]).toContain("image/png");
   await expect(page.locator(".site-nav").locator('a[href*="/lab/v2"]')).toHaveCount(0);
   await expect(page.getByText("V2 VISUAL LAB — NOT PRODUCTION UI")).toBeVisible();
   expect(
@@ -278,7 +278,8 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
   const profitEngine = page.locator("[data-profit-engine]");
   const homeForge = page.locator('[data-surface="home"]');
   await expect(page).toHaveTitle(/Underwrite AI-Agent Work/);
-  await expect(page.locator('link[rel~="icon"]')).toHaveAttribute("href", /icon\.svg/);
+  await expect(page.locator('link[rel~="icon"][href*="icon.svg"]')).toHaveCount(1);
+  await expect(page.locator('link[rel~="icon"][href*="icon.png"]')).toHaveCount(1);
   await expect(profitEngine).toBeVisible();
   await expect(homeForge).toContainText("Extract and synthesize a bounded public dataset");
   await expect(homeForge).toContainText("CAPITAL ≠ EXPENSE");

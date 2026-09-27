@@ -2,9 +2,9 @@
 
 ## Project Structure & Module Organization
 
-`apps/signalforge/` is the production Next.js application. App Router pages and route handlers live in `src/app`, reusable UI in `src/components`, and deterministic domain/server logic in `src/domain` and `src/server`. Its tests are under `apps/signalforge/tests`, with Playwright suites in `tests/e2e` and `tests/real-ui`; static assets belong in `public/`.
+`apps/signalforge/` is the production Next.js application, publicly branded WorthRoute. Keep the existing repository paths, API identifiers, and environment namespaces for compatibility. App Router pages and route handlers live in `src/app`, reusable UI in `src/components`, and deterministic domain/server logic in `src/domain` and `src/server`. Its tests are under `apps/signalforge/tests`, with Playwright suites in `tests/e2e` and `tests/real-ui`; static assets belong in `public/`.
 
-The original Python prototype remains in `src/arbiter` and `src/arbiter_worker`, with tests in root `tests/` and fixtures in `data/golden_tasks/`. `web/` is a legacy frontend: do not treat it as the deployed SignalForge app. Architecture, security, and deployment notes live in `docs/`.
+The original Python prototype remains in `src/arbiter` and `src/arbiter_worker`, with tests in root `tests/` and fixtures in `data/golden_tasks/`. `web/` is a legacy frontend: do not treat it as the deployed WorthRoute app. Architecture, security, and deployment notes live in `docs/`.
 
 ## Build, Test, and Development Commands
 
@@ -40,7 +40,7 @@ Use short imperative commits, such as `Harden observed underwriting` or `Add saf
 
 Copy variable names from `.env.example`; store values only in `.env.local` or Vercel. Never commit secrets or create `NEXT_PUBLIC_` variants of server credentials. Do not add marketplace writes, claims, payments, wallets, arbitrary URL fetching, or new execution paths without explicit authorization and a separate safety review. The existing bounded, user-authorized public-source synthesis route is the sole enabled execution path; underwriting contracts remain `execution_not_enabled`.
 
-## SignalForge Production Baseline
+## WorthRoute Production Baseline
 
 Production branch: `claude/verify-bounty-api-facts-f6ccdu`.
 
@@ -52,7 +52,7 @@ Never merge, deploy, promote, modify Production environment variables, or change
 
 ## Product Identity
 
-SignalForge is an economic operating system and underwriting layer for agent work.
+WorthRoute (formerly SignalForge) is an economic operating system and underwriting layer for agent work.
 
 It is **not**:
 
@@ -100,7 +100,7 @@ Marketing surfaces may use strong negative space and expressive typography. Work
 
 ## Typography
 
-Typography is part of SignalForge's identity and may communicate economic state, certainty, risk, or decision status.
+Typography is part of WorthRoute's identity and may communicate economic state, certainty, risk, or decision status.
 
 Do not default the full product to Inter, Geist, Space Grotesk, or another generic startup stack without explicit design justification.
 

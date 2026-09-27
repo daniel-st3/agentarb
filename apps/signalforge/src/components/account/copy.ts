@@ -2,8 +2,8 @@ export type AccountLocale = "en" | "es" | "fr";
 
 const en = {
   signIn: "Sign in",
-  title: "Keep your SignalForge work.",
-  intro: "Sign in to save analyses, receipts and history. SignalForge remains fully usable without an account.",
+  title: "Keep your WorthRoute work.",
+  intro: "Sign in to save analyses, receipts and history. WorthRoute remains fully usable without an account.",
   google: "Continue with Google",
   or: "or",
   email: "Email",
@@ -31,8 +31,8 @@ export type AccountCopy = typeof en;
 const es: AccountCopy = {
   ...en,
   signIn: "Iniciar sesión",
-  title: "Conserva tu trabajo en SignalForge.",
-  intro: "Inicia sesión para guardar análisis, recibos e historial. SignalForge sigue siendo totalmente usable sin una cuenta.",
+  title: "Conserva tu trabajo en WorthRoute.",
+  intro: "Inicia sesión para guardar análisis, recibos e historial. WorthRoute sigue siendo totalmente usable sin una cuenta.",
   google: "Continuar con Google",
   or: "o",
   email: "Correo electrónico",
@@ -58,8 +58,8 @@ const es: AccountCopy = {
 const fr: AccountCopy = {
   ...en,
   signIn: "Se connecter",
-  title: "Conservez votre travail SignalForge.",
-  intro: "Connectez-vous pour enregistrer analyses, reçus et historique. SignalForge reste entièrement utilisable sans compte.",
+  title: "Conservez votre travail WorthRoute.",
+  intro: "Connectez-vous pour enregistrer analyses, reçus et historique. WorthRoute reste entièrement utilisable sans compte.",
   google: "Continuer avec Google",
   or: "ou",
   email: "E-mail",

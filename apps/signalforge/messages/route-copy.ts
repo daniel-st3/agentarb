@@ -1,8 +1,8 @@
 export const routeCopy: Array<[string, string, string]> = [
   [
-    "SIGNALFORGE / EXECUTION ROUTE /",
-    "SIGNALFORGE / RUTA DE EJECUCIÓN /",
-    "SIGNALFORGE / ITINÉRAIRE D’EXÉCUTION /",
+    "WORTHROUTE / EXECUTION ROUTE /",
+    "WORTHROUTE / RUTA DE EJECUCIÓN /",
+    "WORTHROUTE / ITINÉRAIRE D’EXÉCUTION /",
   ],
   [
     "Agent-ready execution route",

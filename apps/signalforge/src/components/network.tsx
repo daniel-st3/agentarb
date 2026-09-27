@@ -183,7 +183,7 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
                 {t(
                   service
                     ? "Catalog fit is not execution eligibility."
-                    : "Evaluation only. SignalForge cannot bid, claim, accept, submit, or settle this opportunity.",
+                    : "Evaluation only. WorthRoute cannot bid, claim, accept, submit, or settle this opportunity.",
                 )}
               </p>
               <div className="network-actions">
@@ -314,7 +314,7 @@ export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkRes
   return (
     <section className="network-page container">
       <header>
-        <p className="eyebrow">{t("SIGNALFORGE / LIVE AGENT NETWORK")}</p>
+        <p className="eyebrow">{t("WORTHROUTE / LIVE AGENT NETWORK")}</p>
         <h1>
           {t("Observe the supply side")}
           <br />
@@ -327,7 +327,7 @@ export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkRes
         </p>
         <p className="route-boundary">
           {t(
-            "Discovery only. SignalForge does not bid, claim, pay, or execute marketplace actions.",
+            "Discovery only. WorthRoute does not bid, claim, pay, or execute marketplace actions.",
           )}
         </p>
       </header>
@@ -471,44 +471,40 @@ export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkRes
             aria-label={t("Catalog results")}
             aria-busy={loading}
           >
-            <AnimatePresence initial={false} mode="wait">
-              <ResultTransition key={records.map((r) => r.id).join("|")}>
-                {[
-                  "live",
-                  "cached_live",
-                  "seeded_catalog",
-                  "simulated_demo",
-                ].map((state) => {
-                  const rows = records.filter((r) => r.freshness === state);
-                  return rows.length ? (
-                    <section key={state} aria-label={t(labels[state])}>
-                      <div
-                        className={`catalog-freshness fresh-${state}`}
-                        style={{ margin: "32px 0 16px" }}
-                      >
-                        {t(labels[state])}
-                        {state === "cached_live" && (
-                          <>
-                            {" "}
-                            / <TechnicalLabel term="cached_live" />
-                          </>
-                        )}
-                      </div>
-                      {rows.map((l) => (
-                        <ListingDetail listing={l} key={l.id} />
-                      ))}
-                    </section>
-                  ) : null;
-                })}
-                {!records.length && (
-                  <p>
-                    {t(
-                      "No matching records in this sample. Unknown capabilities and prices are not inferred as eligible.",
+            {[
+              "live",
+              "cached_live",
+              "seeded_catalog",
+              "simulated_demo",
+            ].map((state) => {
+              const rows = records.filter((r) => r.freshness === state);
+              return rows.length ? (
+                <section key={state} aria-label={t(labels[state])}>
+                  <div
+                    className={`catalog-freshness fresh-${state}`}
+                    style={{ margin: "32px 0 16px" }}
+                  >
+                    {t(labels[state])}
+                    {state === "cached_live" && (
+                      <>
+                        {" "}
+                        / <TechnicalLabel term="cached_live" />
+                      </>
                     )}
-                  </p>
+                  </div>
+                  {rows.map((l) => (
+                    <ListingDetail listing={l} key={l.id} />
+                  ))}
+                </section>
+              ) : null;
+            })}
+            {!records.length && (
+              <p>
+                {t(
+                  "No matching records in this sample. Unknown capabilities and prices are not inferred as eligible.",
                 )}
-              </ResultTransition>
-            </AnimatePresence>
+              </p>
+            )}
           </div>
           <p className="field-help">{network.warnings.join(" ")}</p>
         </>

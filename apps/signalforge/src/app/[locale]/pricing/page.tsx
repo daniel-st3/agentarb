@@ -10,9 +10,9 @@ export const generateMetadata = ({ params }: { params: Promise<{ locale: string 
 
 const copy = {
   en: {
-    eyebrow: "SIGNALFORGE / PRICING",
+    eyebrow: "WORTHROUTE / PRICING",
     title: "Start with the economics.",
-    intro: "Use SignalForge without an account. Paid plans are published for product direction only; billing is not available yet.",
+    intro: "Use WorthRoute without an account. Paid plans are published for product direction only; billing is not available yet.",
     month: "/mo",
     available: "AVAILABLE NOW",
     soon: "COMING SOON",
@@ -25,9 +25,9 @@ const copy = {
     ],
   },
   es: {
-    eyebrow: "SIGNALFORGE / PRECIOS",
+    eyebrow: "WORTHROUTE / PRECIOS",
     title: "Empieza por la economía.",
-    intro: "Usa SignalForge sin una cuenta. Los planes pagos solo muestran la dirección del producto; la facturación aún no está disponible.",
+    intro: "Usa WorthRoute sin una cuenta. Los planes pagos solo muestran la dirección del producto; la facturación aún no está disponible.",
     month: "/mes",
     available: "DISPONIBLE AHORA",
     soon: "PRÓXIMAMENTE",
@@ -40,9 +40,9 @@ const copy = {
     ],
   },
   fr: {
-    eyebrow: "SIGNALFORGE / TARIFS",
+    eyebrow: "WORTHROUTE / TARIFS",
     title: "Commencez par l’économie.",
-    intro: "Utilisez SignalForge sans compte. Les offres payantes indiquent seulement la direction du produit ; la facturation n’est pas encore disponible.",
+    intro: "Utilisez WorthRoute sans compte. Les offres payantes indiquent seulement la direction du produit ; la facturation n’est pas encore disponible.",
     month: "/mois",
     available: "DISPONIBLE",
     soon: "BIENTÔT",

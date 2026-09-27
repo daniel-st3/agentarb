@@ -287,7 +287,7 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
     URL.revokeObjectURL(url);
   }
 
-  return <section className={styles.synthesis} aria-labelledby="source-synthesis-title">
+  return <section className={styles.synthesis} id="forge-source-synthesis" aria-labelledby="source-synthesis-title">
     <span className={styles.tag}>{copy.synthesisTag}</span>
     <h2 id="source-synthesis-title">{copy.synthesisTitle}</h2>
     <p>{copy.synthesisIntro}</p>
@@ -504,6 +504,10 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
           </div>
           <p className={styles.boundary}>{copy.boundary}</p>
         </header>
+        <nav className={styles.workflowNav} aria-label={copy.title}>
+          <a href="#forge-objective-input">01 / {copy.submit}</a>
+          <a href="#forge-source-synthesis">02 / {copy.synthesisEntry}</a>
+        </nav>
 
         <div className={styles.workspace}>
           <form
@@ -612,12 +616,7 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
           <div className={styles.output} aria-live="polite" aria-busy={pending}>
             {pending ? (
               <UnderwritingProgress copy={copy} active={progressStage} />
-            ) : !result ? (
-              <div className={styles.placeholder}>
-                <span aria-hidden="true">→</span>
-                <p>{copy.edit}</p>
-              </div>
-            ) : (
+            ) : result ? (
               <AnimatePresence mode="wait">
                 <m.div
                   key={result.receipt.receiptHash}
@@ -745,11 +744,11 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
                   </section>
                 </m.div>
               </AnimatePresence>
-            )}
+            ) : null}
             {pending && <p className={styles.status} role="status">{copy.working}</p>}
+            <SourceSynthesisPanel objective={form.objective} copy={copy} ceiling={sourceSynthesisCeilingUsdMicros} locale={locale} />
           </div>
         </div>
-        <SourceSynthesisPanel objective={form.objective} copy={copy} ceiling={sourceSynthesisCeilingUsdMicros} locale={locale} />
       </div>
     </div>
   );

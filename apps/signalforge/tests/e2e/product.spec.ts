@@ -241,10 +241,30 @@ test("empty live homepage remains truthful and unpinned", async ({
   await page.goto("/");
   await expect(page.locator("[data-profit-engine]")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Know if an AI task is worth running." })).toBeVisible();
+  await expect(page.getByLabel("LIVE OBSERVED WORK")).toContainText("observed listings");
+  await expect(page.getByLabel("LIVE OBSERVED WORK")).toContainText("paid opportunities in this view");
+  await expect(page.getByText("FROM TASK TO DECISION")).toBeVisible();
   await expect(page.locator("main")).toContainText("No qualifying observed work");
   await expect(page.locator("main")).not.toContainText("SIMULATED / ARBITRAGE LAB");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await page.screenshot({ path: shots + "/desktop-profit-engine-empty.png" });
+});
+test("Forge exposes the separate public-source route without an empty result panel", async ({ page }) => {
+  await page.goto("/forge");
+  await expect(page.getByText("Change the scenario and apply assumptions to recalculate on the server.")).toHaveCount(0);
+  await expect(page.locator("#forge-source-synthesis")).toBeVisible();
+  await page.getByRole("link", { name: /Research from public sources/ }).click();
+  await expect(page.locator("#forge-source-synthesis")).toBeInViewport();
+  await expect(page.getByLabel("Agent objective")).toBeVisible();
+});
+test("homepage task entry carries the visitor's objective into Forge without executing", async ({ page }) => {
+  await page.goto("/");
+  const objective = "Summarize three public reports and compare their evidence.";
+  await page.getByLabel("YOUR TASK / START HERE").fill(objective);
+  await page.getByRole("button", { name: /ANALYZE A TASK/i }).click();
+  await expect(page).toHaveURL(/\/forge\?objective=/);
+  await expect(page.getByLabel("Agent objective")).toHaveValue(objective);
+  await expect(page.getByRole("button", { name: /Underwrite task/i })).toBeVisible();
 });
 test("mobile Profit Engine is readable with no pinning", async ({
   page,

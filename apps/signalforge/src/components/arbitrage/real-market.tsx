@@ -279,7 +279,7 @@ export function RealMarket({
   return (
     <article className="container real-market">
       <header>
-        <p className="eyebrow">SIGNALFORGE / {t("OBSERVED MARKET")}</p>
+        <p className="eyebrow">WORTHROUTE / {t("OBSERVED MARKET")}</p>
         <h1>{t("Price the work. Know the gaps.")}</h1>
         <p>
           {t(

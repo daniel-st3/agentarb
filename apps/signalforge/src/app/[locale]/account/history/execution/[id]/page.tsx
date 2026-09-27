@@ -26,7 +26,7 @@ export default async function SavedSourceSynthesis({ params }: { params: Promise
   if (!parsed.success || parsed.data.receiptHash !== data.receipt_hash || hashReceipt(parsed.data.core) !== data.receipt_hash) notFound();
   const receipt = parsed.data;
   return <article className="account-page saved-analysis container">
-    <p className="eyebrow">SIGNALFORGE / {t.title}</p><h1>{t.title}</h1>
+    <p className="eyebrow">WORTHROUTE / {t.title}</p><h1>{t.title}</h1>
     <section><h2>{t.objective}</h2><p>{receipt.core.objective}</p></section>
     <section><h2>{t.sources}</h2><ol>{receipt.core.sourceUrls.map((url) => <li key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></li>)}</ol></section>
     <section><h2>{t.findings}</h2><p>{receipt.core.result.summary}</p><ol>{receipt.core.result.findings.map((finding, index) => <li key={index}>{finding.statement} {finding.sourceIds.map((sourceId) => <a key={sourceId} href={receipt.core.sourceUrls[sourceId - 1]} target="_blank" rel="noreferrer">[{sourceId}]</a>)}</li>)}</ol></section>
