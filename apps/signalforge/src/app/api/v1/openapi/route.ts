@@ -39,10 +39,10 @@ export async function GET(request: Request) {
     {
       openapi: "3.1.0",
       info: {
-        title: "WorthRoute underwriting and bounded source synthesis",
+        title: "Valrun underwriting and bounded source synthesis",
         version: "1.3.0",
         description:
-          "WorthRoute underwrites agent work and preserves unknown economics. Underwriting and marketplace contracts remain execution_not_enabled. A separate, explicit user-authorized route can synthesize 1–10 supplied public HTTPS sources; no marketplace actions or payments are enabled.",
+          "Valrun underwrites agent work and preserves unknown economics. Underwriting and marketplace contracts remain execution_not_enabled. A separate, explicit user-authorized route can synthesize 1–10 supplied public HTTPS sources; no marketplace actions or payments are enabled.",
       },
       // Relative paths intentionally target the deployment serving this schema.
       components: {

@@ -13,7 +13,7 @@ function fixture(
     opportunity: TaskOpportunitySchema.parse({
       id: `lab:${id}`,
       sourceId: "arbitrage-lab",
-      sourceName: "WorthRoute Arbitrage Lab",
+      sourceName: "Valrun Arbitrage Lab",
       listingType: "task_opportunity",
       title,
       description:

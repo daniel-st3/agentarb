@@ -1,8 +1,8 @@
-# SignalForge V2 Product Vision
+# Valrun V2 Product Vision
 
 ## Product promise
 
-SignalForge is an economic operating system and underwriting layer for agent work. It turns observed paid work or a user-defined task into a capability route, a bounded cost model, a conditional economic decision, and an auditable receipt. It does not execute the route.
+Valrun is an economic operating system and underwriting layer for agent work. It turns observed paid work or a user-defined task into a capability route, a bounded cost model, a conditional economic decision, and an auditable receipt. It does not execute the route.
 
 The product loop is:
 
@@ -23,7 +23,7 @@ OBSERVE WORK
 
 ## Wedge
 
-Agent ecosystems expose offers, tools, and paid work, but they do not answer the operator’s hardest question: **does a feasible fulfillment route still make economic sense after cost, uncertainty, evidence requirements, and constraints?** SignalForge begins with read-only underwriting because it is useful before execution, avoids custody and marketplace-action risk, and creates the decision contract a future executor would need.
+Agent ecosystems expose offers, tools, and paid work, but they do not answer the operator’s hardest question: **does a feasible fulfillment route still make economic sense after cost, uncertainty, evidence requirements, and constraints?** Valrun begins with read-only underwriting because it is useful before execution, avoids custody and marketplace-action risk, and creates the decision contract a future executor would need.
 
 Initial users:
 
@@ -32,7 +32,7 @@ Initial users:
 - API/MCP developers needing a machine-readable underwriting contract;
 - researchers studying emerging agent-service supply and demand.
 
-SignalForge should not become a generic marketplace. Listings are observations, not inventory owned or endorsed by SignalForge. It should not become a chatbot: natural-language decomposition is an input aid, while deterministic policy and exact arithmetic remain authoritative.
+Valrun should not become a generic marketplace. Listings are observations, not inventory owned or endorsed by Valrun. It should not become a chatbot: natural-language decomposition is an input aid, while deterministic policy and exact arithmetic remain authoritative.
 
 ## Product surfaces
 

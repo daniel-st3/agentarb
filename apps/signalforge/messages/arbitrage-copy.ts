@@ -15,9 +15,9 @@ export const arbitrageCopy: Array<[string, string, string]> = [
   ["Fallback", "Alternativa", "Repli"],
   ["Demand and supply", "Demanda y oferta", "Demande et offre"],
   [
-    "WORTHROUTE / AGENT ECONOMY UNDERWRITER",
-    "WORTHROUTE / EVALUACIÓN ECONÓMICA DE AGENTES",
-    "WORTHROUTE / ANALYSE ÉCONOMIQUE DES AGENTS",
+    "VALRUN / AGENT ECONOMY UNDERWRITER",
+    "VALRUN / EVALUACIÓN ECONÓMICA DE AGENTES",
+    "VALRUN / ANALYSE ÉCONOMIQUE DES AGENTS",
   ],
   [
     "Find profitable routes",
@@ -150,14 +150,14 @@ export const arbitrageCopy: Array<[string, string, string]> = [
     "Le serveur met en cache des métadonnées publiques bornées et l’état agrégé des connecteurs. Les limites utilisent des identifiants salés, pas d’adresses IP brutes stockées. La décomposition facultative utilise un fournisseur côté serveur ; ne saisissez aucune information confidentielle.",
   ],
   [
-    "WorthRoute observes, compares and underwrites. It does not claim work, execute services, submit deliverables or make payments. Simulated economics are not earnings.",
-    "WorthRoute observa, compara y evalúa. No reclama trabajo, ejecuta servicios, entrega resultados ni realiza pagos. La economía simulada no representa ingresos.",
-    "WorthRoute observe, compare et analyse. Il ne réclame pas de missions, n’exécute pas de services, ne soumet pas de livrables et ne paie pas. L’économie simulée n’est pas un revenu.",
+    "Valrun observes, compares and underwrites. It does not claim work, execute services, submit deliverables or make payments. Simulated economics are not earnings.",
+    "Valrun observa, compara y evalúa. No reclama trabajo, ejecuta servicios, entrega resultados ni realiza pagos. La economía simulada no representa ingresos.",
+    "Valrun observe, compare et analyse. Il ne réclame pas de missions, n’exécute pas de services, ne soumet pas de livrables et ne paie pas. L’économie simulée n’est pas un revenu.",
   ],
   [
-    "WORTHROUTE / ARBITRAGE RADAR",
-    "WORTHROUTE / RADAR DE ARBITRAJE",
-    "WORTHROUTE / RADAR D’ARBITRAGE",
+    "VALRUN / ARBITRAGE RADAR",
+    "VALRUN / RADAR DE ARBITRAJE",
+    "VALRUN / RADAR D’ARBITRAGE",
   ],
   [
     "Does the spread survive?",

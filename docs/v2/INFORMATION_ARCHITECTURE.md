@@ -1,4 +1,4 @@
-# SignalForge V2 Information Architecture
+# Valrun V2 Information Architecture
 
 ## Navigation principle
 

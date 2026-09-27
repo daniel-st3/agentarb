@@ -6,7 +6,7 @@ export function Brand() {
   const t = useCopy();
 
   return (
-    <Link href="/" className="brand" aria-label={t("WorthRoute home")}>
+    <Link href="/" className="brand" aria-label={t("Valrun home")}>
       <svg
         width="25"
         height="25"
@@ -16,16 +16,16 @@ export function Brand() {
         className="brand-signal"
       >
         <path
-          d="M8 15L17 49L32 27L47 49L56 15"
+          d="M10 12L30 52L51 12"
           stroke="currentColor"
-          strokeWidth="5"
+          strokeWidth="5.5"
           strokeLinecap="square"
-          strokeLinejoin="bevel"
+          strokeLinejoin="miter"
         />
-        <path d="M32 15l6 7-6 7-6-7z" fill="#e85f3b" />
+        <path d="M30 38H56" stroke="#d9ef81" strokeWidth="5.5" />
       </svg>
       <span>
-        WorthRoute
+        Valrun
         <span className="brand-dot">.</span>
       </span>
     </Link>

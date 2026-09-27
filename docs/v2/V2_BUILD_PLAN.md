@@ -1,4 +1,4 @@
-# SignalForge V2 Build Plan
+# Valrun V2 Build Plan
 
 ## Delivery rule
 
@@ -18,7 +18,7 @@ Each phase begins in an isolated branch and Preview. A phase advances only after
 - **Stack:** current React, GSAP, Motion, CSS/SVG; no new dependency.
 - **Mobile/accessibility:** vertical ledger, ordered summary, immediate reduced-motion state, live regions only after user-triggered recalculation.
 - **Risk:** type-axis motion could overstate precision or harm locale layout.
-- **SignalForge signature:** economics literally reshape the interface.
+- **Valrun signature:** economics literally reshape the interface.
 
 ### Concept B — Live Market / Signal Field
 
@@ -30,7 +30,7 @@ Each phase begins in an isolated branch and Preview. A phase advances only after
 - **Stack:** local SVG with current Motion; GSAP for one capture sequence.
 - **Mobile/accessibility:** replace spatial field with ordered source rows; chart has a synchronized text table.
 - **Risk:** spatial encoding may look like a trading screen or imply exhaustive market coverage.
-- **SignalForge signature:** live supply becomes an inspectable evidence map, with gaps visible.
+- **Valrun signature:** live supply becomes an inspectable evidence map, with gaps visible.
 
 ### Concept C — Experimental Instrument / Route System
 
@@ -42,7 +42,7 @@ Each phase begins in an isolated branch and Preview. A phase advances only after
 - **Stack:** local SVG/HTML; GSAP for the signature route timeline, Motion for node state.
 - **Mobile/accessibility:** staged capability steps and a semantic ordered list; no pan/zoom requirement.
 - **Risk:** highest complexity and greatest chance of decorative “agent graph” theater.
-- **SignalForge signature:** constraints visibly compile a market of possibilities into an auditable route.
+- **Valrun signature:** constraints visibly compile a market of possibilities into an auditable route.
 
 **Recommended first prototype: Concept A.** It directly expresses the underwriting wedge, works with incomplete real data, has the lowest accessibility/bundle risk, and can later accept the best provenance behavior from B and route behavior from C.
 

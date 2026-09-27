@@ -183,7 +183,7 @@ function ListingDetail({ listing: l }: { listing: Listing }) {
                 {t(
                   service
                     ? "Catalog fit is not execution eligibility."
-                    : "Evaluation only. WorthRoute cannot bid, claim, accept, submit, or settle this opportunity.",
+                    : "Evaluation only. Valrun cannot bid, claim, accept, submit, or settle this opportunity.",
                 )}
               </p>
               <div className="network-actions">
@@ -314,7 +314,7 @@ export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkRes
   return (
     <section className="network-page container">
       <header>
-        <p className="eyebrow">{t("WORTHROUTE / LIVE AGENT NETWORK")}</p>
+        <p className="eyebrow">{t("VALRUN / LIVE AGENT NETWORK")}</p>
         <h1>
           {t("Observe the supply side")}
           <br />
@@ -327,7 +327,7 @@ export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkRes
         </p>
         <p className="route-boundary">
           {t(
-            "Discovery only. WorthRoute does not bid, claim, pay, or execute marketplace actions.",
+            "Discovery only. Valrun does not bid, claim, pay, or execute marketplace actions.",
           )}
         </p>
       </header>

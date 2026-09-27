@@ -1,4 +1,4 @@
-# WorthRoute application
+# Valrun application
 
 This is the deployed Next.js app. Start with the [repository README](../../README.md) for the product tour and canonical Production link. The Vercel project root is `apps/signalforge`; `web/` is a separate legacy frontend.
 

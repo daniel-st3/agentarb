@@ -1,10 +1,10 @@
 export type ForgeLocale = "en" | "es" | "fr";
 
 const en = {
-  eyebrow: "WORTHROUTE / FORGE",
+  eyebrow: "VALRUN / FORGE",
   title: "Underwrite your own task.",
   intro:
-    "Define the work and state the economics you know. WorthRoute underwrites first; optional public-source synthesis requires a separate Run task action.",
+    "Define the work and state the economics you know. Valrun underwrites first; optional public-source synthesis requires a separate Run task action.",
   task: "TASK",
   objective: "Objective",
   help: "Field help",
@@ -14,7 +14,7 @@ const en = {
   budget: "Hard fulfillment budget (USD)",
   budgetHelp: "The maximum total fulfillment cost the route may accept. Example: 10.00.",
   policy: "Routing policy",
-  policyHelp: "Choose how WorthRoute should prioritize observed route evidence: value, cost, verification, or speed.",
+  policyHelp: "Choose how Valrun should prioritize observed route evidence: value, cost, verification, or speed.",
   policyBestValue: "Best value",
   policyCheapest: "Cheapest",
   policyMostVerified: "Most verified",
@@ -118,10 +118,10 @@ export type ForgeCopy = typeof en;
 
 const es: ForgeCopy = {
   ...en,
-  eyebrow: "WORTHROUTE / LABORATORIO FORGE",
+  eyebrow: "VALRUN / LABORATORIO FORGE",
   title: "Evalúa tu propia tarea.",
   intro:
-    "Define el trabajo y los datos económicos conocidos. WorthRoute evalúa primero; la síntesis opcional de fuentes públicas requiere otra autorización.",
+    "Define el trabajo y los datos económicos conocidos. Valrun evalúa primero; la síntesis opcional de fuentes públicas requiere otra autorización.",
   task: "TAREA",
   objective: "Objetivo",
   help: "Ayuda del campo",
@@ -131,7 +131,7 @@ const es: ForgeCopy = {
   budget: "Presupuesto máximo de cumplimiento (USD)",
   budgetHelp: "El costo máximo total que puede aceptar la ruta. Ejemplo: 10.00.",
   policy: "Política de ruta",
-  policyHelp: "Elige cómo WorthRoute prioriza la evidencia: valor, costo, verificación o velocidad.",
+  policyHelp: "Elige cómo Valrun prioriza la evidencia: valor, costo, verificación o velocidad.",
   policyBestValue: "Mejor valor",
   policyCheapest: "Más económica",
   policyMostVerified: "Más verificada",
@@ -233,10 +233,10 @@ const es: ForgeCopy = {
 
 const fr: ForgeCopy = {
   ...en,
-  eyebrow: "WORTHROUTE / LABORATOIRE FORGE",
+  eyebrow: "VALRUN / LABORATOIRE FORGE",
   title: "Analysez votre propre mission.",
   intro:
-    "Définissez le travail et les données économiques connues. WorthRoute analyse d’abord ; la synthèse facultative de sources publiques exige une autorisation distincte.",
+    "Définissez le travail et les données économiques connues. Valrun analyse d’abord ; la synthèse facultative de sources publiques exige une autorisation distincte.",
   task: "MISSION",
   objective: "Objectif",
   help: "Aide du champ",

@@ -8,7 +8,7 @@ export const underwritingReasons: Record<string, string> = {
   verification_not_ready:
     "The source has not confirmed that verification is ready.",
   funding_participation_required:
-    "Participation requires funding activity outside WorthRoute’s permitted scope.",
+    "Participation requires funding activity outside Valrun’s permitted scope.",
   requirements_not_supported:
     "The complete task cannot be mapped to a supported fulfillment route.",
   complete_fulfillment_scope:

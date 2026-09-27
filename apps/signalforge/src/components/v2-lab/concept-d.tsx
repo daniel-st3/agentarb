@@ -315,7 +315,7 @@ export function ConceptD({
   return (
     <section ref={scope} className={styles.conceptD} aria-labelledby="concept-d-title" data-surface={home ? "home" : "lab"} data-scenario-active={scenarioActive} data-forge-stage={STAGES[stage]} data-story-skipped={skipped} data-decision={activeDecision}>
       <header className={styles.dIntro}>
-        <p className={styles.sectionIndex}>{home?.eyebrow ?? `D / ${copy.forge} · WORTHROUTE / LIVE UNDERWRITING`}</p>
+        <p className={styles.sectionIndex}>{home?.eyebrow ?? `D / ${copy.forge} · VALRUN / LIVE UNDERWRITING`}</p>
         {home ? <h1 id="concept-d-title">{home.headline}</h1> : <h2 id="concept-d-title">{copy.forgeIntro}</h2>}
         {home && <p className={styles.dHomeIntroduction}>{home.introduction}</p>}
         {home && <div className={styles.dHomeActions}>

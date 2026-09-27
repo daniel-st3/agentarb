@@ -1,8 +1,8 @@
-# WorthRoute
+# Valrun
 
-**Know if an AI task is worth running.** WorthRoute maps the capabilities a task needs, checks observed AI-service supply, prices known costs and explicit assumptions, and returns an auditable economic decision. It is an underwriter, not an autonomous marketplace agent.
+**Know if an AI task is worth running.** Valrun maps the capabilities a task needs, checks observed AI-service supply, prices known costs and explicit assumptions, and returns an auditable economic decision. It is an underwriter, not an autonomous marketplace agent.
 
-**Use the live product:** [WorthRoute](https://signalforge-rose-two.vercel.app/en) · [Español](https://signalforge-rose-two.vercel.app/es) · [Français](https://signalforge-rose-two.vercel.app/fr)
+**Use the live product:** [Valrun](https://signalforge-rose-two.vercel.app/en) · [Español](https://signalforge-rose-two.vercel.app/es) · [Français](https://signalforge-rose-two.vercel.app/fr)
 
 ## What you can do
 
@@ -27,7 +27,7 @@ The economic path is **objective → required capabilities → observed supply a
 
 ## Safety boundaries
 
-- Underwriting, claim-readiness and marketplace route contracts remain `execution_not_enabled`. WorthRoute does not claim, bid, submit, fund, pay, sign, use wallets or execute discovered catalog services.
+- Underwriting, claim-readiness and marketplace route contracts remain `execution_not_enabled`. Valrun does not claim, bid, submit, fund, pay, sign, use wallets or execute discovered catalog services.
 - The separate source-synthesis route requires an explicit user action, accepts only bounded public HTTPS sources, blocks private/internal network targets and redirects, and caps authorized model spend at **$0.01 per run**. Source links provide structural citation evidence, not independent fact verification.
 - Public API quotas and catalog caches use shared Upstash infrastructure on Vercel. Missing durable protection fails closed. Optional accounts use Supabase Auth and owner-scoped row-level security; guest analysis does not require persistence.
 - Marketplace text and fetched page text are untrusted data. They cannot change policy, network destinations, model access or execution permissions.
@@ -45,7 +45,7 @@ The first response reports source health, shared-cache/distributed-limit mode an
 
 ## Run locally
 
-The deployed application is `apps/signalforge` (Next.js/TypeScript); use Node **22.13+**. The repository name `agentarb` and the root `src/arbiter*` Python packages reflect an earlier prototype, not another live WorthRoute app. `web/` is a legacy frontend.
+The deployed application is `apps/signalforge` (Next.js/TypeScript); use Node **22.13+**. The repository name `agentarb` and the root `src/arbiter*` Python packages reflect an earlier prototype, not another live Valrun app. `web/` is a legacy frontend.
 
 ```bash
 cd apps/signalforge

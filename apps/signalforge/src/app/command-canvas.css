@@ -27,7 +27,7 @@
   top: 120px;
   right: calc(30% - 18px);
   fill: none;
-  stroke: #aaa8d7;
+  stroke: var(--accent);
   opacity: 0.5;
   pointer-events: none;
 }
@@ -37,7 +37,7 @@
   stroke-dashoffset: 0;
 }
 .canvas-bridge circle {
-  fill: #aaa8d7;
+  fill: var(--accent);
   stroke: none;
 }
 .brand-signal path {
@@ -65,7 +65,7 @@
 }
 .canvas-rule {
   height: 1px;
-  background: linear-gradient(90deg, #9b9ac177, var(--line));
+  background: var(--line);
 }
 .canvas-rail,
 .preview-coordinate {
@@ -87,7 +87,7 @@
   top: 24px;
   left: 34px;
   right: 0;
-  color: #979ba4;
+  color: var(--muted);
   font: clamp(21px, 2vw, 28px)/1.4 var(--font-sans);
   animation: placeholder-resolve 0.45s ease-out;
 }
@@ -105,7 +105,7 @@
 .command-marker {
   font: 34px var(--font-mono);
   padding-top: 25px;
-  color: #aeadd7;
+  color: var(--accent);
 }
 .command-writing textarea {
   border: 0;
@@ -117,12 +117,12 @@
   transition: border-color 0.2s;
 }
 .command-writing textarea:focus {
-  border-bottom-color: #c3c2fb;
-  box-shadow: 0 1px 0 #c3c2fb;
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 var(--accent);
   outline: none;
 }
 .command-writing textarea::placeholder {
-  color: #979ba4;
+  color: var(--muted);
 }
 .command-controls {
   grid-template-columns: auto auto auto 1fr;
