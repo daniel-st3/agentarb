@@ -471,44 +471,40 @@ export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkRes
             aria-label={t("Catalog results")}
             aria-busy={loading}
           >
-            <AnimatePresence initial={false} mode="wait">
-              <ResultTransition key={records.map((r) => r.id).join("|")}>
-                {[
-                  "live",
-                  "cached_live",
-                  "seeded_catalog",
-                  "simulated_demo",
-                ].map((state) => {
-                  const rows = records.filter((r) => r.freshness === state);
-                  return rows.length ? (
-                    <section key={state} aria-label={t(labels[state])}>
-                      <div
-                        className={`catalog-freshness fresh-${state}`}
-                        style={{ margin: "32px 0 16px" }}
-                      >
-                        {t(labels[state])}
-                        {state === "cached_live" && (
-                          <>
-                            {" "}
-                            / <TechnicalLabel term="cached_live" />
-                          </>
-                        )}
-                      </div>
-                      {rows.map((l) => (
-                        <ListingDetail listing={l} key={l.id} />
-                      ))}
-                    </section>
-                  ) : null;
-                })}
-                {!records.length && (
-                  <p>
-                    {t(
-                      "No matching records in this sample. Unknown capabilities and prices are not inferred as eligible.",
+            {[
+              "live",
+              "cached_live",
+              "seeded_catalog",
+              "simulated_demo",
+            ].map((state) => {
+              const rows = records.filter((r) => r.freshness === state);
+              return rows.length ? (
+                <section key={state} aria-label={t(labels[state])}>
+                  <div
+                    className={`catalog-freshness fresh-${state}`}
+                    style={{ margin: "32px 0 16px" }}
+                  >
+                    {t(labels[state])}
+                    {state === "cached_live" && (
+                      <>
+                        {" "}
+                        / <TechnicalLabel term="cached_live" />
+                      </>
                     )}
-                  </p>
+                  </div>
+                  {rows.map((l) => (
+                    <ListingDetail listing={l} key={l.id} />
+                  ))}
+                </section>
+              ) : null;
+            })}
+            {!records.length && (
+              <p>
+                {t(
+                  "No matching records in this sample. Unknown capabilities and prices are not inferred as eligible.",
                 )}
-              </ResultTransition>
-            </AnimatePresence>
+              </p>
+            )}
           </div>
           <p className="field-help">{network.warnings.join(" ")}</p>
         </>
