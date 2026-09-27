@@ -372,7 +372,7 @@ describe("agent-facing discovery", () => {
       }),
     );
     expect(init.status).toBe(200);
-    expect((await init.json()).result.serverInfo.name).toBe("SignalForge");
+    expect((await init.json()).result.serverInfo.name).toBe("Valrun");
     const list = await handleMcp(request("tools/list"));
     expect(list.status).toBe(200);
     expect(
