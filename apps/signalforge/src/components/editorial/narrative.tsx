@@ -409,7 +409,7 @@ export function ReportPreview({ run }: { run: Run }) {
     <section className="paper-report" ref={ref}>
       <div className="container">
         <div className="paper-top">
-          <span>{t("WORTHROUTE / RESEARCH MEMO 001")}</span>
+          <span>{t("VALRUN / RESEARCH MEMO 001")}</span>
           <span>{t("DEMO OUTPUT — SIMULATED EVIDENCE")}</span>
         </div>
         <div className="paper-layout">

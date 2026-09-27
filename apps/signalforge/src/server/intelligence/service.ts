@@ -355,7 +355,7 @@ export async function networkSnapshot() {
     sources: snapshots.map((s) => s.health),
     cacheMode: cache.mode,
     warnings: [
-      "Discovery only. No listed service or task is executable through WorthRoute.",
+      "Discovery only. No listed service or task is executable through Valrun.",
       "Catalog samples are bounded, not exhaustive. Live means the catalog was observed now, not that underlying services were tested.",
       ...(cache.mode === "non_durable_demo"
         ? [
@@ -396,6 +396,6 @@ export function evaluateOpportunity(listing: Listing) {
       "Projected margin unavailable: payout or execution cost is not structured enough for a defensible estimate.",
     executionStatus: "execution_not_enabled" as const,
     disclosure:
-      "Evaluation only. WorthRoute cannot and does not bid, claim, accept, submit, or settle this opportunity.",
+      "Evaluation only. Valrun cannot and does not bid, claim, accept, submit, or settle this opportunity.",
   };
 }

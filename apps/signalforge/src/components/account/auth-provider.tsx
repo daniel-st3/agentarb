@@ -89,7 +89,7 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
       {open && (
         <dialog ref={dialog} className="auth-dialog" onClose={() => setOpen(false)} aria-labelledby="auth-title">
           <button className="auth-close" type="button" onClick={closeAuth} aria-label={copy.close}>×</button>
-          <p className="auth-kicker">WORTHROUTE / ACCOUNT</p>
+          <p className="auth-kicker">VALRUN / ACCOUNT</p>
           <h2 id="auth-title">{copy.title}</h2>
           <p>{copy.intro}</p>
           {!configured ? <p role="status" className="auth-status">{copy.unavailable}</p> : (

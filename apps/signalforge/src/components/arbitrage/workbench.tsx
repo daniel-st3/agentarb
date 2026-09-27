@@ -148,7 +148,7 @@ export function ArbitrageWorkbench({
         url = URL.createObjectURL(blob),
         a = document.createElement("a");
       a.href = url;
-      a.download = "signalforge-arbitrage-receipt.json";
+      a.download = "valrun-arbitrage-receipt.json";
       a.click();
       URL.revokeObjectURL(url);
       setMessage("Receipt compiled against the current network.");
@@ -177,7 +177,7 @@ export function ArbitrageWorkbench({
   return (
     <div className="arb-workbench container">
       <header className="arb-heading">
-        <p className="eyebrow">{t("WORTHROUTE / ARBITRAGE RADAR")}</p>
+        <p className="eyebrow">{t("VALRUN / ARBITRAGE RADAR")}</p>
         <h1>{t("Does the spread survive?")}</h1>
         <p>
           {t(

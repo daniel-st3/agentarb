@@ -78,7 +78,7 @@ export default async function RootLayout({
           </NetworkState>
 
           <footer className="site-footer site-footer-v1 container">
-            <div className="footer-identity"><span>WorthRoute<span className="brand-dot">.</span></span><p>{locale === "es" ? "Evaluación + ejecución acotada · sin pagos autónomos" : locale === "fr" ? "Analyse + exécution bornée · aucun paiement autonome" : "Underwriting + bounded execution · no autonomous payments"}</p></div>
+            <div className="footer-identity"><span>Valrun<span className="brand-dot">.</span></span><p>{locale === "es" ? "Evaluación + ejecución acotada · sin pagos autónomos" : locale === "fr" ? "Analyse + exécution bornée · aucun paiement autonome" : "Underwriting + bounded execution · no autonomous payments"}</p></div>
             <nav aria-label={locale === "es" ? "Navegación de pie de página" : locale === "fr" ? "Navigation de pied de page" : "Footer navigation"}>
               <Link href="/forge">{t("Forge")}</Link>
               <Link href="/pricing">{t("Pricing")}</Link>

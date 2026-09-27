@@ -18,7 +18,7 @@ test("visual lab is isolated, truthful and keyboard reachable", async ({ page },
   await Promise.all([opportunities, catalog]);
 
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  await expect(page).toHaveTitle(/V2 visual laboratory · WorthRoute/);
+  await expect(page).toHaveTitle(/V2 visual laboratory · Valrun/);
   await expect(page.locator('link[rel~="icon"][href*="icon.png"]')).toHaveCount(1);
   const icon = await page.request.get("/icon.png");
   expect(icon.ok()).toBe(true);

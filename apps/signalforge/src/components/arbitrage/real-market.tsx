@@ -272,14 +272,14 @@ export function RealMarket({
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
     a.href = url;
-    a.download = "signalforge-real-underwriting.json";
+    a.download = "valrun-real-underwriting.json";
     a.click();
     URL.revokeObjectURL(url);
   }
   return (
     <article className="container real-market">
       <header>
-        <p className="eyebrow">WORTHROUTE / {t("OBSERVED MARKET")}</p>
+        <p className="eyebrow">VALRUN / {t("OBSERVED MARKET")}</p>
         <h1>{t("Price the work. Know the gaps.")}</h1>
         <p>
           {t(

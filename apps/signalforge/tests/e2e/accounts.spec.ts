@@ -17,7 +17,7 @@ test("optional sign-in experience is accessible and dismissible", async ({ page,
   await page.goto("/en/forge");
   if (isMobile) await page.locator(".arb-mobile-nav summary").click();
   await page.getByRole("navigation", { name: "Main navigation" }).getByRole("button", { name: "Sign in", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Keep your WorthRoute work." });
+  const dialog = page.getByRole("dialog", { name: "Keep your Valrun work." });
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText("fully usable without an account");
   await expect(dialog.getByRole("button", { name: "Continue without an account" })).toBeVisible();

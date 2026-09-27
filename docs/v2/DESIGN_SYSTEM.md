@@ -1,8 +1,8 @@
-# SignalForge V2 Design System
+# Valrun V2 Design System
 
 ## Visual thesis
 
-SignalForge should feel like a **financial instrument × editorial research lab × technical schematic**. Marketing surfaces use negative space and decisive type; work surfaces become denser as evidence and economic state accumulate. Rules, alignment, notation, and provenance do more work than containers.
+Valrun should feel like a **financial instrument × editorial research lab × technical schematic**. Marketing surfaces use negative space and decisive type; work surfaces become denser as evidence and economic state accumulate. Rules, alignment, notation, and provenance do more work than containers.
 
 Avoid generic dashboard grids, centered chatbot composers, purple “AI” gradients, glass panels, decorative glow, arbitrary pills, excessive rounding, stock illustrations, and 3D without a spatial-data purpose.
 
@@ -16,7 +16,7 @@ Avoid generic dashboard grids, centered chatbot composers, purple “AI” gradi
 
 ## Color and state
 
-Retain the warm graphite ground, soft ivory ink, mineral gray, oxidized signal orange / vermilion-coral accent, mineral green, and muted amber. Ultraviolet is reserved for an optional, rare data or spectral treatment—not the primary SignalForge brand accent. Color is semantic:
+Use deep petrol ground, soft ivory ink, sea-mineral gray, a restrained citron active signal, cool mint for verified/favorable states, and muted amber for uncertainty. Avoid purple and orange as brand accents. Color is semantic:
 
 | Role | Treatment |
 | --- | --- |

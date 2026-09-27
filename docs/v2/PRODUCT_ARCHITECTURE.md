@@ -1,4 +1,4 @@
-# SignalForge V2 Product Architecture
+# Valrun V2 Product Architecture
 
 ## Current foundation
 

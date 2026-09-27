@@ -2,9 +2,9 @@
 
 ## Project Structure & Module Organization
 
-`apps/signalforge/` is the production Next.js application, publicly branded WorthRoute. Keep the existing repository paths, API identifiers, and environment namespaces for compatibility. App Router pages and route handlers live in `src/app`, reusable UI in `src/components`, and deterministic domain/server logic in `src/domain` and `src/server`. Its tests are under `apps/signalforge/tests`, with Playwright suites in `tests/e2e` and `tests/real-ui`; static assets belong in `public/`.
+`apps/signalforge/` is the production Next.js application, publicly branded Valrun. Keep the existing repository paths, API identifiers, and environment namespaces for compatibility. App Router pages and route handlers live in `src/app`, reusable UI in `src/components`, and deterministic domain/server logic in `src/domain` and `src/server`. Its tests are under `apps/signalforge/tests`, with Playwright suites in `tests/e2e` and `tests/real-ui`; static assets belong in `public/`.
 
-The original Python prototype remains in `src/arbiter` and `src/arbiter_worker`, with tests in root `tests/` and fixtures in `data/golden_tasks/`. `web/` is a legacy frontend: do not treat it as the deployed WorthRoute app. Architecture, security, and deployment notes live in `docs/`.
+The original Python prototype remains in `src/arbiter` and `src/arbiter_worker`, with tests in root `tests/` and fixtures in `data/golden_tasks/`. `web/` is a legacy frontend: do not treat it as the deployed Valrun app. Architecture, security, and deployment notes live in `docs/`.
 
 ## Build, Test, and Development Commands
 
@@ -40,11 +40,11 @@ Use short imperative commits, such as `Harden observed underwriting` or `Add saf
 
 Copy variable names from `.env.example`; store values only in `.env.local` or Vercel. Never commit secrets or create `NEXT_PUBLIC_` variants of server credentials. Do not add marketplace writes, claims, payments, wallets, arbitrary URL fetching, or new execution paths without explicit authorization and a separate safety review. The existing bounded, user-authorized public-source synthesis route is the sole enabled execution path; underwriting contracts remain `execution_not_enabled`.
 
-## WorthRoute Production Baseline
+## Valrun Production Baseline
 
 Production branch: `claude/verify-bounty-api-facts-f6ccdu`.
 
-Last verified product-release commit when this guide was updated: `245ce8ed74785503c751ea6d7ca59f8f3dc80c8b`. Verify the current branch head and Vercel deployment before release work; this reference is historical after later merges.
+Last verified product-release commit when this guide was updated: `f9ee96340e7a01a3f3d5e66e1fcee01ec2ae83ca`. Verify the current branch head and Vercel deployment before release work; this reference is historical after later merges.
 
 The V2 Profit Engine, Forge, guest-first accounts and bounded public-source synthesis are live. Keep Production stable; future experiments belong on dedicated branches and Preview deployments.
 
@@ -52,7 +52,7 @@ Never merge, deploy, promote, modify Production environment variables, or change
 
 ## Product Identity
 
-WorthRoute (formerly SignalForge) is an economic operating system and underwriting layer for agent work.
+Valrun (formerly SignalForge) is an economic operating system and underwriting layer for agent work.
 
 It is **not**:
 
@@ -100,7 +100,7 @@ Marketing surfaces may use strong negative space and expressive typography. Work
 
 ## Typography
 
-Typography is part of WorthRoute's identity and may communicate economic state, certainty, risk, or decision status.
+Typography is part of Valrun's identity and may communicate economic state, certainty, risk, or decision status.
 
 Do not default the full product to Inter, Geist, Space Grotesk, or another generic startup stack without explicit design justification.
 

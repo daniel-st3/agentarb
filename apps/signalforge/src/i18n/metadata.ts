@@ -49,7 +49,7 @@ export async function pageMetadata(
     column = locales.indexOf(locale);
   const suffix = path.replace("[id]", encodeURIComponent(p.id ?? ""));
   return {
-    title: `${titles[page][column]} · WorthRoute`,
+    title: `${titles[page][column]} · Valrun`,
     description: [
       "Underwrite AI-agent work with observed evidence, explicit assumptions and auditable decisions. Optional public-source synthesis requires a separate user action; marketplace execution remains disabled.",
       "Evalúa tareas de agentes de IA con evidencia observada, supuestos explícitos y decisiones auditables. La síntesis de fuentes públicas requiere una acción aparte; las acciones de mercado siguen deshabilitadas.",

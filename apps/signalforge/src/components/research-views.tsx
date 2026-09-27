@@ -274,7 +274,7 @@ function download(run: Run, format: "md" | "json") {
   );
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `signalforge-${run.request.id}.${format}`;
+  anchor.download = `valrun-${run.request.id}.${format}`;
   anchor.click();
   URL.revokeObjectURL(url);
 }
@@ -299,7 +299,7 @@ export function BriefView({ id, example }: { id: string; example?: Run }) {
         <div className="brief-title" data-reveal>
           <div className="report-masthead">
             <span>
-              {t("WORTHROUTE / RESEARCH BRIEF /")}{" "}
+              {t("VALRUN / RESEARCH BRIEF /")}{" "}
               {t(
                 run.example
                   ? run.request.id.replace("example-", "00")
@@ -312,7 +312,7 @@ export function BriefView({ id, example }: { id: string; example?: Run }) {
             </span>
           </div>
           <Eyebrow>
-            WORTHROUTE /
+            VALRUN /
             {t(run.example ? "EXAMPLE BRIEF" : "SESSION BRIEF")} /{" "}
             {t(policyLabels[run.request.optimizationPolicy])} {t("/ DEMO MODE")}
           </Eyebrow>

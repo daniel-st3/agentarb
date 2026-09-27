@@ -38,7 +38,7 @@ export const translations: Array<[string, string, string]> = [
   ["Developers", "Desarrolladores", "Développeurs"],
   ["Archive", "Archivo", "Archives"],
   ["Main navigation", "Navegación principal", "Navigation principale"],
-  ["WorthRoute home", "Inicio de WorthRoute", "Accueil WorthRoute"],
+  ["Valrun home", "Inicio de Valrun", "Accueil Valrun"],
   [
     "Open command palette",
     "Abrir consola de comandos",
@@ -479,9 +479,9 @@ export const translations: Array<[string, string, string]> = [
     "Conçu et développé par Daniel Rodríguez · Systèmes d’IA, données et produit",
   ],
   [
-    "WORTHROUTE / OBJECTIVE LAUNCHER",
-    "WORTHROUTE / CONSOLA DE OBJETIVOS",
-    "WORTHROUTE / LANCEUR D’OBJECTIFS",
+    "VALRUN / OBJECTIVE LAUNCHER",
+    "VALRUN / CONSOLA DE OBJETIVOS",
+    "VALRUN / LANCEUR D’OBJECTIFS",
   ],
   ["Example objectives", "Ejemplos de objetivos", "Exemples d’objectifs"],
   [
@@ -507,9 +507,9 @@ export const translations: Array<[string, string, string]> = [
     "Utilisez un objectif clair de 12 à 2 000 caractères, sans identifiants ni instructions exécutables.",
   ],
   [
-    "WORTHROUTE / LIVE AGENT NETWORK",
-    "WORTHROUTE / RED DE AGENTES EN VIVO",
-    "WORTHROUTE / RÉSEAU D’AGENTS EN DIRECT",
+    "VALRUN / LIVE AGENT NETWORK",
+    "VALRUN / RED DE AGENTES EN VIVO",
+    "VALRUN / RÉSEAU D’AGENTS EN DIRECT",
   ],
   ["Observe the supply side", "Observa la oferta", "Observez l’offre"],
   ["of the agent web.", "de la web de agentes.", "du web des agents."],
@@ -519,9 +519,9 @@ export const translations: Array<[string, string, string]> = [
     "Inspectez les métadonnées publiques, les capacités, la fraîcheur et les contraintes d’accès avant de planifier un itinéraire.",
   ],
   [
-    "Discovery only. WorthRoute does not bid, claim, pay, or execute marketplace actions.",
-    "Solo descubrimiento. WorthRoute no oferta, reclama tareas, paga ni realiza acciones en mercados.",
-    "Découverte uniquement. WorthRoute ne fait aucune offre, ne prend aucune tâche, ne paie ni n’agit sur les places de marché.",
+    "Discovery only. Valrun does not bid, claim, pay, or execute marketplace actions.",
+    "Solo descubrimiento. Valrun no oferta, reclama tareas, paga ni realiza acciones en mercados.",
+    "Découverte uniquement. Valrun ne fait aucune offre, ne prend aucune tâche, ne paie ni n’agit sur les places de marché.",
   ],
   [
     "Reading bounded catalog snapshots…",
@@ -692,9 +692,9 @@ export const translations: Array<[string, string, string]> = [
     "Une correspondance au catalogue n’autorise pas l’exécution.",
   ],
   [
-    "Evaluation only. WorthRoute cannot bid, claim, accept, submit, or settle this opportunity.",
-    "Solo evaluación. WorthRoute no puede ofertar, reclamar, aceptar, entregar ni liquidar esta oportunidad.",
-    "Évaluation uniquement. WorthRoute ne peut ni faire une offre, ni prendre, accepter, livrer ou régler cette opportunité.",
+    "Evaluation only. Valrun cannot bid, claim, accept, submit, or settle this opportunity.",
+    "Solo evaluación. Valrun no puede ofertar, reclamar, aceptar, entregar ni liquidar esta oportunidad.",
+    "Évaluation uniquement. Valrun ne peut ni faire une offre, ni prendre, accepter, livrer ou régler cette opportunité.",
   ],
   [
     "Forge a route for this capability →",

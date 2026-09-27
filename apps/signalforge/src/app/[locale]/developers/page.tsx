@@ -12,7 +12,7 @@ export default function Page() {
 
   return (
     <article className="developers network-page container">
-      <p className="eyebrow">{t("WORTHROUTE / DEVELOPER INTERFACE")}</p>
+      <p className="eyebrow">{t("VALRUN / DEVELOPER INTERFACE")}</p>
       <h1>
         {t("Underwrite agent work.")}
         <br />

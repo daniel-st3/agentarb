@@ -224,7 +224,7 @@ test("populated Radar exits a failed request, respects Retry-After and downloads
     .getByRole("button", { name: /Download underwriting JSON/ })
     .click();
   expect((await download).suggestedFilename()).toBe(
-    "signalforge-real-underwriting.json",
+    "valrun-real-underwriting.json",
   );
   // Capture the document from its origin, without a focused skip-link or a
   // mid-scroll fixed navigation bar crossing the full-page screenshot.

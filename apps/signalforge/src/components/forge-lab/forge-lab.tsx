@@ -282,7 +282,7 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
     const url = URL.createObjectURL(new Blob([JSON.stringify(visibleOutput.receipt, null, 2)], { type: "application/json" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `signalforge-execution-${visibleOutput.receipt.receiptHash.slice(0, 12)}.json`;
+    link.download = `valrun-execution-${visibleOutput.receipt.receiptHash.slice(0, 12)}.json`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -477,7 +477,7 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `signalforge-forge-receipt-${result.receipt.receiptHash.slice(0, 12)}.json`;
+    anchor.download = `valrun-forge-receipt-${result.receipt.receiptHash.slice(0, 12)}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
   }

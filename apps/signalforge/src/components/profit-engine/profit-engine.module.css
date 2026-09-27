@@ -1,9 +1,9 @@
 .home {
-  --forge-bg: #111210;
-  --forge-ink: #f3f0e7;
-  --forge-muted: #989993;
-  --forge-line: #343632;
-  --forge-orange: #e85f3b;
+  --forge-bg: #102020;
+  --forge-ink: #f0f3e7;
+  --forge-muted: #a8b8b1;
+  --forge-line: #34514b;
+  --forge-accent: #d9ef81;
   min-height: 100svh;
   overflow: clip;
   color: var(--forge-ink);
@@ -34,7 +34,7 @@
 }
 
 .statusRail span { color: var(--forge-muted); }
-.statusRail .statusTitle { color: var(--forge-orange); letter-spacing: .1em; }
+.statusRail .statusTitle { color: var(--forge-accent); letter-spacing: .1em; }
 .statusRail strong { color: var(--forge-ink); font-size: .82rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .statusRail .statusDetail { color: var(--forge-ink); text-align: end; line-height: 1.45; }
 
@@ -49,7 +49,7 @@
 
 .heroMain > p:first-child,
 .entries header p {
-  color: var(--forge-orange);
+  color: var(--forge-accent);
   font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.12em;
@@ -63,14 +63,14 @@
 }
 .heroIntroduction { max-width: 37rem; font-size: clamp(1rem, 1.3vw, 1.2rem); line-height: 1.5; color: var(--forge-ink); font-family: var(--font-sans); letter-spacing: 0; }
 .quickEntry { display: grid; gap: .6rem; max-width: 43rem; margin-block-start: clamp(2rem, 4vw, 3.2rem); }
-.quickEntry label { color: var(--forge-orange); font: .67rem var(--font-mono); letter-spacing: .09em; }
-.quickEntry > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; border: 1px solid #777971; background: #1c1d19; }
-.quickEntry > div:focus-within { border-color: var(--forge-orange); box-shadow: inset 0 0 0 1px var(--forge-orange); }
-.quickEntry input { min-width: 0; min-height: 58px; border: 0; padding: .85rem 1rem; color: var(--forge-ink); background: transparent; font: 1rem var(--font-sans); }
+.quickEntry label { color: var(--forge-accent); font: .67rem var(--font-mono); letter-spacing: .09em; }
+.quickEntry > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; border-bottom: 1px solid #6b8980; }
+.quickEntry > div:focus-within { border-color: var(--forge-accent); }
+.quickEntry input { min-width: 0; min-height: 64px; border: 0; padding: .85rem 0; color: var(--forge-ink); background: transparent; font: clamp(1.1rem, 1.7vw, 1.5rem) var(--font-sans); }
 .quickEntry input::placeholder { color: #a7a89e; }
 .quickEntry input:focus { outline: none; }
-.quickEntry button { min-height: 58px; border: 0; border-inline-start: 1px solid #777971; padding: .75rem 1rem; color: #111210; background: var(--forge-orange); cursor: pointer; font: .65rem var(--font-mono); letter-spacing: .06em; white-space: nowrap; }
-.quickEntry button:hover { background: #f17a56; }
+.quickEntry button { min-height: 64px; border: 0; padding: .75rem 0 .75rem 1rem; color: var(--forge-accent); background: transparent; cursor: pointer; font: .7rem var(--font-mono); letter-spacing: .06em; white-space: nowrap; }
+.quickEntry button:hover { color: #e6fa99; }
 .quickEntry small { color: var(--forge-muted); font: .69rem/1.5 var(--font-mono); }
 .marketNote { margin-block: 1.2rem 0; padding-block: .8rem; border-top: 1px solid var(--forge-line); color: var(--forge-muted); font-size: .74rem; line-height: 1.5; letter-spacing: 0; }
 
@@ -84,13 +84,13 @@
 .emptyHero > div span { color: var(--forge-muted); }
 .heroMain nav { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin-block-start: 1rem; font: 0.68rem var(--font-mono); letter-spacing: 0.1em; }
 .emptyHero nav a { min-height: 44px; padding-block: 0.7rem; border-bottom: 1px solid var(--forge-line); }
-.emptyHero nav a:first-child { border-color: var(--forge-orange); }
+.emptyHero nav a:first-child { border-color: var(--forge-accent); }
 .heroMethod { position: relative; align-self: stretch; display: grid; align-content: center; border-top: 1px solid var(--forge-line); }
-.methodTrace { position: absolute; top: 50%; left: 0; width: 1rem; height: 13rem; transform: translateY(-40%); fill: none; stroke: var(--forge-orange); stroke-width: 1.3; pointer-events: none; }
+.methodTrace { position: absolute; top: 50%; left: 0; width: 1rem; height: 13rem; transform: translateY(-40%); fill: none; stroke: var(--forge-accent); stroke-width: 1.3; pointer-events: none; }
 .methodTrace path { stroke-dasharray: 194 194; stroke-dashoffset: 194; }
-.heroMethod > p:first-child { margin: 0 0 .75rem; color: var(--forge-orange); font: .64rem var(--font-mono); letter-spacing: .1em; }
+.heroMethod > p:first-child { margin: 0 0 .75rem; color: var(--forge-accent); font: .64rem var(--font-mono); letter-spacing: .1em; }
 .heroMethod > div { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: .25rem .7rem; margin-inline-start: 1.5rem; padding-block: 1rem; border-bottom: 1px solid var(--forge-line); }
-.heroMethod > div span { grid-row: span 2; color: var(--forge-orange); font: .68rem var(--font-mono); }
+.heroMethod > div span { grid-row: span 2; color: var(--forge-accent); font: .68rem var(--font-mono); }
 .heroMethod > div strong { font-size: 1rem; font-weight: 600; }
 .heroMethod > div small { color: var(--forge-muted); font-size: .78rem; line-height: 1.5; }
 
@@ -122,7 +122,7 @@
 .entries nav span,
 .entries nav small { color: var(--forge-muted); font-family: var(--font-mono); font-size: 0.65rem; }
 .entries nav strong { font-size: 0.82rem; letter-spacing: 0.05em; }
-.entries nav b { color: var(--forge-orange); font-weight: 400; }
+.entries nav b { color: var(--forge-accent); font-weight: 400; }
 
 .trust {
   display: grid;
@@ -135,14 +135,14 @@
   font-size: 0.62rem;
   letter-spacing: 0.08em;
 }
-.trust strong { color: #bd925c; font-weight: 500; }
+.trust strong { color: #efc075; font-weight: 500; }
 .trust a { color: var(--forge-ink); }
 
-.home :focus-visible { outline-color: var(--forge-orange); }
+.home :focus-visible { outline-color: var(--forge-accent); }
 
 @media (hover: hover) and (pointer: fine) {
   .entries nav a:hover strong,
-  .trust a:hover { color: var(--forge-orange); }
+  .trust a:hover { color: var(--forge-accent); }
 }
 
 @media (max-width: 899px) {
@@ -160,7 +160,7 @@
   .emptyHero { padding-block: 3rem; }
   .emptyHero h1 { font-size: clamp(3.35rem, 14vw, 5rem); line-height: .9; }
   .quickEntry > div { grid-template-columns: 1fr; }
-  .quickEntry button { border-inline-start: 0; border-top: 1px solid #777971; }
+  .quickEntry button { justify-self: start; padding-inline-start: 0; }
   .statusRail { gap: .55rem; }
   .statusRail .statusTitle, .statusRail .statusDetail { grid-column: 1 / -1; }
   .entries { padding-block: 4rem; }

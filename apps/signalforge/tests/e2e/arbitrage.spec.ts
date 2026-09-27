@@ -38,7 +38,7 @@ test("Radar policy sensitivity → auditable receipt", async ({
     .getByRole("button", { name: "Download auditable receipt" })
     .click();
   expect((await download).suggestedFilename()).toBe(
-    "signalforge-arbitrage-receipt.json",
+    "valrun-arbitrage-receipt.json",
   );
   await page.getByRole("button", { name: "OBSERVED", exact: true }).click();
   await expect(

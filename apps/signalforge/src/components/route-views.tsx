@@ -319,7 +319,7 @@ function downloadContract(route: ExecutionRouteContract) {
     );
   const a = document.createElement("a");
   a.href = url;
-  a.download = `signalforge-${route.routeId}.json`;
+  a.download = `valrun-${route.routeId}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -379,7 +379,7 @@ export function ExecutionRouteView({ id }: { id: string }) {
     <Reveal className="workspace container execution-report">
       <header className="workspace-title" data-reveal>
         <p className="eyebrow">
-          {t("WORTHROUTE / EXECUTION ROUTE /")}{" "}
+          {t("VALRUN / EXECUTION ROUTE /")}{" "}
           {t(
             id.startsWith("example") ? id.replace("example-", "00") : "SESSION",
           )}

@@ -1,18 +1,18 @@
 ---
 name: signalforge-experience
-description: Design or implement SignalForge product experiences, visual systems, interactions, data visualizations, or V2 surfaces while preserving economic truth, provenance, accessibility, performance, and the no-execution boundary.
+description: Design or implement Valrun product experiences, visual systems, interactions, data visualizations, or V2 surfaces while preserving economic truth, provenance, accessibility, performance, and the bounded-execution boundary.
 ---
 
-# SignalForge Experience
+# Valrun Experience
 
-Use this checklist for SignalForge UI, UX, motion, or product-surface work. Read root `AGENTS.md` first. For V2 work, consult the relevant file in `docs/v2/` rather than copying its doctrine into a task.
+Use this checklist for Valrun UI, UX, motion, or product-surface work. Read root `AGENTS.md` first. For V2 work, consult the relevant file in `docs/v2/` rather than copying its doctrine into a task.
 
 ## Frame the work
 
 1. Identify the user decision the surface improves.
 2. Inventory the existing route, component, API, schema, motion owner, tests, and responsive states.
 3. Classify every value as observed, published, market-observed, user-supplied, derived, or unknown.
-4. State which no-execution boundary remains visible.
+4. State which execution boundary remains visible.
 
 ## Design standard
 
@@ -36,4 +36,4 @@ Use this checklist for SignalForge UI, UX, motion, or product-surface work. Read
 4. Run the relevant unit, Playwright, real-UI, boundary, lint, typecheck, and build gates.
 5. Integrate into primary routes only after Preview review and measured comprehension/performance.
 
-Do not add autonomous execution, marketplace writes, wallets, payments, or claims. Do not add a dependency without a named architectural role and evidence that current primitives are insufficient.
+Do not add autonomous execution, marketplace writes, wallets, payments, or claims. The existing bounded, user-authorized public-source synthesis route is the only execution exception. Do not add a dependency without a named architectural role and evidence that current primitives are insufficient.

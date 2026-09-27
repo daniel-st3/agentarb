@@ -10,9 +10,9 @@ export const generateMetadata = ({ params }: { params: Promise<{ locale: string 
 
 const copy = {
   en: {
-    eyebrow: "WORTHROUTE / PRICING",
+    eyebrow: "VALRUN / PRICING",
     title: "Start with the economics.",
-    intro: "Use WorthRoute without an account. Paid plans are published for product direction only; billing is not available yet.",
+    intro: "Use Valrun without an account. Paid plans are published for product direction only; billing is not available yet.",
     month: "/mo",
     available: "AVAILABLE NOW",
     soon: "COMING SOON",
@@ -25,9 +25,9 @@ const copy = {
     ],
   },
   es: {
-    eyebrow: "WORTHROUTE / PRECIOS",
+    eyebrow: "VALRUN / PRECIOS",
     title: "Empieza por la economía.",
-    intro: "Usa WorthRoute sin una cuenta. Los planes pagos solo muestran la dirección del producto; la facturación aún no está disponible.",
+    intro: "Usa Valrun sin una cuenta. Los planes pagos solo muestran la dirección del producto; la facturación aún no está disponible.",
     month: "/mes",
     available: "DISPONIBLE AHORA",
     soon: "PRÓXIMAMENTE",
@@ -40,9 +40,9 @@ const copy = {
     ],
   },
   fr: {
-    eyebrow: "WORTHROUTE / TARIFS",
+    eyebrow: "VALRUN / TARIFS",
     title: "Commencez par l’économie.",
-    intro: "Utilisez WorthRoute sans compte. Les offres payantes indiquent seulement la direction du produit ; la facturation n’est pas encore disponible.",
+    intro: "Utilisez Valrun sans compte. Les offres payantes indiquent seulement la direction du produit ; la facturation n’est pas encore disponible.",
     month: "/mois",
     available: "DISPONIBLE",
     soon: "BIENTÔT",
