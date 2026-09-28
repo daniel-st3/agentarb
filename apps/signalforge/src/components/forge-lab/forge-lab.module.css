@@ -1,11 +1,11 @@
 .lab {
-  --forge-bg: #102020;
-  --forge-ink: #f0f3e7;
-  --forge-muted: #a8b8b1;
-  --forge-line: #34514b;
-  --forge-accent: #d9ef81;
-  --forge-green: #95d8b5;
-  --forge-amber: #efc075;
+  --forge-bg: #1b1a18;
+  --forge-ink: #f1ece2;
+  --forge-muted: #ada79d;
+  --forge-line: #49453f;
+  --forge-accent: #ec8169;
+  --forge-green: #9bc6a8;
+  --forge-amber: #d8b47a;
   min-height: 100svh;
   overflow: clip;
   color: var(--forge-ink);
@@ -28,19 +28,19 @@
 .form section { padding-block: 1rem; border-top: 1px solid var(--forge-line); }
 .form section:last-of-type { border-bottom: 1px solid var(--forge-line); }
 .label { display: block; margin-block-end: .85rem; color: var(--forge-muted); }
-.field { display: grid; gap: .4rem; min-width: 0; border-bottom: 1px solid #4a6760; padding: .8rem 0 .55rem; background: transparent; transition: border-color .16s ease; }
-.field:hover { border-color: #96b1a5; }
+.field { display: grid; gap: .4rem; min-width: 0; border-bottom: 1px solid #726b62; padding: .8rem 0 .55rem; background: transparent; transition: border-color .16s ease; }
+.field:hover { border-color: #baa89c; }
 .field:focus-within { border-color: var(--forge-accent); }
 .fieldHeading { display: flex; gap: .5rem; align-items: start; justify-content: space-between; min-height: 1.35rem; color: #c7c8bf; font-size: .76rem; line-height: 1.35; }
 .fieldHeading > label { cursor: pointer; }
 .fieldHelp { position: relative; flex: 0 0 auto; }
 .fieldHelp button { display: grid; place-items: center; width: 28px; height: 28px; margin-block-start: -.3rem; border: 0; color: var(--forge-muted); background: transparent; cursor: help; }
 .fieldHelp button:hover, .fieldHelp button:focus-visible { color: var(--forge-accent); outline: 1px solid var(--forge-accent); outline-offset: -3px; }
-.fieldHelp [role="tooltip"] { position: absolute; inset: calc(100% + .35rem) 0 auto auto; z-index: 20; display: none; width: min(18rem, 70vw); border: 1px solid var(--forge-line); padding: .75rem; color: var(--forge-ink); background: #0b1918; box-shadow: 0 14px 35px rgb(0 0 0 / .32); font: .68rem/1.5 var(--font-mono); letter-spacing: 0; text-transform: none; }
+.fieldHelp [role="tooltip"] { position: absolute; inset: calc(100% + .35rem) 0 auto auto; z-index: 20; display: none; width: min(18rem, 70vw); border: 1px solid var(--forge-line); padding: .75rem; color: var(--forge-ink); background: #272521; box-shadow: 0 14px 35px rgb(0 0 0 / .32); font: .68rem/1.5 var(--font-mono); letter-spacing: 0; text-transform: none; }
 .fieldHelp:hover [role="tooltip"], .fieldHelp:focus-within [role="tooltip"] { display: block; }
 .form textarea, .form input, .form select { width: 100%; min-width: 0; min-height: 44px; border: 0; border-radius: 0; padding: .4rem 0; color: var(--forge-ink); background: transparent; font-variant-numeric: tabular-nums; }
 .form textarea { min-height: 7rem; resize: vertical; font-family: var(--font-sans); font-size: clamp(1rem, 1.35vw, 1.3rem); line-height: 1.45; }
-.form textarea::placeholder, .form input::placeholder { color: #96988f; opacity: 1; }
+.form textarea::placeholder, .form input::placeholder { color: #ada79d; opacity: 1; }
 .form select { cursor: pointer; }
 .form input:focus, .form textarea:focus, .form select:focus { border-color: var(--forge-accent); outline: 0; }
 .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }

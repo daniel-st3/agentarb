@@ -52,7 +52,7 @@
 }
 .arb-hero h1 em,
 .arb-thesis h2 em {
-  color: #a7b7dc;
+  color: var(--accent);
   font-weight: 400;
 }
 .arb-lede {
@@ -380,7 +380,7 @@
 }
 .arb-decision.unroutable,
 .arb-decision.insufficient_data {
-  color: #aeb4c0;
+  color: var(--muted);
 }
 .arb-inspector {
   padding-top: 4rem;
@@ -444,7 +444,7 @@
   position: relative;
 }
 .arb-competition article[data-selected="true"] {
-  border-top-color: #91a2d3;
+  border-top-color: var(--accent);
 }
 .arb-route-title {
   display: flex;
@@ -561,7 +561,7 @@
 }
 .arb-sensitivity {
   margin: 2rem 0;
-  color: #aab6d1;
+  color: var(--muted);
 }
 .arb-sensitivity figcaption {
   font: 10px/1.6 var(--font-mono);

@@ -1,11 +1,11 @@
 .lab {
-  --lab-bg: #102020;
-  --lab-ink: #f0f3e7;
-  --lab-muted: #a8b8b1;
-  --lab-line: #34514b;
+  --lab-bg: #1b1a18;
+  --lab-ink: #f1ece2;
+  --lab-muted: #ada79d;
+  --lab-line: #49453f;
   --lab-line-strong: #565a52;
-  --lab-signal: #d9ef81;
-  --lab-signal-soft: #819e47;
+  --lab-signal: #ec8169;
+  --lab-signal-soft: #bd624e;
   --lab-green: #8fae97;
   --lab-amber: #b8976b;
   min-block-size: 100svh;
@@ -618,9 +618,9 @@
 
 /* Concept D — one observed datum continuously becoming an economic decision. */
 .conceptD {
-  --forge-accent: #d9ef81;
+  --forge-accent: #ec8169;
   --forge-green: #80a88d;
-  --forge-amber: #efc075;
+  --forge-amber: #d8b47a;
   --forge-type-display: clamp(4.8rem, 10vw, 10.8rem);
   --forge-type-verdict: clamp(4.4rem, 9.4vw, 10.2rem);
   --forge-type-section: clamp(2.25rem, 4.7vw, 5rem);
@@ -634,10 +634,10 @@
 }
 
 .conceptD[data-surface="home"] {
-  --lab-bg: #102020;
-  --lab-ink: #f0f3e7;
-  --lab-muted: #a8b8b1;
-  --lab-line: #34514b;
+  --lab-bg: #1b1a18;
+  --lab-ink: #f1ece2;
+  --lab-muted: #ada79d;
+  --lab-line: #49453f;
   --lab-line-strong: #565a52;
   --lab-grid: rgb(255 255 255 / 0.025);
   color: var(--lab-ink);
@@ -646,9 +646,9 @@
 
 :global(body:has([data-profit-engine]) .site-nav) {
   height: 64px;
-  color: #f0f3e7;
-  background: #102020;
-  border-color: #34514b;
+  color: #f1ece2;
+  background: #1b1a18;
+  border-color: #49453f;
 }
 
 :global(body:has([data-profit-engine]) .nav-inner) {
@@ -664,16 +664,16 @@
 }
 
 :global(body:has([data-profit-engine]) .site-footer) {
-  color: #a8b8b1;
-  border-color: #34514b;
-  background: #102020;
+  color: #ada79d;
+  border-color: #49453f;
+  background: #1b1a18;
 }
 
 :global(body:has([data-visual-lab="v2"]) .site-nav) {
   height: 64px;
-  color: #f0f3e7;
-  background: #102020;
-  border-color: #34514b;
+  color: #f1ece2;
+  background: #1b1a18;
+  border-color: #49453f;
 }
 
 :global(body:has([data-visual-lab="v2"]) .nav-inner) {
@@ -689,9 +689,9 @@
 }
 
 :global(body:has([data-visual-lab="v2"]) .site-footer) {
-  color: #a8b8b1;
-  border-color: #34514b;
-  background: #102020;
+  color: #ada79d;
+  border-color: #49453f;
+  background: #1b1a18;
 }
 
 .dIntro {

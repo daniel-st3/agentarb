@@ -16,7 +16,7 @@ Avoid generic dashboard grids, centered chatbot composers, purple “AI” gradi
 
 ## Color and state
 
-Use deep petrol ground, soft ivory ink, sea-mineral gray, a restrained citron active signal, cool mint for verified/favorable states, and muted amber for uncertainty. Avoid purple and orange as brand accents. Color is semantic:
+Use warm graphite ground, soft ivory ink, mineral gray, a restrained vermilion active signal, mineral green for verified/favorable states, and muted amber for uncertainty. Avoid purple and neon-green brand accents. Color is semantic:
 
 | Role | Treatment |
 | --- | --- |
