@@ -84,7 +84,7 @@ export default async function RootLayout({
               <Link href="/pricing">{t("Pricing")}</Link>
               <Link href="/developers/try">{t("Developers")}</Link>
               <Link href="/privacy">{t("Privacy and boundaries")}</Link>
-              <a href="https://github.com/daniel-st3/agentarb" target="_blank" rel="noreferrer">GitHub ↗</a>
+              <a href="https://github.com/daniel-st3/valrun" target="_blank" rel="noreferrer">GitHub ↗</a>
             </nav>
           </footer>
         </InteractionProvider>

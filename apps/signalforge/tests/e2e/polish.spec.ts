@@ -32,7 +32,7 @@ test("evidence arrives once, remains truthful, and has a static equivalent", asy
   await evidence.screenshot({
     path: `test-results/screenshots/${info.project.name}-evidence-reduced-motion.png`,
   });
-  await expect(page.locator(".site-footer").getByRole("link", { name: "GitHub" })).toHaveAttribute("href", "https://github.com/daniel-st3/agentarb");
+  await expect(page.locator(".site-footer").getByRole("link", { name: "GitHub" })).toHaveAttribute("href", "https://github.com/daniel-st3/valrun");
   expect(errors).toEqual([]);
 });
 
