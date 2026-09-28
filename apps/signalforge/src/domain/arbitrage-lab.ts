@@ -38,7 +38,7 @@ function fixture(
       accessMode: "manual_seed",
       freshness: "simulated_demo",
       observedAt: "2026-08-31T00:00:00.000Z",
-      sourceUrl: "https://github.com/daniel-st3/agentarb/blob/codex/agent-arbitrage-underwriter/apps/signalforge/src/domain/arbitrage-lab.ts",
+      sourceUrl: "https://github.com/daniel-st3/valrun/blob/claude/verify-bounty-api-facts-f6ccdu/apps/signalforge/src/domain/arbitrage-lab.ts",
       executionStatus: "execution_not_enabled",
       dataQuality: {
         freshnessScore: 0,

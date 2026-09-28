@@ -45,7 +45,7 @@ The first response reports source health, shared-cache/distributed-limit mode an
 
 ## Run locally
 
-The deployed application is `apps/signalforge` (Next.js/TypeScript); use Node **22.13+**. The repository name `agentarb` and the root `src/arbiter*` Python packages reflect an earlier prototype, not another live Valrun app. `web/` is a legacy frontend.
+The deployed application is `apps/signalforge` (Next.js/TypeScript); use Node **22.13+**. The `apps/signalforge` path and root `src/arbiter*` Python packages reflect earlier internal names, not another live Valrun app. `web/` is a legacy frontend.
 
 ```bash
 cd apps/signalforge

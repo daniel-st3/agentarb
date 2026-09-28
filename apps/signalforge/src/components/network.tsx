@@ -525,7 +525,7 @@ export function NetworkExplorer({initial,initialFilters={}}:{initial?:NetworkRes
           )}
         </p>
         <Link
-          href="https://github.com/daniel-st3/agentarb/blob/claude/verify-bounty-api-facts-f6ccdu/docs/live-sources.md"
+          href="https://github.com/daniel-st3/valrun/blob/claude/verify-bounty-api-facts-f6ccdu/docs/live-sources.md"
           className="text-link"
         >
           {t("Source assessments and limitations ↗")}
