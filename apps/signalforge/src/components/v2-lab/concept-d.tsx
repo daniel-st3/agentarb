@@ -298,10 +298,8 @@ export function ConceptD({
     const targetProgress = [0.08, 0.41, 0.58, 0.76, 0.94][index];
     const targetScroll = st.start + (st.end - st.start) * targetProgress;
     replayTween.current?.kill();
-    window.scrollTo({ top: targetScroll, behavior: "auto" });
-    ScrollTrigger.update();
-    stageValue.current = index;
-    setStage(index);
+    st.scroll(targetScroll);
+    st.update();
   };
 
   if (!subject) return (

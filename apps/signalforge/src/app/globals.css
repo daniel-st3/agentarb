@@ -3,14 +3,14 @@
   --font-display: var(--font-newsreader), Georgia, serif;
   --font-sans: var(--font-geist), Arial, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-  --bg: #102020;
-  --ink: #f0f3e7;
-  --muted: #a8b8b1;
-  --line: #34514b;
-  --accent: #d9ef81;
-  --verified: #95d8b5;
-  --uncertain: #efc075;
-  --paper: #f0f3e7;
+  --bg: #1b1a18;
+  --ink: #f1ece2;
+  --muted: #ada79d;
+  --line: #49453f;
+  --accent: #ec8169;
+  --verified: #9bc6a8;
+  --uncertain: #d8b47a;
+  --paper: #f1ece2;
 }
 * {
   box-sizing: border-box;
@@ -45,8 +45,8 @@ body::before {
   background-size: 7px 9px;
 }
 ::selection {
-  background: #d9ef81;
-  color: #102020;
+  background: #ec8169;
+  color: #1b1a18;
 }
 a {
   color: inherit;
@@ -616,7 +616,7 @@ dd {
   --muted: #5d6269;
   --line: #cecdc7;
   --ink: #111318;
-  --accent: #405f23;
+  --accent: #a84634;
   --verified: #405b4d;
 }
 .paper-top,

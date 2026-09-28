@@ -1,9 +1,9 @@
 .home {
-  --forge-bg: #102020;
-  --forge-ink: #f0f3e7;
-  --forge-muted: #a8b8b1;
-  --forge-line: #34514b;
-  --forge-accent: #d9ef81;
+  --forge-bg: #1b1a18;
+  --forge-ink: #f1ece2;
+  --forge-muted: #ada79d;
+  --forge-line: #49453f;
+  --forge-accent: #ec8169;
   min-height: 100svh;
   overflow: clip;
   color: var(--forge-ink);
@@ -64,13 +64,13 @@
 .heroIntroduction { max-width: 37rem; font-size: clamp(1rem, 1.3vw, 1.2rem); line-height: 1.5; color: var(--forge-ink); font-family: var(--font-sans); letter-spacing: 0; }
 .quickEntry { display: grid; gap: .6rem; max-width: 43rem; margin-block-start: clamp(2rem, 4vw, 3.2rem); }
 .quickEntry label { color: var(--forge-accent); font: .67rem var(--font-mono); letter-spacing: .09em; }
-.quickEntry > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; border-bottom: 1px solid #6b8980; }
+.quickEntry > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; border-bottom: 1px solid #817a70; }
 .quickEntry > div:focus-within { border-color: var(--forge-accent); }
 .quickEntry input { min-width: 0; min-height: 64px; border: 0; padding: .85rem 0; color: var(--forge-ink); background: transparent; font: clamp(1.1rem, 1.7vw, 1.5rem) var(--font-sans); }
-.quickEntry input::placeholder { color: #a7a89e; }
+.quickEntry input::placeholder { color: #ada79d; }
 .quickEntry input:focus { outline: none; }
 .quickEntry button { min-height: 64px; border: 0; padding: .75rem 0 .75rem 1rem; color: var(--forge-accent); background: transparent; cursor: pointer; font: .7rem var(--font-mono); letter-spacing: .06em; white-space: nowrap; }
-.quickEntry button:hover { color: #e6fa99; }
+.quickEntry button:hover { color: #ffab96; }
 .quickEntry small { color: var(--forge-muted); font: .69rem/1.5 var(--font-mono); }
 .marketNote { margin-block: 1.2rem 0; padding-block: .8rem; border-top: 1px solid var(--forge-line); color: var(--forge-muted); font-size: .74rem; line-height: 1.5; letter-spacing: 0; }
 
@@ -135,7 +135,7 @@
   font-size: 0.62rem;
   letter-spacing: 0.08em;
 }
-.trust strong { color: #efc075; font-weight: 500; }
+.trust strong { color: #d8b47a; font-weight: 500; }
 .trust a { color: var(--forge-ink); }
 
 .home :focus-visible { outline-color: var(--forge-accent); }

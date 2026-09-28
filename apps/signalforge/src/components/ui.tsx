@@ -16,13 +16,14 @@ export function Brand() {
         className="brand-signal"
       >
         <path
-          d="M10 12L30 52L51 12"
+          d="M11 14 30 32h17"
           stroke="currentColor"
-          strokeWidth="5.5"
+          strokeWidth="6"
           strokeLinecap="square"
           strokeLinejoin="miter"
         />
-        <path d="M30 38H56" stroke="#d9ef81" strokeWidth="5.5" />
+        <path d="M11 50 30 32" stroke="var(--accent)" strokeWidth="6" strokeLinecap="square" />
+        <rect x="47" y="27" width="8" height="10" fill="currentColor" />
       </svg>
       <span>
         Valrun
