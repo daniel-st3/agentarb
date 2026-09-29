@@ -103,15 +103,18 @@ export function parseAgentBounties(raw: unknown, observedAt: string) {
     const evidenceResult = evidenceSchema.safeParse(p.evidence_requirements);
     const evidence = evidenceResult.success ? evidenceResult.data : undefined;
     const now = Date.parse(observedAt),
+      deadline = p.deadline && Number.isFinite(Date.parse(p.deadline))
+        ? new Date(p.deadline).toISOString()
+        : undefined,
       reasons: string[] = [];
     if (!evidenceResult.success) reasons.push("requirements_unknown");
     if (p.work_state !== "claimable") reasons.push("work_not_claimable");
     if (p.payment_state !== "escrowed" || !p.payment_committed)
       reasons.push("payment_not_committed");
     if (!p.verification_ready) reasons.push("verification_not_ready");
-    if (!p.deadline || !Number.isFinite(Date.parse(p.deadline)))
+    if (!deadline)
       reasons.push("deadline_unknown");
-    else if (Date.parse(p.deadline) <= now) reasons.push("deadline_expired");
+    else if (Date.parse(deadline) <= now) reasons.push("deadline_expired");
     if (
       evidence?.scoring_window?.ends_at &&
       Date.parse(evidence.scoring_window.ends_at) <= now
@@ -147,7 +150,7 @@ export function parseAgentBounties(raw: unknown, observedAt: string) {
               }
             : {}),
         },
-        ...(p.deadline ? { deadline: p.deadline } : {}),
+        ...(deadline ? { deadline } : {}),
         claimModel:
           p.competition_mode === "exclusive_claim" ? "open_claim" : "unknown",
         settlement: "escrow",
@@ -202,7 +205,7 @@ export function parseAgentBounties(raw: unknown, observedAt: string) {
             projection.generated_at,
           ).toISOString(),
           provenance: "observed_source",
-        }, p.deadline ?? undefined, now),
+        }, deadline, now),
       }),
     ];
   });

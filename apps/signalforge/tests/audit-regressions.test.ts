@@ -90,6 +90,29 @@ it("does not certify partial capability mappings as a complete supported scope",
   expect(known.demandState!.capabilityStatus).toBe("source_mapped");
 });
 
+it("returns an insufficient receipt for a live bounty with unmapped capabilities", async () => {
+  vi.stubEnv("DISCOVERY_MODE", "offline");
+  const task = parseAgentBounties(
+    projection({ skills: [], deadline: "2026-10-29T05:59:00+00:00" }),
+    at,
+  )[0];
+  expect(task.deadline).toBe("2026-10-29T05:59:00.000Z");
+  vi.spyOn(intelligence, "networkSnapshot").mockResolvedValue({
+    version: "1.0",
+    records: [task],
+    sources: [],
+    cacheMode: "shared",
+    warnings: [],
+    executionStatus: "execution_not_enabled",
+  });
+  const receipt = await underwriteOpportunity({
+    opportunityId: task.id,
+    responseVersion: "2.0",
+    policy: { minimumMarginBps: 2500 },
+  });
+  expect(receipt.evaluation.decision).toBe("insufficient_data");
+});
+
 it("rechecks scoring expiry on cached reads before a new source poll is due", async () => {
   const fetcher = vi
     .fn()
