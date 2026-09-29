@@ -3,7 +3,7 @@
   --font-display: var(--font-newsreader), Georgia, serif;
   --font-sans: var(--font-geist), Arial, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-  --bg: #17181a;
+  --bg: #101113;
   --ink: #f4f0e8;
   --muted: #abb1b5;
   --line: #41454a;
@@ -46,7 +46,7 @@ body::before {
 }
 ::selection {
   background: #ff7456;
-  color: #17181a;
+  color: #101113;
 }
 a {
   color: inherit;
@@ -381,7 +381,7 @@ code,
   text-decoration-color: var(--uncertain);
 }
 .route-narrative {
-  background: #0c1b1a;
+  background: #111519;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   scroll-margin-top: 72px;
@@ -504,7 +504,7 @@ dd {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: #0c1b1a;
+  background: #111519;
   padding: 6px 0;
 }
 .map-node small {
