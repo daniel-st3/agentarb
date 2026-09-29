@@ -264,6 +264,8 @@ it("claim-readiness schema cannot authorize claim or execution", () => {
 
 it("publishes claim readiness through read-only machine surfaces", () => {
   expect(toolNames).toContain("signalforge_get_claim_readiness");
+  expect(agentCard["x-signalforge"].mcp.tools).toEqual([...toolNames]);
+  expect(agentCard["x-signalforge"].api.forgeUnderwriting).toBe("/api/v1/forge/underwrite");
   expect(agentCard["x-signalforge"].api.claimReadiness).toBe(
     "/api/v1/opportunities/claim-readiness",
   );

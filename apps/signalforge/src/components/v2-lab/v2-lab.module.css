@@ -1,12 +1,12 @@
 .lab {
-  --lab-bg: #1b1a18;
-  --lab-ink: #f1ece2;
-  --lab-muted: #ada79d;
-  --lab-line: #49453f;
-  --lab-line-strong: #565a52;
-  --lab-signal: #ec8169;
-  --lab-signal-soft: #bd624e;
-  --lab-green: #8fae97;
+  --lab-bg: #17181a;
+  --lab-ink: #f4f0e8;
+  --lab-muted: #abb1b5;
+  --lab-line: #41454a;
+  --lab-line-strong: #545a62;
+  --lab-signal: #ff7456;
+  --lab-signal-soft: #c95740;
+  --lab-verified: #92bfd6;
   --lab-amber: #b8976b;
   min-block-size: 100svh;
   color: var(--lab-ink);
@@ -303,12 +303,12 @@
   gap: 0.65rem;
   margin-block-start: clamp(2rem, 8vw, 8rem);
   padding-block-start: 0.75rem;
-  border-block-start: 3px double var(--lab-green);
+  border-block-start: 3px double var(--lab-verified);
   color: var(--lab-muted);
 }
 
 .capitalRail strong {
-  color: var(--lab-green);
+  color: var(--lab-verified);
 }
 
 .aVerdict {
@@ -618,8 +618,8 @@
 
 /* Concept D — one observed datum continuously becoming an economic decision. */
 .conceptD {
-  --forge-accent: #ec8169;
-  --forge-green: #80a88d;
+  --forge-accent: #ff7456;
+  --forge-verified: #92bfd6;
   --forge-amber: #d8b47a;
   --forge-type-display: clamp(4.8rem, 10vw, 10.8rem);
   --forge-type-verdict: clamp(4.4rem, 9.4vw, 10.2rem);
@@ -634,11 +634,11 @@
 }
 
 .conceptD[data-surface="home"] {
-  --lab-bg: #1b1a18;
-  --lab-ink: #f1ece2;
-  --lab-muted: #ada79d;
-  --lab-line: #49453f;
-  --lab-line-strong: #565a52;
+  --lab-bg: #17181a;
+  --lab-ink: #f4f0e8;
+  --lab-muted: #abb1b5;
+  --lab-line: #41454a;
+  --lab-line-strong: #545a62;
   --lab-grid: rgb(255 255 255 / 0.025);
   color: var(--lab-ink);
   background: var(--lab-bg);
@@ -646,9 +646,9 @@
 
 :global(body:has([data-profit-engine]) .site-nav) {
   height: 64px;
-  color: #f1ece2;
-  background: #1b1a18;
-  border-color: #49453f;
+  color: #f4f0e8;
+  background: #17181a;
+  border-color: #41454a;
 }
 
 :global(body:has([data-profit-engine]) .nav-inner) {
@@ -664,16 +664,16 @@
 }
 
 :global(body:has([data-profit-engine]) .site-footer) {
-  color: #ada79d;
-  border-color: #49453f;
-  background: #1b1a18;
+  color: #abb1b5;
+  border-color: #41454a;
+  background: #17181a;
 }
 
 :global(body:has([data-visual-lab="v2"]) .site-nav) {
   height: 64px;
-  color: #f1ece2;
-  background: #1b1a18;
-  border-color: #49453f;
+  color: #f4f0e8;
+  background: #17181a;
+  border-color: #41454a;
 }
 
 :global(body:has([data-visual-lab="v2"]) .nav-inner) {
@@ -689,9 +689,9 @@
 }
 
 :global(body:has([data-visual-lab="v2"]) .site-footer) {
-  color: #ada79d;
-  border-color: #49453f;
-  background: #1b1a18;
+  color: #abb1b5;
+  border-color: #41454a;
+  background: #17181a;
 }
 
 .dIntro {
@@ -1118,10 +1118,10 @@
 .dEconomicUnknown .dEconomicTrack::after { inset-inline-start: 58%; }
 .dEconomicTrack > span { position: absolute; inset: 50% auto auto 50%; color: var(--forge-amber); font: 0.64rem var(--font-mono); transform: translate(-50%, -50%); }
 .dUnknownReason { position: absolute; inset-inline-start: calc(38% + 1rem); inset-block-end: 0.2rem; color: var(--forge-amber) !important; font: 0.5rem var(--font-mono); letter-spacing: 0.06em; }
-.dEconomics aside { position: absolute; inset-inline-end: 0; inset-block-start: 4rem; width: min(18rem, 22vw); padding-block: 1rem; border-block: 1px solid var(--forge-green); }
+.dEconomics aside { position: absolute; inset-inline-end: 0; inset-block-start: 4rem; width: min(18rem, 22vw); padding-block: 1rem; border-block: 1px solid var(--forge-verified); }
 .dEconomics aside span,
 .dEconomics aside small { display: block; color: var(--lab-muted); font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.08em; }
-.dEconomics aside strong { display: block; margin: 0.8rem 0; color: var(--forge-green); font-family: var(--font-mono); font-size: 1.2rem; }
+.dEconomics aside strong { display: block; margin: 0.8rem 0; color: var(--forge-verified); font-family: var(--font-mono); font-size: 1.2rem; }
 
 .dVerdict { z-index: 4; align-content: center; }
 .dVerdict > span { color: var(--forge-accent); font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; }
@@ -1141,7 +1141,7 @@
 .conceptD[data-decision="conditionally_marginal"] .dVerdict > strong {
   font-size: clamp(3.5rem, 7vw, 8.4rem);
 }
-.conceptD[data-scenario-active="true"] .dVerdict > strong { color: var(--forge-green); }
+.conceptD[data-scenario-active="true"] .dVerdict > strong { color: var(--forge-verified); }
 .dVerdict > small { color: var(--forge-amber); font-family: var(--font-mono); letter-spacing: 0.08em; }
 
 .dStorySkipped { min-height: 100vh; }

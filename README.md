@@ -12,7 +12,7 @@
 | [Market](https://signalforge-rose-two.vercel.app/en/opportunities) and [Network](https://signalforge-rose-two.vercel.app/en/network) | Inspect bounded, read-only observations. Agent Bounties supplies paid-work observations when qualifying inventory exists; service catalogs are supply context, not executable task quotes. Empty and unavailable states remain honest. |
 | Bounded source synthesis in Forge | After a separate **Run task** action, fetch 1–10 user-supplied public HTTPS pages and make one bounded Groq synthesis call with source links. This is the only enabled execution route. It does not call discovered services or act on a marketplace. |
 | Accounts | Optional email sign-in adds private saved analyses and execution history. Guests retain full underwriting results and receipt downloads. Saved snapshots reopen without rerunning work. |
-| [Developer interfaces](https://signalforge-rose-two.vercel.app/en/developers/try) | REST, read-only MCP tools and A2A-style discovery metadata expose routing and underwriting evidence to other agents. |
+| [Developer interfaces](https://signalforge-rose-two.vercel.app/en/developers) | REST, read-only MCP tools and A2A-style discovery metadata expose routing and underwriting evidence to other agents. |
 
 The economic path is **objective → required capabilities → observed supply and route evidence → costs and risk → conditional decision → receipt**. Observed rewards, published model prices, market FX observations, user assumptions and unknown values keep distinct provenance. A missing payout, cost or eligibility signal never becomes zero or a favorable guess. A receipt hash is a SHA-256 fingerprint, not a digital signature.
 

@@ -66,7 +66,7 @@ export function ProviderRouteMap() {
           d="M128 128 V300 H292 V210"
         />
         <circle cx="128" cy="128" r="5" />
-        <circle className="green-node" cx="128" cy="300" r="5" />
+        <circle className="verified-node" cx="128" cy="300" r="5" />
         <circle cx="292" cy="210" r="5" />
         <circle className="convergence-ring" cx="292" cy="210" r="13" />
         <path

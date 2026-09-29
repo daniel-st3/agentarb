@@ -1,4 +1,4 @@
-# MCP and agent discoverability
+# Valrun MCP and agent discoverability
 
 These MCP tools expose read-only planning, catalog and underwriting inspection. A `signalforge_plan_route` demo contract is a legacy compatibility surface; it is not live task execution. The separately authorized public-source synthesis available in Forge is not an MCP tool. Marketplace claims, payments and discovered-service execution remain unavailable.
 
@@ -13,7 +13,7 @@ Reference: https://modelcontextprotocol.io/specification/2025-11-25/basic/transp
 Use `apps/signalforge/mcp.json` or the equivalent client-specific remote MCP setting:
 
 ```json
-{"mcpServers":{"signalforge":{"type":"http","url":"https://signalforge-rose-two.vercel.app/api/mcp"}}}
+{"mcpServers":{"valrun":{"type":"http","url":"https://signalforge-rose-two.vercel.app/api/mcp"}}}
 ```
 
 Client configuration shape varies; use your client's **remote Streamable HTTP** option, not a stdio command. No local bridge is required.
@@ -24,7 +24,9 @@ Tools:
 - `signalforge_search_catalog`: capability?, query?, listing_type?, max_price_usd?, freshness?, limit (1–50).
 - `signalforge_get_listing`: id from the current bounded catalog.
 - `signalforge_evaluate_opportunity`: opportunity_id from the catalog. No bid/claim/submit/settle behavior.
+- `signalforge_search_opportunities`: bounded observed-opportunity search. It cannot trigger a marketplace action.
 - `signalforge_get_claim_readiness`: the same strict underwriting input; returns a read-only packet with `claimAuthorized:false` and `executionStatus:execution_not_enabled`. No claim tool exists.
+- `signalforge_underwrite_task`: a user-defined objective and explicit scenario assumptions in the same nested shape as `POST /api/v1/forge/underwrite` (excluding `clientRunId`). Returns conditional economics and a receipt fingerprint. Missing payout or fulfillment cost stays unknown. This tool does not save the run, return save authorization, or execute the task.
 
 All tool inputs are strict Zod schemas. Descriptions are untrusted plain text. No arbitrary URL or credential field, payment tool or execution method is registered. MCP methods share the API service functions, quotas, cache, validation and safety boundaries.
 

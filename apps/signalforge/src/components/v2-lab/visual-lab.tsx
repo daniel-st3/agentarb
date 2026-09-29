@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, m, useReducedMotion } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import type { Locale } from "@/i18n/routing";
 import { ConceptA } from "./concept-a";
@@ -138,23 +138,20 @@ export function VisualLab({ locale }: { locale: Locale }) {
         <small>{copy.modeHint}</small>
       </div>
 
-      <AnimatePresence mode="wait" initial={false}>
-        <m.article
-          id="v2-lab-concept"
-          key={`${concept}:${mode}:${dataset.subject?.id ?? "none"}`}
-          role="tabpanel"
-          className={styles.conceptStage}
-          initial={motionReduced ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={motionReduced ? undefined : { opacity: 0, y: -5 }}
-          transition={{ duration: motionReduced ? 0 : 0.2 }}
-        >
-          {concept === "a" && <ConceptA subject={dataset.subject} copy={copy} />}
-          {concept === "b" && <ConceptB dataset={dataset} copy={copy} />}
-          {concept === "c" && <ConceptC subject={dataset.subject} copy={copy} />}
-          {concept === "d" && <ConceptD dataset={dataset} copy={copy} />}
-        </m.article>
-      </AnimatePresence>
+      <m.article
+        id="v2-lab-concept"
+        key={`${concept}:${mode}:${dataset.subject?.id ?? "none"}`}
+        role="tabpanel"
+        className={styles.conceptStage}
+        initial={motionReduced ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: motionReduced ? 0 : 0.2 }}
+      >
+        {concept === "a" && <ConceptA subject={dataset.subject} copy={copy} />}
+        {concept === "b" && <ConceptB dataset={dataset} copy={copy} />}
+        {concept === "c" && <ConceptC subject={dataset.subject} copy={copy} />}
+        {concept === "d" && <ConceptD dataset={dataset} copy={copy} />}
+      </m.article>
 
       <footer className={styles.labFooter}>
         <span>{copy.provenance} / {dataset.subject?.stateLabel ?? (mode === "real" ? "NO OBSERVATION" : copy.simulated)}</span>

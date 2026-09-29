@@ -16,13 +16,13 @@ Avoid generic dashboard grids, centered chatbot composers, purple “AI” gradi
 
 ## Color and state
 
-Use warm graphite ground, soft ivory ink, mineral gray, a restrained vermilion active signal, mineral green for verified/favorable states, and muted amber for uncertainty. Avoid purple and neon-green brand accents. Color is semantic:
+Use neutral ink-charcoal ground, soft ivory text, cool mineral gray, a restrained vermilion active signal, mineral blue for verified/favorable states, and muted amber for uncertainty. Avoid purple and green brand accents. Color is semantic:
 
 | Role | Treatment |
 | --- | --- |
 | Selected route | restrained accent line plus increased contrast |
 | Observed / current | cool mineral tone; never “verified” by color alone |
-| Conditional decision | amber-to-green only after inputs are complete |
+| Conditional decision | amber-to-mineral-blue only after inputs are complete |
 | Unknown | neutral hatch, open marker, or interrupted rule |
 | Rejected / unavailable | lowered contrast plus explicit reason |
 | Risk threshold | fine amber rule; red is reserved for invalid or unsafe state |

@@ -1,6 +1,6 @@
-# SignalForge REST API
+# Valrun REST API
 
-SignalForge's live Forge experience and observed-market underwriting are distinct from the older `mode:demo` route-planning examples below. Demo contracts are compatibility/reference surfaces, not current paid opportunities or evidence of task execution. For current request and response schemas, use the deployment-local [OpenAPI](https://signalforge-rose-two.vercel.app/api/v1/openapi). The only enabled task execution is Forge's separately authorized, bounded public-source synthesis; marketplace actions and discovered-service execution remain disabled.
+Valrun's live Forge experience and observed-market underwriting are distinct from the older `mode:demo` route-planning examples below. Demo contracts are compatibility/reference surfaces, not current paid opportunities or evidence of task execution. For current request and response schemas, use the deployment-local [OpenAPI](https://signalforge-rose-two.vercel.app/api/v1/openapi). The only enabled task execution is Forge's separately authorized, bounded public-source synthesis; marketplace actions and discovered-service execution remain disabled.
 
 Base: `https://signalforge-rose-two.vercel.app`. JSON only. No credentials or cookies required. Same-origin browsers; command-line/MCP clients may omit Origin. No CORS wildcard. A future browser-origin allowlist requires an explicit reviewed code change.
 
@@ -13,6 +13,8 @@ Base: `https://signalforge-rose-two.vercel.app`. JSON only. No credentials or co
 | GET `/api/v1/catalog/{id}` | URL-encoded ID from catalog; max 240 chars | one current normalized listing; 404 if missing |
 | POST `/api/v1/opportunities/evaluate` | opportunityId, agentProfile:`default_demo_profile` | assumptions, projectedMarginUsd:null when insufficient evidence, execution_not_enabled |
 | POST `/api/v1/opportunities/claim-readiness` | versioned underwriting input with a real observed opportunity ID | read-only ClaimReadinessPacket; claimAuthorized:false, execution_not_enabled |
+| POST `/api/v1/forge/underwrite` | objective, budget/routing policy, explicit user scenario; payout and fulfillment cost may be omitted | server-authoritative conditional economics, limitations, receipt fingerprint; unknown inputs remain unknown, execution_not_enabled |
+| POST `/api/v1/forge/synthesize` | explicit `run_task` authorization, objective, unique run ID, 1–10 public HTTPS source URLs | bounded source-grounded synthesis and execution receipt; not marketplace execution |
 | GET `/api/v1/network/status` | none | source health, freshness, cache-mode warning; no raw records/secrets |
 | GET `/api/v1/openapi` | none | OpenAPI 3.1 documentation |
 

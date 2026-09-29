@@ -42,6 +42,7 @@ export const agentCard = agentCardSchema.parse({
   defaultOutputModes: ["application/json"],
   skills: [
     {id:"arbitrage-underwriting",name:"Arbitrage underwriting",description:"Underwrite observed paid opportunities. Preserve USDC base units, published provider pricing, bounded user assumptions and unknown costs. Inspection only.",tags:["underwriting","observed-opportunities","execution_not_enabled"]},
+    {id:"user-task-underwriting",name:"User-defined task underwriting",description:"Evaluate an objective and explicit user scenario with observed supply as context, deterministic conditional economics, and a receipt fingerprint. No task execution or automatic saving.",tags:["underwriting","user-scenario","execution_not_enabled"]},
     {id:"public-source-synthesis",name:"Public-source synthesis",description:"After explicit Run task authorization, fetch 1–10 supplied public HTTPS pages and produce source-bound synthesis with one bounded model call. No marketplace actions or payments.",tags:["user-authorized","bounded-execution","public-sources"]},
     {
       id: "route-planning",
@@ -71,6 +72,7 @@ export const agentCard = agentCardSchema.parse({
       opportunityEvaluation: "/api/v1/opportunities/evaluate",
       opportunitySearch: "/api/v1/opportunities",
       claimReadiness: "/api/v1/opportunities/claim-readiness",
+      forgeUnderwriting: "/api/v1/forge/underwrite",
       sourceSynthesis: "/api/v1/forge/synthesize",
       openapi: "/api/v1/openapi",
     },
@@ -82,6 +84,7 @@ export const agentCard = agentCardSchema.parse({
       "ArbitrageEvaluation/2.0",
       "ClaimReadinessPacket/1.1",
       "UnderwritingReceipt/2.0",
+      "ForgeUnderwritingReceipt/1.0",
       "SourceSynthesisReceipt/1.0",
     ],
     mcp: {
@@ -94,6 +97,7 @@ export const agentCard = agentCardSchema.parse({
         "signalforge_evaluate_opportunity",
         "signalforge_search_opportunities",
         "signalforge_get_claim_readiness",
+        "signalforge_underwrite_task",
       ],
     },
   },

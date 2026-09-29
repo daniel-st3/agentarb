@@ -82,7 +82,7 @@ export default async function RootLayout({
             <nav aria-label={locale === "es" ? "Navegación de pie de página" : locale === "fr" ? "Navigation de pied de page" : "Footer navigation"}>
               <Link href="/forge">{t("Forge")}</Link>
               <Link href="/pricing">{t("Pricing")}</Link>
-              <Link href="/developers/try">{t("Developers")}</Link>
+              <Link href="/developers">{t("Developers")}</Link>
               <Link href="/privacy">{t("Privacy and boundaries")}</Link>
               <a href="https://github.com/daniel-st3/valrun" target="_blank" rel="noreferrer">GitHub ↗</a>
             </nav>

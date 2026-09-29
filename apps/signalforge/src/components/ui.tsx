@@ -15,15 +15,8 @@ export function Brand() {
         aria-hidden="true"
         className="brand-signal"
       >
-        <path
-          d="M11 14 30 32h17"
-          stroke="currentColor"
-          strokeWidth="6"
-          strokeLinecap="square"
-          strokeLinejoin="miter"
-        />
-        <path d="M11 50 30 32" stroke="var(--accent)" strokeWidth="6" strokeLinecap="square" />
-        <rect x="47" y="27" width="8" height="10" fill="currentColor" />
+        <path d="M10 18 29 46 53 15" stroke="currentColor" strokeWidth="8" strokeLinecap="square" strokeLinejoin="miter" />
+        <path d="M36 48h18" stroke="var(--accent)" strokeWidth="8" strokeLinecap="square" />
       </svg>
       <span>
         Valrun

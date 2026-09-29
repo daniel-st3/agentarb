@@ -20,7 +20,7 @@ export function Navigation() {
     ["/opportunities", "Market"],
     ["/forge", "Forge"],
     ["/pricing", "Pricing"],
-    ["/developers/try", "Developers"],
+    ["/developers", "Developers"],
   ];
   return (
     <header className="site-nav">

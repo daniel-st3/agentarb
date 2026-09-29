@@ -5,15 +5,20 @@ vi.mock("../src/server/planning-limit", () => ({
   checkPlanningLimit: vi.fn(async () => null),
   quotaHeaders: () => ({}),
 }));
+vi.mock("../src/server/forge-underwriting", () => ({
+  underwriteForgeTask: vi.fn(),
+}));
 import { checkPlanningLimit } from "../src/server/planning-limit";
+import { underwriteForgeTask } from "../src/server/forge-underwriting";
 import { handleCatalog } from "../src/server/intelligence/http";
-import { handleMcp } from "../src/server/mcp";
+import { handleMcp, invokeSafeTool } from "../src/server/mcp";
 import { readBounded } from "../src/server/http";
 import { requestQuery } from "../src/server/request-query";
 import { GET as openapi } from "../src/app/api/v1/openapi/route";
 
 beforeEach(() => {
   vi.mocked(checkPlanningLimit).mockReset().mockResolvedValue(null);
+  vi.mocked(underwriteForgeTask).mockReset();
   vi.stubGlobal("fetch", vi.fn());
 });
 afterEach(() => {
@@ -105,6 +110,7 @@ it.each([
   ["signalforge_search_catalog", ["catalog"]],
   ["signalforge_plan_route", ["catalog", undefined]],
   ["signalforge_evaluate_opportunity", ["catalog", "underwriting"]],
+  ["signalforge_underwrite_task", ["catalog", "underwriting"]],
 ])(
   "MCP %s consumes the corresponding shared category before dispatch",
   async (name, categories) => {
@@ -156,4 +162,36 @@ it("MCP shared underwriting denial stops dispatch", async () => {
   });
   expect((await handleMcp(request)).status).toBe(429);
   expect(fetch).not.toHaveBeenCalled();
+});
+
+it("MCP task underwriting reuses the server model without exposing save authorization", async () => {
+  vi.mocked(underwriteForgeTask).mockResolvedValueOnce({
+    decision: "insufficient_data",
+    receipt: { receiptHash: "a".repeat(64) },
+    executionStatus: "execution_not_enabled",
+    saveAuthorization: "b".repeat(64),
+    persistence: { status: "guest", savedRunId: null },
+  } as Awaited<ReturnType<typeof underwriteForgeTask>>);
+  const input = {
+    objective: {
+      objective: "Summarize public research findings",
+      budgetUsd: 1,
+      optimizationPolicy: "best_value",
+    },
+    scenario: {
+      successProbabilityBps: 5000,
+      humanReviewCostUsd: "0.25",
+      verificationCostUsd: "0",
+      platformCostUsd: "0",
+      failureCostUsd: "0",
+    },
+  };
+  const result = await invokeSafeTool("signalforge_underwrite_task", input, new AbortController().signal);
+  expect(vi.mocked(underwriteForgeTask)).toHaveBeenCalledWith(
+    expect.objectContaining({ locale: "en", objective: expect.objectContaining({ mode: "demo" }) }),
+    expect.any(AbortSignal),
+  );
+  expect(result).toHaveProperty("executionStatus", "execution_not_enabled");
+  expect(result).not.toHaveProperty("saveAuthorization");
+  expect(JSON.stringify(result)).not.toContain("b".repeat(64));
 });

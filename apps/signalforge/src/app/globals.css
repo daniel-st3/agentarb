@@ -3,14 +3,14 @@
   --font-display: var(--font-newsreader), Georgia, serif;
   --font-sans: var(--font-geist), Arial, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-  --bg: #1b1a18;
-  --ink: #f1ece2;
-  --muted: #ada79d;
-  --line: #49453f;
-  --accent: #ec8169;
-  --verified: #9bc6a8;
+  --bg: #101113;
+  --ink: #f4f0e8;
+  --muted: #abb1b5;
+  --line: #41454a;
+  --accent: #ff7456;
+  --verified: #92bfd6;
   --uncertain: #d8b47a;
-  --paper: #f1ece2;
+  --paper: #f4f0e8;
 }
 * {
   box-sizing: border-box;
@@ -45,8 +45,8 @@ body::before {
   background-size: 7px 9px;
 }
 ::selection {
-  background: #ec8169;
-  color: #1b1a18;
+  background: #ff7456;
+  color: #101113;
 }
 a {
   color: inherit;
@@ -381,7 +381,7 @@ code,
   text-decoration-color: var(--uncertain);
 }
 .route-narrative {
-  background: #0c1b1a;
+  background: #111519;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   scroll-margin-top: 72px;
@@ -489,7 +489,7 @@ dd {
 .provider-route-map circle {
   fill: var(--accent);
 }
-.provider-route-map .green-node {
+.provider-route-map .verified-node {
   fill: var(--verified);
 }
 .map-origin {
@@ -504,7 +504,7 @@ dd {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: #0c1b1a;
+  background: #111519;
   padding: 6px 0;
 }
 .map-node small {
@@ -616,8 +616,8 @@ dd {
   --muted: #5d6269;
   --line: #cecdc7;
   --ink: #111318;
-  --accent: #a84634;
-  --verified: #405b4d;
+  --accent: #b44832;
+  --verified: #315f78;
 }
 .paper-top,
 .paper-bottom {

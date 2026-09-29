@@ -64,6 +64,23 @@ test("homepage choreography skips optional GSAP targets without warnings", async
   ).toBeVisible();
   expect(warnings).toEqual([]);
 });
+test("homepage trace resolves without hiding the decision path", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  await page.getByText("FROM TASK TO DECISION").scrollIntoViewIfNeeded();
+  const trace = page.locator("[data-method-trace]");
+  await expect(trace).toHaveCount(1);
+  await expect(trace.locator("xpath=..")).toBeVisible();
+  await expect.poll(async () => trace.evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).strokeDashoffset)
+  )).toBe(0);
+  await expect(page.locator("[data-method-step]")).toHaveCount(3);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(page.locator("[data-method-step]")).toHaveCount(3);
+  await expect(page.getByRole("heading", { name: "Know if an AI task is worth running." })).toBeVisible();
+});
 test("homepage → Forge Lab → conditional decision → receipt, with legacy evidence exports intact", async ({
   page,
 }, info) => {

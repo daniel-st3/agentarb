@@ -27,6 +27,7 @@ export function ProfitEngine({
   const copy = useMemo(() => profitEngineCopy(locale), [locale]);
   const router = useRouter();
   const [quickObjective, setQuickObjective] = useState("");
+  const heroRef = useRef<HTMLElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
   const { status: networkStatus } = useNetworkState();
   const homePresentation = useMemo(() => ({
@@ -56,15 +57,23 @@ export function ProfitEngine({
   }, []);
 
   useGSAP(() => {
+    const hero = heroRef.current;
+    const titleSignal = hero?.querySelector<HTMLElement>("[data-hero-signal]");
+    const entrySignal = hero?.querySelector<HTMLElement>("[data-entry-signal]");
+    if (!hero || !titleSignal || !entrySignal || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const signal = gsap.timeline({ defaults: { ease: "power2.inOut" } });
+    signal.fromTo(titleSignal, { scaleX: 0 }, { scaleX: 1, duration: 0.55, clearProps: "transform" });
+    signal.fromTo(entrySignal, { scaleX: 0 }, { scaleX: 1, duration: 0.7, clearProps: "transform" }, "-=0.15");
+  }, { scope: heroRef, dependencies: [Boolean(dataset.subject)], revertOnUpdate: true });
+
+  useGSAP(() => {
     const host = methodRef.current;
     const trace = host?.querySelector<SVGPathElement>("[data-method-trace]");
     if (!host || !trace || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    gsap.to(trace, {
-      strokeDashoffset: 0,
-      duration: 1.1,
-      ease: "power2.inOut",
+    const timeline = gsap.timeline({
       scrollTrigger: { trigger: host, start: "top 82%", once: true },
     });
+    timeline.to(trace, { strokeDashoffset: 0, duration: 1.1, ease: "none" });
   }, { scope: methodRef, dependencies: [Boolean(dataset.subject)], revertOnUpdate: true });
 
   const subject = dataset.subject;
@@ -100,9 +109,9 @@ export function ProfitEngine({
             home={homePresentation}
           />
         ) : (
-          <section className={styles.emptyHero} aria-labelledby="profit-engine-title">
+          <section className={styles.emptyHero} ref={heroRef} aria-labelledby="profit-engine-title">
             <div className={styles.heroMain}>
-              <p>{copy.product.eyebrow}</p>
+              <p>{copy.product.eyebrow}<span className={styles.heroSignal} data-hero-signal aria-hidden="true" /></p>
               <h1 id="profit-engine-title">{copy.product.headline}</h1>
               <p className={styles.heroIntroduction}>{copy.product.introduction}</p>
               <form className={styles.quickEntry} onSubmit={openForge}>
@@ -110,6 +119,7 @@ export function ProfitEngine({
                 <div>
                   <input id="home-task-entry" type="text" minLength={12} maxLength={2000} required value={quickObjective} onChange={(event) => setQuickObjective(event.target.value)} placeholder={copy.product.quickPlaceholder} />
                   <button type="submit">{copy.product.underwriteAction} ↗</button>
+                  <span className={styles.entrySignal} data-entry-signal aria-hidden="true" />
                 </div>
                 <small>{copy.product.quickHint}</small>
               </form>
@@ -122,7 +132,7 @@ export function ProfitEngine({
               <p>{copy.product.methodLabel}</p>
               <svg className={styles.methodTrace} viewBox="0 0 24 210" aria-hidden="true" focusable="false"><path data-method-trace d="M12 8v194" /></svg>
               {copy.product.methodSteps.map((step, index) => (
-                <div key={step.title}>
+                <div key={step.title} data-method-step>
                   <span>0{index + 1}</span>
                   <strong>{step.title}</strong>
                   <small>{step.detail}</small>
@@ -142,7 +152,7 @@ export function ProfitEngine({
         <nav aria-label={copy.product.productEntry}>
           <Entry href="/opportunities" index="01" title={copy.product.radar} detail={copy.product.radarDetail} />
           <Entry href="/forge" index="02" title={copy.product.forge} detail={copy.product.forgeDetail} />
-          <Entry href="/developers/try" index="03" title={copy.product.developers} detail={copy.product.developersDetail} />
+          <Entry href="/developers" index="03" title={copy.product.developers} detail={copy.product.developersDetail} />
           <Entry href="/opportunities" index="04" title={copy.product.receipts} detail={copy.product.receiptsDetail} />
         </nav>
       </section>
@@ -150,7 +160,7 @@ export function ProfitEngine({
       <section className={styles.trust} aria-label={copy.product.boundariesLabel}>
         <span>{copy.product.trust}</span>
         <strong>{copy.product.boundary}</strong>
-        <Link href="/developers/try">REST / MCP / A2A ↗</Link>
+        <Link href="/developers">REST / MCP / A2A ↗</Link>
       </section>
     </div>
   );
