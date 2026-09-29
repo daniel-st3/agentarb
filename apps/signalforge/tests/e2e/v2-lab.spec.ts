@@ -78,7 +78,13 @@ test("degraded and empty states are explicit and locale-safe", async ({ page }) 
 
 test("the Forge is a reversible, lab-only causal instrument", async ({ page }, info) => {
   const errors: string[] = [];
+  const gsapWarnings: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "warning" && message.text().includes("GSAP target")) {
+      gsapWarnings.push(message.text());
+    }
+  });
   const at = "2026-09-15T12:00:00.000Z";
   const quality = {
     freshnessScore: 1,
@@ -306,6 +312,7 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
   await expect(page.locator('.site-nav a[href*="/lab/v2"]')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
+  expect(gsapWarnings).toEqual([]);
 });
 
 test("the Forge reduced-motion mode exposes the resolved causal structure", async ({ page }) => {

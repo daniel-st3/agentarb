@@ -194,6 +194,7 @@ export function ConceptD({
       const headingSplit = SplitText.create(heading, { type: "lines", aria: "auto", linesClass: styles.dSplitLine });
       const verdictSplit = SplitText.create(verdict, { type: "lines", aria: "auto", linesClass: styles.dSplitLine });
       const layers = gsap.utils.toArray<HTMLElement>("[data-forge-layer]", root);
+      const secondaryMarks = gsap.utils.toArray<HTMLElement>("[data-forge-market-secondary]", root);
       gsap.set(layers, { autoAlpha: 0 });
       gsap.set(layers[0], { autoAlpha: 1 });
       gsap.set(layers.slice(1), { scaleX: 0.985, transformOrigin: "left center" });
@@ -212,7 +213,6 @@ export function ConceptD({
         .fromTo(headingSplit.lines, { autoAlpha: 0, scaleX: 0.9, transformOrigin: "left center" }, { autoAlpha: 1, scaleX: 1, duration: 0.065, stagger: 0.018, ease: "power3.inOut" }, 0.025)
         .fromTo("[data-forge-market-mark]", { scale: 0, transformOrigin: "0 0" }, { scale: 1, duration: 0.045, stagger: 0.007, ease: "power2.out" }, 0.075)
         .fromTo("[data-forge-market-trace]", { drawSVG: "0%" }, { drawSVG: "100%", duration: 0.055 }, 0.1)
-        .to("[data-forge-market-secondary]", { opacity: 0.16, duration: 0.08 }, 0.13)
         .to(subjectCore, { autoAlpha: 1, x: 0, y: 0, scale: 1, duration: 0.12, ease: "power3.inOut" }, 0.13)
         .set(layers[1], { autoAlpha: 1, scaleX: 1 }, 0.18)
         .set(layers[0], { autoAlpha: 0 }, 0.18)
@@ -230,6 +230,9 @@ export function ConceptD({
         .set(layers[5], { autoAlpha: 1, scaleX: 1 }, 0.88)
         .set(layers[4], { autoAlpha: 0 }, 0.88)
         .fromTo(verdictSplit.lines, { autoAlpha: 0.5, scaleX: 0.91, transformOrigin: "left center" }, { autoAlpha: 1, scaleX: 1, duration: 0.075, stagger: 0.018, ease: "power3.inOut" }, 0.88);
+      if (secondaryMarks.length > 0) {
+        tl.to(secondaryMarks, { opacity: 0.16, duration: 0.08 }, 0.13);
+      }
 
       const st = ScrollTrigger.create({
         id: home ? "profit-engine-story" : "v2-forge-story",

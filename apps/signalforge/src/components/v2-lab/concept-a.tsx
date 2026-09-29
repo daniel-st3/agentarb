@@ -25,25 +25,32 @@ export function ConceptA({
     () => {
       const media = gsap.matchMedia();
       media.add("(prefers-reduced-motion: no-preference)", () => {
+        const root = scope.current;
+        if (!root) return;
+        const question = root.querySelector<HTMLElement>("[data-gsap-a=question]");
+        const rules = root.querySelectorAll<HTMLElement>("[data-gsap-a=rule]");
+        const values = root.querySelectorAll<HTMLElement>("[data-gsap-a=value]");
+        const verdict = root.querySelector<HTMLElement>("[data-gsap-a=verdict]");
+        if (!question || rules.length === 0 || values.length === 0 || !verdict) return;
         const timeline = gsap.timeline({ defaults: { ease: "power3.out" } });
         timeline
-          .from("[data-gsap-a=question]", {
+          .from(question, {
             clipPath: "inset(0 0 100% 0)",
             yPercent: 12,
             duration: 0.7,
           })
           .from(
-            "[data-gsap-a=rule]",
+            rules,
             { scaleX: 0, transformOrigin: "left", duration: 0.45, stagger: 0.08 },
             "-=0.32",
           )
           .from(
-            "[data-gsap-a=value]",
+            values,
             { xPercent: -6, opacity: 0, duration: 0.38, stagger: 0.075 },
             "-=0.3",
           )
           .from(
-            "[data-gsap-a=verdict]",
+            verdict,
             { clipPath: "inset(0 100% 0 0)", duration: 0.55 },
             "-=0.08",
           );
