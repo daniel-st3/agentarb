@@ -3,14 +3,14 @@
   --font-display: var(--font-newsreader), Georgia, serif;
   --font-sans: var(--font-geist), Arial, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-  --bg: #1b1a18;
-  --ink: #f1ece2;
-  --muted: #ada79d;
-  --line: #49453f;
-  --accent: #ec8169;
-  --verified: #9bc6a8;
+  --bg: #17181a;
+  --ink: #f4f0e8;
+  --muted: #abb1b5;
+  --line: #41454a;
+  --accent: #ff7456;
+  --verified: #92bfd6;
   --uncertain: #d8b47a;
-  --paper: #f1ece2;
+  --paper: #f4f0e8;
 }
 * {
   box-sizing: border-box;
@@ -45,8 +45,8 @@ body::before {
   background-size: 7px 9px;
 }
 ::selection {
-  background: #ec8169;
-  color: #1b1a18;
+  background: #ff7456;
+  color: #17181a;
 }
 a {
   color: inherit;
@@ -489,7 +489,7 @@ dd {
 .provider-route-map circle {
   fill: var(--accent);
 }
-.provider-route-map .green-node {
+.provider-route-map .verified-node {
   fill: var(--verified);
 }
 .map-origin {
@@ -616,8 +616,8 @@ dd {
   --muted: #5d6269;
   --line: #cecdc7;
   --ink: #111318;
-  --accent: #a84634;
-  --verified: #405b4d;
+  --accent: #b44832;
+  --verified: #315f78;
 }
 .paper-top,
 .paper-bottom {

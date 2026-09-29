@@ -1,10 +1,10 @@
 .lab {
-  --forge-bg: #1b1a18;
-  --forge-ink: #f1ece2;
-  --forge-muted: #ada79d;
-  --forge-line: #49453f;
-  --forge-accent: #ec8169;
-  --forge-green: #9bc6a8;
+  --forge-bg: #17181a;
+  --forge-ink: #f4f0e8;
+  --forge-muted: #abb1b5;
+  --forge-line: #41454a;
+  --forge-accent: #ff7456;
+  --forge-verified: #92bfd6;
   --forge-amber: #d8b47a;
   min-height: 100svh;
   overflow: clip;
@@ -40,7 +40,7 @@
 .fieldHelp:hover [role="tooltip"], .fieldHelp:focus-within [role="tooltip"] { display: block; }
 .form textarea, .form input, .form select { width: 100%; min-width: 0; min-height: 44px; border: 0; border-radius: 0; padding: .4rem 0; color: var(--forge-ink); background: transparent; font-variant-numeric: tabular-nums; }
 .form textarea { min-height: 7rem; resize: vertical; font-family: var(--font-sans); font-size: clamp(1rem, 1.35vw, 1.3rem); line-height: 1.45; }
-.form textarea::placeholder, .form input::placeholder { color: #ada79d; opacity: 1; }
+.form textarea::placeholder, .form input::placeholder { color: #abb1b5; opacity: 1; }
 .form select { cursor: pointer; }
 .form input:focus, .form textarea:focus, .form select:focus { border-color: var(--forge-accent); outline: 0; }
 .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
@@ -60,7 +60,7 @@
 .progress li:last-child { border-bottom: 1px solid var(--forge-line); }
 .progress li span { font-variant-numeric: tabular-nums; }
 .progress li[data-state="complete"] { color: var(--forge-muted); }
-.progress li[data-state="complete"] span::after { content: "  /"; color: var(--forge-green); }
+.progress li[data-state="complete"] span::after { content: "  /"; color: var(--forge-verified); }
 .progress li[data-state="active"] { color: var(--forge-ink); }
 .progress li[data-state="active"] span { color: var(--forge-accent); }
 .progress li[data-state="active"] strong { position: relative; }
@@ -83,7 +83,7 @@
 .capability strong, .routeOption strong { font-weight: 520; }
 .capability small, .routeOption small { color: var(--forge-muted); text-align: end; }
 .missing { color: var(--forge-amber); }
-.covered { color: var(--forge-green); }
+.covered { color: var(--forge-verified); }
 .routeBoundary { margin-block: 1.2rem; padding: 1rem 0; color: var(--forge-muted); }
 .routeBoundary strong { color: var(--forge-amber); }
 .ledgerRow { grid-template-columns: minmax(11rem, .7fr) minmax(0, 1fr) auto; }

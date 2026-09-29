@@ -221,6 +221,27 @@
   border-block: 1px solid var(--line);
   font: 12px/1.8 var(--font-mono);
 }
+.developer-entry {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 2rem;
+  margin-block: 2.5rem 1rem;
+  border-top: 1px solid var(--line);
+}
+.developer-entry a {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font: 0.75rem/1.4 var(--font-mono);
+  letter-spacing: .04em;
+}
+.developer-entry a:hover,
+.developer-entry a:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .developers section {
   padding: 28px 0;
 }
@@ -230,6 +251,10 @@
 }
 .developers li {
   line-height: 1.9;
+}
+@media (max-width: 700px) {
+  .developer-entry { grid-template-columns: 1fr; gap: 0; }
+  .developer-entry a { min-height: 52px; }
 }
 .priority-critical h2 {
   font-weight: 650;

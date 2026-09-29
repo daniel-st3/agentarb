@@ -142,7 +142,7 @@ export function ProfitEngine({
         <nav aria-label={copy.product.productEntry}>
           <Entry href="/opportunities" index="01" title={copy.product.radar} detail={copy.product.radarDetail} />
           <Entry href="/forge" index="02" title={copy.product.forge} detail={copy.product.forgeDetail} />
-          <Entry href="/developers/try" index="03" title={copy.product.developers} detail={copy.product.developersDetail} />
+          <Entry href="/developers" index="03" title={copy.product.developers} detail={copy.product.developersDetail} />
           <Entry href="/opportunities" index="04" title={copy.product.receipts} detail={copy.product.receiptsDetail} />
         </nav>
       </section>
@@ -150,7 +150,7 @@ export function ProfitEngine({
       <section className={styles.trust} aria-label={copy.product.boundariesLabel}>
         <span>{copy.product.trust}</span>
         <strong>{copy.product.boundary}</strong>
-        <Link href="/developers/try">REST / MCP / A2A ↗</Link>
+        <Link href="/developers">REST / MCP / A2A ↗</Link>
       </section>
     </div>
   );

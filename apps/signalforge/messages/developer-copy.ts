@@ -4,6 +4,37 @@ export const developerCopy: Array<[string, string, string]> = [
     "VALRUN / INTERFAZ PARA DESARROLLADORES",
     "VALRUN / INTERFACE DÉVELOPPEUR",
   ],
+  ["Developer access", "Acceso para desarrolladores", "Accès développeur"],
+  [
+    "Try REST and MCP in the browser →",
+    "Probar REST y MCP en el navegador →",
+    "Essayer REST et MCP dans le navigateur →",
+  ],
+  [
+    "Open the live OpenAPI schema →",
+    "Abrir el esquema OpenAPI actual →",
+    "Ouvrir le schéma OpenAPI actuel →",
+  ],
+  [
+    "Underwrite your own task",
+    "Evalúa tu propia tarea",
+    "Évaluer votre propre tâche",
+  ],
+  [
+    "POST /api/v1/forge/underwrite accepts an objective and explicit user-scenario assumptions. Missing payout or fulfillment cost stays unknown; the response includes conditional economics and a receipt fingerprint. This does not execute the task.",
+    "POST /api/v1/forge/underwrite acepta un objetivo y supuestos explícitos del usuario. Si faltan el pago o el costo de ejecución, siguen siendo desconocidos; la respuesta incluye economía condicional y una huella del recibo. No ejecuta la tarea.",
+    "POST /api/v1/forge/underwrite accepte un objectif et des hypothèses explicites de l’utilisateur. Un paiement ou coût d’exécution absent reste inconnu ; la réponse inclut une économie conditionnelle et l’empreinte du reçu. La tâche n’est pas exécutée.",
+  ],
+  [
+    "MCP offers the same read-only task underwriting as signalforge_underwrite_task. It never saves a run or returns account save authorization.",
+    "MCP ofrece la misma evaluación de tareas de solo lectura mediante signalforge_underwrite_task. Nunca guarda una ejecución ni devuelve autorización para guardarla en una cuenta.",
+    "MCP offre la même évaluation de tâche en lecture seule via signalforge_underwrite_task. Il n’enregistre jamais une analyse et ne renvoie aucune autorisation d’enregistrement de compte.",
+  ],
+  [
+    "Planning: 10 requests per client key per 10 minutes. Catalog and MCP protocol requests: 60 per 10 minutes. MCP planning and underwriting also consume their respective quotas. HTTP 429 includes Retry-After.",
+    "Planificación: 10 solicitudes por identificador de cliente cada 10 minutos. Catálogo y protocolo MCP: 60 cada 10 minutos. La planificación y evaluación por MCP también consumen sus respectivas cuotas. HTTP 429 incluye Retry-After.",
+    "Planification : 10 requêtes par identifiant client toutes les 10 minutes. Catalogue et protocole MCP : 60 toutes les 10 minutes. La planification et l’évaluation via MCP consomment aussi leurs quotas respectifs. HTTP 429 inclut Retry-After.",
+  ],
   ["Give your agent", "Dale a tu agente", "Offrez à votre agent"],
   ["a better route.", "una mejor ruta.", "un meilleur itinéraire."],
   [
@@ -89,9 +120,9 @@ export const developerCopy: Array<[string, string, string]> = [
     "Upstash configuré active des quotas et instantanés partagés. Sinon, la démonstration utilise des limites prudentes par instance et un cache non durable, pas une protection distribuée. Une configuration partagée invalide bloque les requêtes.",
   ],
   [
-    "Same-origin browser requests only; non-browser API/MCP clients need no cookies or credentials. Bodies are limited to 16 KiB; objectives to 2,000 characters. No visitor objectives or keys are persisted.",
-    "Solo solicitudes de navegador del mismo origen; los clientes API/MCP externos no necesitan cookies ni credenciales. Cuerpos limitados a 16 KiB y objetivos a 2.000 caracteres. No se guardan objetivos ni claves de visitantes.",
-    "Requêtes navigateur de même origine uniquement ; les clients API/MCP externes n’ont besoin ni de cookies ni d’identifiants. Corps limités à 16 Kio, objectifs à 2 000 caractères. Aucun objectif ni clé de visiteur n’est conservé.",
+    "Same-origin browser requests only; non-browser API/MCP clients need no cookies or credentials. Bodies are limited to 16 KiB; objectives to 2,000 characters. This public MCP tool does not save analyses; signed-in Forge users can choose account history.",
+    "Solo solicitudes de navegador del mismo origen; los clientes API/MCP externos no necesitan cookies ni credenciales. Cuerpos limitados a 16 KiB y objetivos a 2.000 caracteres. Esta herramienta MCP pública no guarda análisis; los usuarios de Forge con sesión pueden elegir el historial de su cuenta.",
+    "Requêtes navigateur de même origine uniquement ; les clients API/MCP externes n’ont besoin ni de cookies ni d’identifiants. Corps limités à 16 Kio, objectifs à 2 000 caractères. Cet outil MCP public n’enregistre pas d’analyses ; les utilisateurs Forge connectés peuvent choisir l’historique de leur compte.",
   ],
   [
     "Discovery snapshots refresh at most hourly per source/cache instance. Cached observations retain timestamps; unavailable sources do not become simulated live data.",

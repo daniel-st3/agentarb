@@ -1,6 +1,7 @@
 import { pageMetadata } from "@/i18n/metadata";
 import { useCopy } from "@/i18n/copy";
 import Link from "@/i18n/navigation";
+import RawLink from "next/link";
 export const generateMetadata = ({
   params,
 }: {
@@ -23,6 +24,17 @@ export default function Page() {
           "Observed opportunities and auditable receipts. Underwriting stays execution_not_enabled; one separate user-authorized public-source synthesis route is available. No marketplace actions or payments.",
         )}
       </p>
+      <nav className="developer-entry" aria-label={t("Developer access")}>
+        <Link href="/developers/try">{t("Try REST and MCP in the browser →")}</Link>
+        <RawLink href="/api/v1/openapi">{t("Open the live OpenAPI schema →")}</RawLink>
+        <RawLink href="/.well-known/agent-card.json">{t("Inspect the Agent Card →")}</RawLink>
+      </nav>
+      <section>
+        <h2>{t("Underwrite your own task")}</h2>
+        <p>{t("POST /api/v1/forge/underwrite accepts an objective and explicit user-scenario assumptions. Missing payout or fulfillment cost stays unknown; the response includes conditional economics and a receipt fingerprint. This does not execute the task.")}</p>
+        <pre>{`curl -X POST https://signalforge-rose-two.vercel.app/api/v1/forge/underwrite \\\n  -H 'Content-Type: application/json' \\\n  -d '{"objective":{"objective":"Summarize public research findings","budgetUsd":1,"optimizationPolicy":"best_value"},"scenario":{"successProbabilityBps":5000,"humanReviewCostUsd":"0.25","verificationCostUsd":"0","platformCostUsd":"0","failureCostUsd":"0"}}'`}</pre>
+        <p>{t("MCP offers the same read-only task underwriting as signalforge_underwrite_task. It never saves a run or returns account save authorization.")}</p>
+      </section>
       <section>
         <h2>{t("Plan across capabilities")}</h2>
         <Link className="text-link" href="/developers/try">
@@ -89,13 +101,15 @@ export default function Page() {
             ". Stateless JSON responses, no standalone SSE, no resumable tasks, no authentication or action tools.",
           )}
         </p>
-        <pre>{`{"mcpServers":{"signalforge":{"type":"http","url":"https://signalforge-rose-two.vercel.app/api/mcp"}}}`}</pre>
+        <pre>{`{"mcpServers":{"valrun":{"type":"http","url":"https://signalforge-rose-two.vercel.app/api/mcp"}}}`}</pre>
         <ul>
           <li>signalforge_plan_route</li>
           <li>signalforge_search_catalog</li>
           <li>signalforge_get_listing</li>
           <li>signalforge_evaluate_opportunity</li>
+          <li>signalforge_search_opportunities</li>
           <li>signalforge_get_claim_readiness</li>
+          <li>signalforge_underwrite_task</li>
         </ul>
         <p>
           {t(
@@ -107,7 +121,7 @@ export default function Page() {
         <h2>{t("Limits & boundaries")}</h2>
         <p>
           {t(
-            "Planning: 10 requests per client key per 10 minutes. Catalog and MCP protocol requests: 60 per 10 minutes. MCP planning also consumes planning quota. HTTP 429 includes Retry-After.",
+            "Planning: 10 requests per client key per 10 minutes. Catalog and MCP protocol requests: 60 per 10 minutes. MCP planning and underwriting also consume their respective quotas. HTTP 429 includes Retry-After.",
           )}
         </p>
         <p>
@@ -117,7 +131,7 @@ export default function Page() {
         </p>
         <p>
           {t(
-            "Same-origin browser requests only; non-browser API/MCP clients need no cookies or credentials. Bodies are limited to 16 KiB; objectives to 2,000 characters. No visitor objectives or keys are persisted.",
+            "Same-origin browser requests only; non-browser API/MCP clients need no cookies or credentials. Bodies are limited to 16 KiB; objectives to 2,000 characters. This public MCP tool does not save analyses; signed-in Forge users can choose account history.",
           )}
         </p>
         <p>

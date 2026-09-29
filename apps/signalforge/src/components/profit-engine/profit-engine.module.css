@@ -1,9 +1,9 @@
 .home {
-  --forge-bg: #1b1a18;
-  --forge-ink: #f1ece2;
-  --forge-muted: #ada79d;
-  --forge-line: #49453f;
-  --forge-accent: #ec8169;
+  --forge-bg: #17181a;
+  --forge-ink: #f4f0e8;
+  --forge-muted: #abb1b5;
+  --forge-line: #41454a;
+  --forge-accent: #ff7456;
   min-height: 100svh;
   overflow: clip;
   color: var(--forge-ink);
@@ -67,7 +67,7 @@
 .quickEntry > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; border-bottom: 1px solid #817a70; }
 .quickEntry > div:focus-within { border-color: var(--forge-accent); }
 .quickEntry input { min-width: 0; min-height: 64px; border: 0; padding: .85rem 0; color: var(--forge-ink); background: transparent; font: clamp(1.1rem, 1.7vw, 1.5rem) var(--font-sans); }
-.quickEntry input::placeholder { color: #ada79d; }
+.quickEntry input::placeholder { color: #abb1b5; }
 .quickEntry input:focus { outline: none; }
 .quickEntry button { min-height: 64px; border: 0; padding: .75rem 0 .75rem 1rem; color: var(--forge-accent); background: transparent; cursor: pointer; font: .7rem var(--font-mono); letter-spacing: .06em; white-space: nowrap; }
 .quickEntry button:hover { color: #ffab96; }
