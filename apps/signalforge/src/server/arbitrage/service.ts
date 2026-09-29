@@ -170,13 +170,22 @@ export async function underwriteOpportunity(raw: unknown) {
   const input = ArbitrageInputSchema.parse(raw),
     network = await networkSnapshot(),
     lab = demoDataEnabled() ? findLab(input.opportunityId) : undefined;
-  const task =
+  const cachedTask =
     lab?.opportunity ??
     network.records.find(
       (l) =>
         l.id === input.opportunityId && l.listingType === "task_opportunity",
     );
-  if (!task) throw new Error("not_found");
+  if (!cachedTask || cachedTask.listingType !== "task_opportunity")
+    throw new Error("not_found");
+  // Shared snapshots may predate connector normalization. Preserve the instant,
+  // but hand the receipt schema its canonical UTC representation.
+  const deadline = cachedTask.deadline && Number.isFinite(Date.parse(cachedTask.deadline))
+    ? new Date(cachedTask.deadline).toISOString()
+    : undefined;
+  const task = cachedTask.deadline === deadline
+    ? cachedTask
+    : { ...cachedTask, deadline };
   const snapshotVersion = hashReceipt(
     network.sources.map((s) => ({
       id: s.connectorId,
