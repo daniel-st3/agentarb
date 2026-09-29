@@ -229,6 +229,13 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
       expect(splitTextSafety.length).toBeGreaterThan(0);
       expect(splitTextSafety.every((line) => line.overflow === "visible" && Boolean(line.text?.trim()))).toBe(true);
     }
+    // The viewport sweep is a separate visual assertion. Reload at the final
+    // size so chapter interaction starts from a settled ScrollTrigger layout,
+    // as it does on a normal page visit rather than mid-resize.
+    await page.reload();
+    await expect(page.getByLabel("Current data status").getByRole("status")).toContainText("1 observed");
+    await forgeTab.click();
+    await expect(forge).toContainText("Extract and synthesize a bounded public dataset");
     const routeChapter = page.getByRole("button", { name: /03\s+ROUTE/i });
     await routeChapter.click();
     await expect(page.locator('[data-forge-stage="route"]')).toBeVisible();
