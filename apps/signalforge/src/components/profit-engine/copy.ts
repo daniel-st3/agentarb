@@ -1,5 +1,4 @@
 import type { Locale } from "@/i18n/routing";
-import { labCopy, type LabCopy } from "@/components/v2-lab/copy";
 
 const productCopy = {
   en: {
@@ -12,6 +11,20 @@ const productCopy = {
     quickLabel: "YOUR TASK / START HERE",
     quickPlaceholder: "What should the agent deliver?",
     quickHint: "No account required · no task runs until you explicitly authorize it",
+    evidenceLabel: "A REAL MARKET OBSERVATION",
+    evidenceQuestion: "What does the evidence actually say?",
+    observedFact: "OBSERVED",
+    rewardLabel: "REWARD",
+    spendLabel: "KNOWN SPEND",
+    decisionLabel: "CURRENT READ",
+    unknown: "UNKNOWN",
+    notEligible: "NOT ELIGIBLE",
+    insufficientData: "INSUFFICIENT DATA",
+    evidenceCaveat: "A listing is not a profit forecast. Missing route costs stay unknown until you underwrite the task.",
+    noObservation: "No current paid work in this view.",
+    methodHeading: "From an objective to a defensible decision.",
+    methodIntroduction: "Each step narrows what is known. You choose the assumptions; the server calculates the economics.",
+    methodOutcome: "CURRENT STEP",
     boundariesLabel: "Valrun boundaries",
     controlsLabel: "Profit Engine controls",
     marketPulse: "MARKET SNAPSHOT",
@@ -55,6 +68,20 @@ const productCopy = {
     quickLabel: "TU TAREA / EMPIEZA AQUÍ",
     quickPlaceholder: "¿Qué debe entregar el agente?",
     quickHint: "Sin cuenta · ninguna tarea se ejecuta sin tu autorización explícita",
+    evidenceLabel: "UNA OBSERVACIÓN REAL DEL MERCADO",
+    evidenceQuestion: "¿Qué dice realmente la evidencia?",
+    observedFact: "OBSERVADO",
+    rewardLabel: "RECOMPENSA",
+    spendLabel: "GASTO CONOCIDO",
+    decisionLabel: "LECTURA ACTUAL",
+    unknown: "DESCONOCIDO",
+    notEligible: "NO APTO",
+    insufficientData: "DATOS INSUFICIENTES",
+    evidenceCaveat: "Una publicación no es un pronóstico de ganancias. Los costos faltantes siguen desconocidos hasta evaluar la tarea.",
+    noObservation: "No hay trabajo remunerado en esta vista.",
+    methodHeading: "De un objetivo a una decisión defendible.",
+    methodIntroduction: "Cada paso delimita lo conocido. Tú eliges los supuestos; el servidor calcula la economía.",
+    methodOutcome: "PASO ACTUAL",
     boundariesLabel: "Límites de Valrun",
     controlsLabel: "Controles del motor económico",
     marketPulse: "INSTANTÁNEA DEL MERCADO",
@@ -98,6 +125,20 @@ const productCopy = {
     quickLabel: "VOTRE TÂCHE / COMMENCEZ ICI",
     quickPlaceholder: "Que doit livrer l’agent ?",
     quickHint: "Sans compte · aucune tâche ne démarre sans votre autorisation explicite",
+    evidenceLabel: "UNE OBSERVATION RÉELLE DU MARCHÉ",
+    evidenceQuestion: "Que disent réellement les preuves ?",
+    observedFact: "OBSERVÉ",
+    rewardLabel: "RÉCOMPENSE",
+    spendLabel: "DÉPENSE CONNUE",
+    decisionLabel: "ÉTAT ACTUEL",
+    unknown: "INCONNU",
+    notEligible: "NON ADMISSIBLE",
+    insufficientData: "DONNÉES INSUFFISANTES",
+    evidenceCaveat: "Une annonce n'est pas une prévision de profit. Les coûts manquants restent inconnus jusqu'à l'analyse.",
+    noObservation: "Aucune mission rémunérée dans cette vue.",
+    methodHeading: "D'un objectif à une décision défendable.",
+    methodIntroduction: "Chaque étape précise ce qui est connu. Vous choisissez les hypothèses ; le serveur calcule l'économie.",
+    methodOutcome: "ÉTAPE ACTUELLE",
     boundariesLabel: "Limites de Valrun",
     controlsLabel: "Commandes du moteur économique",
     marketPulse: "INSTANTANÉ DU MARCHÉ",
@@ -136,19 +177,5 @@ const productCopy = {
 export type ProfitEngineCopy = (typeof productCopy)["en"];
 
 export function profitEngineCopy(locale: Locale) {
-  const product = productCopy[locale] as ProfitEngineCopy;
-  const forge = {
-    ...labCopy(locale),
-    applyScenario: locale === "es"
-      ? "APLICAR ESCENARIO DEL OPERADOR"
-      : locale === "fr"
-        ? "APPLIQUER LE SCÉNARIO OPÉRATEUR"
-        : "APPLY USER SCENARIO",
-    scenarioDisclosure: locale === "es"
-      ? "No se supone nada hasta que apliques este escenario explícito del operador."
-      : locale === "fr"
-        ? "Rien n’est supposé avant l’application de ce scénario opérateur explicite."
-        : "Nothing is assumed until you apply this explicit operator scenario.",
-  } as unknown as LabCopy;
-  return { product, forge };
+  return productCopy[locale] as ProfitEngineCopy;
 }

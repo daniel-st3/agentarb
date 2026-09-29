@@ -347,45 +347,30 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
 
   await page.goto("/en");
   const profitEngine = page.locator("[data-profit-engine]");
-  const homeForge = page.locator('[data-surface="home"]');
   await expect(page).toHaveTitle(/Underwrite AI-Agent Work/);
   await expect(page.locator('link[rel~="icon"][href*="icon.svg"]')).toHaveCount(1);
   await expect(page.locator('link[rel~="icon"][href*="icon.png"]')).toHaveCount(1);
   await expect(profitEngine).toBeVisible();
-  await expect(homeForge).toContainText("Extract and synthesize a bounded public dataset");
-  await expect(homeForge).toContainText("CAPITAL ≠ EXPENSE");
-  await expect(homeForge).toContainText("execution_not_enabled");
-  await expect(homeForge).not.toContainText("LAB STATE SIMULATION");
+  await expect(profitEngine).toContainText("Extract and synthesize a bounded public dataset");
+  await expect(profitEngine).toContainText("INSUFFICIENT DATA");
+  await expect(profitEngine).not.toContainText("LAB STATE SIMULATION");
+  await expect(profitEngine.getByLabel("YOUR TASK / START HERE")).toBeVisible();
   await expect(page.locator("[data-observation-id]")).toHaveCount(1);
   if (info.project.name === "desktop") {
     for (const width of [1440, 1280]) {
       await page.setViewportSize({ width, height: 900 });
-      await expect(page.locator(".pin-spacer")).toHaveCount(1);
-      await page.getByRole("button", { name: /01\s+CAPTURE/i }).click();
-      await expect(page.locator('[data-surface="home"][data-forge-stage="capture"]')).toBeVisible();
-      await expect.poll(() => page.locator('[data-surface="home"] [data-forge-pin]').evaluate((pin) => pin.getBoundingClientRect().top)).toBeGreaterThanOrEqual(110);
-      const geometry = await page.evaluate(() => {
-        const heading = document.querySelector('[data-surface="home"] [data-forge-heading]')!.getBoundingClientRect();
-        const note = document.querySelector('[data-surface="home"] [data-forge-layer] > p')!.getBoundingClientRect();
-        const rail = document.querySelector('[data-surface="home"] [aria-label="Underwriting stages"]')!.getBoundingClientRect();
-        const pin = document.querySelector('[data-surface="home"] [data-forge-pin]')!.getBoundingClientRect();
-        return { headingBottom: heading.bottom, noteTop: note.top, railBottom: rail.bottom, pinTop: pin.top };
-      });
-      await page.screenshot({ path: `test-results/screenshots/forge-home-capture-${width}.png` });
-      expect(geometry.headingBottom, `home headline clears the context note at ${width}px`).toBeLessThan(geometry.noteTop - 8);
-      expect(geometry.pinTop).toBeGreaterThanOrEqual(geometry.railBottom - 2);
+      await expect(page.locator(".pin-spacer")).toHaveCount(0);
+      await expect(profitEngine.getByLabel("YOUR TASK / START HERE")).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
   }
   await expect(page.getByRole("link", { name: "INSPECT LIVE WORK ↗" })).toHaveAttribute(
     "href",
     /opportunities\?id=agentbounties%3Aforge-e2e/,
   );
-  await page.getByRole("button", { name: "SKIP STORY" }).click();
-  await expect(homeForge).toHaveAttribute("data-story-skipped", "true");
-  await page.getByRole("button", { name: "APPLY USER SCENARIO" }).click();
-  await expect(homeForge).toHaveAttribute("data-scenario-active", "true");
-  await expect(homeForge).toHaveAttribute("data-decision", "insufficient_data");
-  await expect(homeForge).toContainText("USER ASSUMPTION");
+  await page.getByRole("button", { name: /03 Test the economics/i }).click();
+  await expect(page.getByRole("button", { name: /03 Test the economics/i })).toHaveAttribute("aria-pressed", "true");
+  await expect(profitEngine).toContainText("the server calculates the economics");
   await expect(page.locator('.site-nav a[href*="/lab/v2"]')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
