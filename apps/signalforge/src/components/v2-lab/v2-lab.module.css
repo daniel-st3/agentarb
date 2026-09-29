@@ -621,7 +621,7 @@
   --forge-accent: #ff7456;
   --forge-verified: #92bfd6;
   --forge-amber: #d8b47a;
-  --forge-type-display: clamp(4.8rem, 10vw, 10.8rem);
+  --forge-type-display: clamp(4.8rem, min(10vw, 14svh), 10.8rem);
   --forge-type-verdict: clamp(4.4rem, 9.4vw, 10.2rem);
   --forge-type-section: clamp(2.25rem, 4.7vw, 5rem);
   --forge-type-body: clamp(0.92rem, 1.05vw, 1.08rem);
@@ -854,7 +854,7 @@
 
 .dPin {
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100svh - 150px);
   overflow: clip;
   border-bottom: 1px solid var(--lab-line);
   background:
@@ -894,6 +894,10 @@
   line-height: 0.82;
   letter-spacing: -0.052em;
   text-wrap: balance;
+}
+
+.conceptD[data-surface="home"] .dMarketField h3 {
+  font-size: clamp(4.8rem, min(9vw, 12svh), 9rem);
 }
 
 .dSplitLine {
@@ -1079,6 +1083,9 @@
 .dRoute aside b { display: block; color: var(--forge-accent); font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.11em; }
 .dRoute aside strong { display: block; margin: 1rem 0; font-size: clamp(1.95rem, 2.15vw, 2.75rem); }
 .dRoute aside p { color: var(--lab-muted); font-size: 0.8rem; }
+.dRoute aside small,
+.dRouteRows span,
+.dRouteRows small { overflow-wrap: anywhere; }
 
 .dResponsiveVerdict {
   min-width: 0;
@@ -1195,7 +1202,7 @@
 .dAfterword p { color: var(--lab-muted); font-size: 0.78rem; overflow-wrap: anywhere; }
 .dBoundary { padding-block: 1rem; color: var(--lab-muted); font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-align: end; }
 
-@media (max-width: 899px) {
+@media (max-width: 1279px), (max-height: 849px) {
   .dIntro { grid-template-columns: 1fr; }
   .conceptD[data-surface="home"] .dIntro {
     min-height: auto;
@@ -1213,7 +1220,7 @@
   .dProgress button span { font-size: 0.6rem; }
   .dStory { display: none; }
   .dMobileFlow { display: block; }
-  .dCausalStep { position: relative; padding: 3.1rem 0 3.1rem 2.3rem; border-bottom: 1px solid var(--lab-line); }
+  .dCausalStep { position: relative; padding: 3.1rem 0 3.1rem 2.3rem; border-bottom: 1px solid var(--lab-line); scroll-margin-top: 74px; }
   .dCausalStep::before { position: absolute; inset-block: 0; inset-inline-start: 0.7rem; width: 1px; background: var(--forge-accent); content: ""; }
   .dCausalStep > header { display: flex; gap: 0.7rem; align-items: baseline; }
   .dCausalStep > header span { color: var(--forge-accent); font-family: var(--font-mono); font-size: 0.62rem; }

@@ -24,6 +24,7 @@ import styles from "./v2-lab.module.css";
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText, Flip, DrawSVGPlugin);
 
 const STAGES = ["capture", "capabilities", "route", "economics", "decision"] as const;
+const STAGE_PROGRESS = [0.16, 0.48, 0.65, 0.84, 1] as const;
 type DerivedEconomics = NonNullable<ArbitrageEvaluation["realEconomics"]>["derived"];
 
 export type ForgeHomePresentation = {
@@ -79,6 +80,8 @@ export function ConceptD({
   const trigger = useRef<ScrollTrigger | null>(null);
   const replayTween = useRef<gsap.core.Tween | null>(null);
   const stageValue = useRef(0);
+  const pendingStage = useRef<number | null>(null);
+  const pendingReplay = useRef(false);
   const reduced = useReducedMotion();
   const motionReduced = reduced === true;
   const [receipt, setReceipt] = useState<LabReceipt>();
@@ -178,9 +181,37 @@ export function ConceptD({
     { label: copy.residual, value: derived?.expectedProfitUsdMicros ?? null, provenance: "DERIVED" },
   ], [copy, derived, scenarioActive]);
 
+  const startReplay = (st: ScrollTrigger) => {
+    replayTween.current?.kill();
+    window.scrollTo({ top: st.start, behavior: "instant" });
+    st.update();
+    const position = { value: st.start };
+    const stopOnInput = () => replayTween.current?.kill();
+    const detach = () => {
+      window.removeEventListener("wheel", stopOnInput);
+      window.removeEventListener("touchstart", stopOnInput);
+      window.removeEventListener("keydown", stopOnInput);
+    };
+    window.addEventListener("wheel", stopOnInput, { once: true });
+    window.addEventListener("touchstart", stopOnInput, { once: true });
+    window.addEventListener("keydown", stopOnInput, { once: true });
+    replayTween.current = gsap.to(position, {
+      value: st.start + (st.end - st.start) * 0.99,
+      duration: home ? 7 : 11,
+      ease: "none",
+      onUpdate: () => {
+        if (trigger.current !== st) return;
+        window.scrollTo({ top: position.value, behavior: "instant" });
+        st.update();
+      },
+      onComplete: detach,
+      onInterrupt: detach,
+    });
+  };
+
   useGSAP(() => {
     const media = gsap.matchMedia();
-    media.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+    media.add("(min-width: 1280px) and (min-height: 850px) and (prefers-reduced-motion: no-preference)", () => {
       if (skipped || !fontsReady) return;
       const root = scope.current;
       const story = root?.querySelector<HTMLElement>("[data-forge-story]");
@@ -237,16 +268,31 @@ export function ConceptD({
       const st = ScrollTrigger.create({
         id: home ? "profit-engine-story" : "v2-forge-story",
         trigger: story,
-        start: "top top",
+        // Leave the sticky site navigation and chapter rail above the pinned instrument.
+        start: "top top+=150",
         end: home ? "+=300%" : "+=400%",
         pin,
-        scrub: 0.55,
+        scrub: true,
         animation: tl,
         invalidateOnRefresh: true,
         onUpdate: (self) => updateStage(self.progress),
       });
       timeline.current = tl;
       trigger.current = st;
+      const requestedStage = pendingStage.current;
+      if (requestedStage !== null) {
+        pendingStage.current = null;
+        requestAnimationFrame(() => {
+          if (trigger.current !== st) return;
+          window.scrollTo({ top: st.start + (st.end - st.start) * STAGE_PROGRESS[requestedStage], behavior: "instant" });
+          st.update();
+        });
+      } else if (pendingReplay.current) {
+        pendingReplay.current = false;
+        requestAnimationFrame(() => {
+          if (trigger.current === st) startReplay(st);
+        });
+      }
       return () => {
         replayTween.current?.kill();
         st.kill();
@@ -261,47 +307,62 @@ export function ConceptD({
   }, { scope, dependencies: [subject?.id, activeDecision, skipped, fontsReady, layoutRevision, home], revertOnUpdate: true });
 
   const replay = () => {
+    pendingStage.current = null;
+    pendingReplay.current = true;
     setSkipped(false);
     requestAnimationFrame(() => {
-      const tl = timeline.current, st = trigger.current;
-      if (!tl || !st) return;
-      scope.current?.querySelector("[data-forge-story]")?.scrollIntoView({ block: "start" });
-      st.disable(false);
-      tl.pause(0);
-      replayTween.current?.kill();
-      replayTween.current = gsap.to(tl, {
-        progress: 1,
-        duration: home ? 7 : 11,
-        ease: "none",
-        onUpdate: () => {
-          const progress = tl.progress();
-          const next = progress < 0.34 ? 0 : progress < 0.5 ? 1 : progress < 0.68 ? 2 : progress < 0.86 ? 3 : 4;
-          if (next !== stageValue.current) { stageValue.current = next; setStage(next); }
-        },
-        onComplete: () => st.enable(false, true),
-      });
+      const st = trigger.current;
+      if (st) {
+        pendingReplay.current = false;
+        startReplay(st);
+        return;
+      }
+      const flow = scope.current?.querySelector<HTMLElement>(`.${styles.dMobileFlow}`);
+      if (flow && getComputedStyle(flow).display !== "none") {
+        pendingReplay.current = false;
+        stageValue.current = 0;
+        setStage(0);
+        flow.querySelectorAll<HTMLElement>(`.${styles.dCausalStep}`)[0]?.scrollIntoView({ block: "start", behavior: "instant" });
+        return;
+      }
+      scope.current?.querySelector("[data-forge-story]")?.scrollIntoView({ block: "start", behavior: "instant" });
     });
   };
 
   const skip = () => {
+    pendingReplay.current = false;
+    pendingStage.current = null;
     replayTween.current?.kill();
     timeline.current?.progress(1).pause();
     trigger.current?.disable(true);
     setStage(4);
     setSkipped(true);
+    if (!trigger.current) {
+      scope.current?.querySelectorAll<HTMLElement>(`.${styles.dCausalStep}`)[4]?.scrollIntoView({ block: "start", behavior: "instant" });
+    }
   };
 
   const goToStage = (index: number) => {
+    pendingReplay.current = false;
     if (motionReduced || skipped || !trigger.current) {
       stageValue.current = index;
       setStage(index);
+      const flow = scope.current?.querySelector<HTMLElement>(`.${styles.dMobileFlow}`);
+      if (flow && getComputedStyle(flow).display !== "none") {
+        pendingStage.current = null;
+        flow.querySelectorAll<HTMLElement>(`.${styles.dCausalStep}`)[index]?.scrollIntoView({ block: "start", behavior: "instant" });
+      } else {
+        pendingStage.current = index;
+        if (skipped) setSkipped(false);
+        scope.current?.querySelector("[data-forge-story]")?.scrollIntoView({ block: "start", behavior: "instant" });
+      }
       return;
     }
     const st = trigger.current;
-    const targetProgress = [0.08, 0.41, 0.58, 0.76, 0.94][index];
+    const targetProgress = STAGE_PROGRESS[index];
     const targetScroll = st.start + (st.end - st.start) * targetProgress;
     replayTween.current?.kill();
-    st.scroll(targetScroll);
+    window.scrollTo({ top: targetScroll, behavior: "instant" });
     st.update();
   };
 
