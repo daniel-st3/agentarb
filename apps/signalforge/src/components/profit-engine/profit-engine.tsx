@@ -65,12 +65,17 @@ export function ProfitEngine({ locale, initialDataset }: { locale: Locale; initi
   }
 
   const subject = dataset.subject;
+  const freshnessLabel = subject?.freshness === "live"
+    ? copy.freshLive
+    : subject?.freshness === "cached_live"
+      ? copy.freshCached
+      : copy.freshUnknown;
   const sourceState = refreshState === "loading"
     ? copy.loading
     : refreshState === "degraded"
       ? copy.unavailable
       : subject
-        ? `${subject.sourceName} · ${subject.freshness}`
+        ? `${subject.sourceName} · ${freshnessLabel}`
         : copy.empty;
   const observationHref = subject ? `/opportunities?id=${encodeURIComponent(subject.id)}` : "/opportunities";
 
@@ -102,7 +107,7 @@ export function ProfitEngine({ locale, initialDataset }: { locale: Locale; initi
           </div>
 
           <div className={styles.heroEvidence} data-observation-id={subject?.id}>
-            <div className={styles.evidenceTopline}><span>{subject ? copy.evidenceLabel : copy.marketPulse}</span><span>{subject ? subject.freshness : "—"}</span></div>
+            <div className={styles.evidenceTopline}><span>{subject ? copy.evidenceLabel : copy.marketPulse}</span><span>{subject ? freshnessLabel : "—"}</span></div>
             <p className={styles.evidenceQuestion}>{copy.evidenceQuestion}</p>
             <div className={styles.evidenceBody}>
               {subject ? (
