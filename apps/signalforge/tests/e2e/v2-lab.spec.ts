@@ -235,16 +235,43 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
       expect(splitTextSafety.length).toBeGreaterThan(0);
       expect(splitTextSafety.every((line) => line.overflow === "visible" && Boolean(line.text?.trim()))).toBe(true);
     }
-    // The viewport sweep is a separate visual assertion. Reload at the final
-    // size so chapter interaction starts from a settled ScrollTrigger layout,
+    // The viewport sweep is a separate visual assertion. Reload at laptop size
+    // so chapter interaction starts from a settled ScrollTrigger layout,
     // as it does on a normal page visit rather than mid-resize.
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.reload();
     await expect(page.getByLabel("Current data status").getByRole("status")).toContainText("1 observed");
     await forgeTab.click();
     await expect(forge).toContainText("Extract and synthesize a bounded public dataset");
+    await page.getByRole("button", { name: /01\s+CAPTURE/i }).click();
+    const openingGeometry = await page.evaluate(() => {
+      const heading = document.querySelector('[data-forge-heading]')!.getBoundingClientRect();
+      const note = document.querySelector('[data-forge-layer] > p')!.getBoundingClientRect();
+      const pin = document.querySelector('[data-forge-pin]')!.getBoundingClientRect();
+      return { headingBottom: heading.bottom, noteTop: note.top, pinBottom: pin.bottom };
+    });
+    expect(openingGeometry.headingBottom).toBeLessThan(openingGeometry.noteTop - 8);
+    expect(openingGeometry.noteTop).toBeLessThan(openingGeometry.pinBottom);
+    await page.screenshot({ path: "test-results/screenshots/forge-capture-1440.png" });
     const routeChapter = page.getByRole("button", { name: /03\s+ROUTE/i });
     await routeChapter.click();
     await expect(page.locator('[data-forge-stage="route"]')).toBeVisible();
+    await expect.poll(() => page.locator("[data-forge-layer]").nth(3).evaluate((layer) => {
+      const style = getComputedStyle(layer);
+      return `${style.visibility}:${style.opacity}`;
+    })).toBe("visible:1");
+    const pinnedGeometry = await page.evaluate(() => {
+      const rail = document.querySelector('[aria-label="Underwriting stages"]')!.getBoundingClientRect();
+      const pin = document.querySelector('[data-forge-pin]')!.getBoundingClientRect();
+      const subject = document.querySelector('[data-forge-subject]')!.getBoundingClientRect();
+      const verdict = document.querySelector('[data-forge-route-verdict]')!.getBoundingClientRect();
+      return { railBottom: rail.bottom, pinTop: pin.top, subjectTop: subject.top, subjectBottom: subject.bottom, verdictTop: verdict.top, verdictBottom: verdict.bottom, pinBottom: pin.bottom };
+    });
+    expect(pinnedGeometry.pinTop).toBeGreaterThanOrEqual(pinnedGeometry.railBottom - 2);
+    expect(pinnedGeometry.subjectTop).toBeGreaterThanOrEqual(pinnedGeometry.railBottom + 8);
+    expect(pinnedGeometry.verdictTop).toBeGreaterThan(pinnedGeometry.subjectBottom);
+    expect(pinnedGeometry.verdictBottom).toBeLessThan(pinnedGeometry.pinBottom);
+    await page.screenshot({ path: "test-results/screenshots/forge-route-1440.png" });
     expect(await page.locator("[data-forge-layer]").evaluateAll((layers) => layers.filter((layer) => {
       const style = getComputedStyle(layer);
       return style.visibility === "visible" && Number(style.opacity) > 0.99;
@@ -260,10 +287,35 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
     await economicsChapter.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-forge-stage="economics"]')).toBeVisible();
+    await expect.poll(() => page.locator("[data-forge-layer]").nth(4).evaluate((layer) => {
+      const style = getComputedStyle(layer);
+      return `${style.visibility}:${style.opacity}`;
+    })).toBe("visible:1");
     expect(await page.locator("[data-forge-layer]").evaluateAll((layers) => layers.filter((layer) => {
       const style = getComputedStyle(layer);
       return style.visibility === "visible" && Number(style.opacity) > 0.99;
     }).length)).toBe(1);
+    await page.screenshot({ path: "test-results/screenshots/forge-economics-1440.png" });
+    for (const viewport of [
+      { width: 1280, height: 800 },
+      { width: 1024, height: 720 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expect(page.locator(".pin-spacer")).toHaveCount(0);
+      await expect(page.getByLabel("Complete underwriting sequence")).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.getByRole("button", { name: /03\s+ROUTE/i }).click();
+      await expect(page.getByLabel("Complete underwriting sequence").locator("section").nth(2)).toBeInViewport();
+      if (viewport.width !== 1280) await page.screenshot({ path: `test-results/screenshots/forge-route-${viewport.width}.png` });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(page.locator(".pin-spacer")).toHaveCount(1);
+    await page.getByRole("button", { name: /05\s+DECISION/i }).click();
+    await expect(page.locator('[data-forge-stage="decision"]')).toBeVisible();
+    await page.getByRole("button", { name: /01\s+CAPTURE/i }).click();
+    await expect(page.locator('[data-forge-stage="capture"]')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   } else {
     await page.setViewportSize({ width: 430, height: 932 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -284,6 +336,12 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
   await expect(forge).toHaveAttribute("data-story-skipped", "true");
   await page.getByRole("button", { name: "REPLAY" }).click();
   await expect(forge).toHaveAttribute("data-story-skipped", "false");
+  if (info.project.name === "desktop") {
+    await expect(page.locator(".pin-spacer")).toHaveCount(1);
+    await expect(forge).toHaveAttribute("data-forge-stage", "capabilities", { timeout: 8_000 });
+  } else {
+    await expect(page.getByLabel("Complete underwriting sequence").locator("section").first()).toBeInViewport();
+  }
   await page.getByRole("tab", { name: "A", exact: true }).click();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
 
@@ -299,6 +357,25 @@ test("the Forge is a reversible, lab-only causal instrument", async ({ page }, i
   await expect(homeForge).toContainText("execution_not_enabled");
   await expect(homeForge).not.toContainText("LAB STATE SIMULATION");
   await expect(page.locator("[data-observation-id]")).toHaveCount(1);
+  if (info.project.name === "desktop") {
+    for (const width of [1440, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect(page.locator(".pin-spacer")).toHaveCount(1);
+      await page.getByRole("button", { name: /01\s+CAPTURE/i }).click();
+      await expect(page.locator('[data-surface="home"][data-forge-stage="capture"]')).toBeVisible();
+      await expect.poll(() => page.locator('[data-surface="home"] [data-forge-pin]').evaluate((pin) => pin.getBoundingClientRect().top)).toBeGreaterThanOrEqual(110);
+      const geometry = await page.evaluate(() => {
+        const heading = document.querySelector('[data-surface="home"] [data-forge-heading]')!.getBoundingClientRect();
+        const note = document.querySelector('[data-surface="home"] [data-forge-layer] > p')!.getBoundingClientRect();
+        const rail = document.querySelector('[data-surface="home"] [aria-label="Underwriting stages"]')!.getBoundingClientRect();
+        const pin = document.querySelector('[data-surface="home"] [data-forge-pin]')!.getBoundingClientRect();
+        return { headingBottom: heading.bottom, noteTop: note.top, railBottom: rail.bottom, pinTop: pin.top };
+      });
+      await page.screenshot({ path: `test-results/screenshots/forge-home-capture-${width}.png` });
+      expect(geometry.headingBottom, `home headline clears the context note at ${width}px`).toBeLessThan(geometry.noteTop - 8);
+      expect(geometry.pinTop).toBeGreaterThanOrEqual(geometry.railBottom - 2);
+    }
+  }
   await expect(page.getByRole("link", { name: "INSPECT LIVE WORK ↗" })).toHaveAttribute(
     "href",
     /opportunities\?id=agentbounties%3Aforge-e2e/,
