@@ -97,9 +97,13 @@ it("returns an insufficient receipt for a live bounty with unmapped capabilities
     at,
   )[0];
   expect(task.deadline).toBe("2026-10-29T05:59:00.000Z");
+  const cachedBeforeNormalization = {
+    ...task,
+    deadline: "2026-10-29T05:59:00+00:00",
+  };
   vi.spyOn(intelligence, "networkSnapshot").mockResolvedValue({
     version: "1.0",
-    records: [task],
+    records: [cachedBeforeNormalization],
     sources: [],
     cacheMode: "shared",
     warnings: [],
@@ -111,6 +115,7 @@ it("returns an insufficient receipt for a live bounty with unmapped capabilities
     policy: { minimumMarginBps: 2500 },
   });
   expect(receipt.evaluation.decision).toBe("insufficient_data");
+  expect(receipt.claimReadiness?.deadline).toBe("2026-10-29T05:59:00.000Z");
 });
 
 it("rechecks scoring expiry on cached reads before a new source poll is due", async () => {
