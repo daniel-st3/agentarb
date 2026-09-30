@@ -8,6 +8,7 @@ import { emailConfirmationRedirect } from "@/lib/auth-email";
 import { accountCopy, type AccountLocale } from "./copy";
 import { reportAuthRequestFailure, type AuthRequestFailure } from "./auth-error";
 import { clearPendingForgeRun } from "./pending-run";
+import { BrandArtwork } from "../brand-artwork";
 
 export type AuthUser = { id: string; email: string | null; displayName: string | null; avatarUrl: string | null };
 type AuthContextValue = {
@@ -104,6 +105,7 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
       {open && (
         <dialog ref={dialog} className="auth-dialog" onClose={() => setOpen(false)} aria-labelledby="auth-title">
           <button className="auth-close" type="button" onClick={closeAuth} aria-label={copy.close}>×</button>
+          <BrandArtwork />
           <p className="auth-kicker">VALRUN / ACCOUNT</p>
           <h2 id="auth-title">{copy.title}</h2>
           <p>{copy.intro}</p>

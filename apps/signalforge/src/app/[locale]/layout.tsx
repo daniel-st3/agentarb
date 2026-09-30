@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { locales } from "@/i18n/routing";
 import Link from "@/i18n/navigation";
 import { Navigation } from "@/components/navigation";
+import { BrandArtwork } from "@/components/brand-artwork";
 import { NetworkState } from "@/components/network-state";
 import { InteractionProvider } from "@/components/interactions/provider";
 import { PageChoreography } from "@/components/editorial/atmosphere";
@@ -78,7 +79,7 @@ export default async function RootLayout({
           </NetworkState>
 
           <footer className="site-footer site-footer-v1 container">
-            <div className="footer-identity"><span>Valrun<span className="brand-dot">.</span></span><p>{locale === "es" ? "Evaluación + ejecución acotada · sin pagos autónomos" : locale === "fr" ? "Analyse + exécution bornée · aucun paiement autonome" : "Underwriting + bounded execution · no autonomous payments"}</p></div>
+            <div className="footer-identity"><BrandArtwork /><p>{locale === "es" ? "Evaluación + ejecución acotada · sin pagos autónomos" : locale === "fr" ? "Analyse + exécution bornée · aucun paiement autonome" : "Underwriting + bounded execution · no autonomous payments"}</p></div>
             <nav aria-label={locale === "es" ? "Navegación de pie de página" : locale === "fr" ? "Navigation de pied de page" : "Footer navigation"}>
               <Link href="/forge">{t("Forge")}</Link>
               <Link href="/pricing">{t("Pricing")}</Link>

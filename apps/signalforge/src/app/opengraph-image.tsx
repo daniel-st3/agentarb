@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import logo from "./brand-logo-data.json";
 
 export const alt = "Valrun — check the economics before an AI agent spends.";
 export const size = { width: 1200, height: 630 };
@@ -9,8 +10,10 @@ export default function Image() {
   return new ImageResponse(
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "100%", padding: 64, background: "#101113", color: "#f4f0e8", fontFamily: "sans-serif" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <svg width="64" height="64" viewBox="0 0 64 64"><path d="M10 18 29 46 53 15" fill="none" stroke="#f4f0e8" strokeWidth="8" /><path d="M36 48h18" stroke="#ff7456" strokeWidth="8" /></svg>
-        <span style={{ fontSize: 38 }}>Valrun.</span>
+        <div style={{ display: "flex", background: "#f4f0e8", padding: "12px 18px" }}>
+          {/* Static local artwork; ImageResponse does not use next/image. */}
+          <img src={logo} alt="Valrun" width={280} height={60} />
+        </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <div style={{ fontSize: 76, lineHeight: 1.05, maxWidth: 1000 }}>Know if an AI task is worth running.</div>

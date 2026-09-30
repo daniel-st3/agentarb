@@ -172,6 +172,20 @@ code,
 .brand-dot {
   color: var(--accent);
 }
+.brand-artwork {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 5px 8px;
+  background: #f4f0e8;
+  line-height: 0;
+}
+.brand-artwork img {
+  display: block;
+  width: 132px;
+  height: auto;
+  max-width: 100%;
+}
 .brand svg {
   width: 22px;
 }
