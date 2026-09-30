@@ -25,6 +25,9 @@ test("source entry explains invalid input, prerequisites and source-specific fai
   await run.click();
   await expect(page.getByRole("alert").filter({ hasText: "Source 2:" })).toContainText("does not follow redirects");
   await expect(page.getByText("internal text must not be displayed")).toHaveCount(0);
+  await page.getByLabel("Public source URLs", { exact: true }).fill("https://example.com");
+  await expect(page.getByRole("alert").filter({ hasText: "Source 2:" })).toHaveCount(0);
+  await expect(page.getByText("Valid URL format · availability checked when research runs")).toBeVisible();
 });
 
 test("money inputs follow the page locale rather than the browser OS", async ({ page }) => {

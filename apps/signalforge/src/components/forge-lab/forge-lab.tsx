@@ -309,7 +309,7 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
     <form onSubmit={runTask}>
       <div className={styles.field}>
         <FieldHeading id="forge-source-urls" label={ux.sources} help={copy.synthesisSourcesHelp} helpLabel={copy.help} />
-        <textarea id="forge-source-urls" value={urls} onChange={(event) => { setUrls(event.target.value); setOutput(null); }} aria-describedby="source-entry-help source-disabled-reason" placeholder="https://example.com" rows={4} maxLength={12000} disabled={running} required />
+        <textarea id="forge-source-urls" value={urls} onChange={(event) => { setUrls(event.target.value); setOutput(null); setError(""); }} aria-describedby="source-entry-help source-disabled-reason" placeholder="https://example.com" rows={4} maxLength={12000} disabled={running} required />
       </div>
       <p id="source-entry-help">{ux.sourceHelp}</p>
       {sources.length > 0 && <ol className={styles.sourceStatus}>{sources.map((url, index) => <li key={index} data-valid={PublicHttpsUrlSchema.safeParse(url).success}><strong>{ux.source} {index + 1}</strong><span>{url}</span><small>{PublicHttpsUrlSchema.safeParse(url).success ? ux.ready : ux.invalid}</small></li>)}</ol>}
