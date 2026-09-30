@@ -3,7 +3,7 @@ import { safeLocale } from "@/i18n/routing";
 import { createSupabaseServerClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { SourceSynthesisResponseSchema } from "@/domain/source-synthesis";
 import { hashReceipt } from "@/server/arbitrage/service";
-import { DeleteAnalysis } from "@/components/account/account-actions";
+import { DeleteAnalysis, DownloadSavedReceipt } from "@/components/account/account-actions";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -32,6 +32,6 @@ export default async function SavedSourceSynthesis({ params }: { params: Promise
     <section><h2>{t.findings}</h2><p>{receipt.core.result.summary}</p><ol>{receipt.core.result.findings.map((finding, index) => <li key={index}>{finding.statement} {finding.sourceIds.map((sourceId) => <a key={sourceId} href={receipt.core.sourceUrls[sourceId - 1]} target="_blank" rel="noreferrer">[{sourceId}]</a>)}</li>)}</ol></section>
     <section><h2>{t.limitations}</h2><ul>{receipt.core.result.limitations.map((item) => <li key={item}>{item}</li>)}</ul></section>
     <section><h2>{t.receipt}</h2><code>{receipt.receiptHash}</code><p>{receipt.hashAlgorithm} · {t.fingerprint} · {receipt.core.verificationStatus}</p></section>
-    <div className="account-actions"><DeleteAnalysis id={id} kind="source-synthesis-runs" label={t.delete} prompt={t.prompt} detail={t.detail} /></div>
+    <div className="account-actions"><DownloadSavedReceipt receipt={receipt} /><DeleteAnalysis id={id} kind="source-synthesis-runs" label={t.delete} prompt={t.prompt} detail={t.detail} /></div>
   </article>;
 }

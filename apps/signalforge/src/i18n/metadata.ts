@@ -49,6 +49,13 @@ export async function pageMetadata(
     column = locales.indexOf(locale);
   const suffix = path.replace("[id]", encodeURIComponent(p.id ?? ""));
   return {
+    metadataBase: new URL(origin),
+    openGraph: {
+      type: "website", siteName: "Valrun", title: `${titles[page][column]} · Valrun`,
+      url: `${origin}/${locale}${suffix}`,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Valrun — deterministic underwriting for AI-agent work" }],
+    },
+    twitter: { card: "summary_large_image", title: `${titles[page][column]} · Valrun`, images: ["/opengraph-image"] },
     title: `${titles[page][column]} · Valrun`,
     description: [
       "Underwrite AI-agent work with observed evidence, explicit assumptions and auditable decisions. Optional public-source synthesis requires a separate user action; marketplace execution remains disabled.",

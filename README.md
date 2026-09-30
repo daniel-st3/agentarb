@@ -66,3 +66,36 @@ npm audit
 ```
 
 For implementation details, start with the [application guide](apps/signalforge/README.md), [API reference](docs/api.md), [localization guide](docs/i18n.md) and [contributor guide](AGENTS.md).
+
+## Architecture and authority
+
+One Next.js App Router application owns the UI and server routes; there is no separate Express service.
+
+- `apps/signalforge/src/domain/forge-underwriting.ts` and `domain/arbitrage.ts`: validated inputs, integer-unit economics, explicit rounding, unknowns and conditional decisions.
+- `src/server/forge-underwriting.ts`: objective interpretation, observed supply, deterministic evaluation, progress events and fingerprinted receipts.
+- `src/server/intelligence/`: bounded fixed-source connectors, normalization, freshness and durable-cache policy.
+- `src/server/source-synthesis/`: the separate, explicitly authorized public-source synthesis path. AI output does not override underwriting.
+- `src/server/account/`, `src/lib/supabase/`, `supabase/migrations/`: optional identity and owner-scoped saved snapshots. History is not an earnings dashboard; usage-priced costs are not provider invoices.
+- `src/server/mcp.ts` and `src/app/api/v1/`: machine interfaces into the same server services. Agent Card discovery does not implement an autonomous A2A task runtime.
+
+These paths after the first two are relative to `apps/signalforge`.
+
+### Agent-to-Valrun demo
+
+From `apps/signalforge`:
+
+```bash
+node --import tsx examples/client-agent/underwrite.ts --transport rest
+node --import tsx examples/client-agent/underwrite.ts --transport mcp
+```
+
+The client sends explicit demonstration assumptions, validates the response and its
+canonical fingerprint, and prints the server's conditional decision and blockers.
+It does not infer observed prices, recalculate profit, or execute the task.
+See the [client guide](apps/signalforge/examples/client-agent/README.md).
+
+## License status
+
+This repository is publicly readable, but currently contains no explicit software
+license. It is **public-source, not licensed open source**. No license is implied;
+the owner must deliberately select one before advertising it as open source.

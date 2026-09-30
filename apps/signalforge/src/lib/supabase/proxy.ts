@@ -19,6 +19,13 @@ export async function refreshSupabaseSession(request: NextRequest, response: Nex
       getAll: () => request.cookies.getAll(),
       setAll(values) {
         for (const value of values) request.cookies.set(value.name, value.value);
+        // intl already created its response. Forward the refreshed request cookie
+        // to Server Components without dropping intl's locale/rewrite headers.
+        const forwarded = NextResponse.next({ request: { headers: request.headers } });
+        const overrides = new Set((response.headers.get("x-middleware-override-headers") ?? "").split(",").filter(Boolean));
+        overrides.add("cookie");
+        response.headers.set("x-middleware-override-headers", [...overrides].join(","));
+        response.headers.set("x-middleware-request-cookie", forwarded.headers.get("x-middleware-request-cookie") ?? "");
         for (const value of values) response.cookies.set(value.name, value.value, value.options);
       },
     },

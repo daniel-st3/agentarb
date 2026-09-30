@@ -4,6 +4,28 @@ An independent Node/TypeScript process consumes deployed REST/MCP. It imports pu
 
 From `apps/signalforge`, run `npm ci`, then:
 
+## Recommended: economic decision over REST or MCP
+
+```bash
+node --import tsx examples/client-agent/underwrite.ts --transport rest
+node --import tsx examples/client-agent/underwrite.ts --transport mcp
+# For local verification, add --endpoint http://127.0.0.1:3001
+```
+
+This real network client sends the same explicitly labeled demonstration assumptions
+through either `/api/v1/forge/underwrite` or `signalforge_underwrite_task`. It validates
+the canonical response and fingerprint, then prints the server's decision, blockers,
+limitations and economics. It does not recompute profit, call providers, save account
+data or execute a route. A favorable scenario is not proof of an executable route.
+No credentials are forwarded. Redirects, response size and time are bounded.
+The fingerprint is an integrity checksum, **not** proof of authorship.
+
+## Legacy route-contract inspection
+
+The stricter route inspector below intentionally refuses incomplete live planning
+contracts. That refusal is expected: observed catalog supply is not an executable
+route quote. Use the economic client above for the public underwriting demonstration.
+
 ```bash
 npm run demo:client-agent -- \
   --objective "Build a verified startup due-diligence route" \

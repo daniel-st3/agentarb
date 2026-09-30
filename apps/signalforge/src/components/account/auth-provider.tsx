@@ -7,6 +7,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { emailConfirmationRedirect } from "@/lib/auth-email";
 import { accountCopy, type AccountLocale } from "./copy";
 import { reportAuthRequestFailure, type AuthRequestFailure } from "./auth-error";
+import { clearPendingForgeRun } from "./pending-run";
 
 export type AuthUser = { id: string; email: string | null; displayName: string | null; avatarUrl: string | null };
 type AuthContextValue = {
@@ -26,6 +27,7 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
   const router = useRouter();
   const [user, setUser] = useState(initialUser);
   const [open, setOpen] = useState(false);
+  const [logoutFailed, setLogoutFailed] = useState(false);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "pending" | "sent" | AuthRequestFailure>("idle");
   const dialog = useRef<HTMLDialogElement>(null);
@@ -44,7 +46,10 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
   useEffect(() => {
     const client = createSupabaseBrowserClient();
     if (!client) return;
-    const { data } = client.auth.onAuthStateChange((_event, session) => {
+    const { data } = client.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        try { clearPendingForgeRun(); } catch { /* Storage may be disabled; logout must still complete. */ }
+      }
       const next = session?.user;
       setUser(next ? {
         id: next.id,
@@ -63,11 +68,15 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
     if (!client || !/^\S+@\S+\.\S+$/.test(email)) return setStatus("unavailable");
     setStatus("pending");
     const next = `/${locale}${pathname}`;
-    const { error } = await client.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: emailConfirmationRedirect(location.origin, next) },
-    });
-    setStatus(error ? reportAuthRequestFailure("email_otp", error) : "sent");
+    try {
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: emailConfirmationRedirect(location.origin, next) },
+      });
+      setStatus(error ? reportAuthRequestFailure("email_otp", error) : "sent");
+    } catch {
+      setStatus("unavailable");
+    }
   }
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -77,15 +86,21 @@ export function AuthProvider({ children, initialUser, configured }: { children: 
     closeAuth,
     async signOut() {
       const client = createSupabaseBrowserClient();
-      if (client) await client.auth.signOut();
-      setUser(null);
-      router.refresh();
+      try {
+        if (!client) throw new Error("auth_unavailable");
+        const { error } = await client.auth.signOut();
+        if (error) throw new Error("logout_failed");
+        setLogoutFailed(false);
+        setUser(null);
+        router.refresh();
+      } catch { setLogoutFailed(true); }
     },
   }), [configured, user, openAuth, closeAuth, router]);
 
   return (
     <AuthContext.Provider value={value}>
       {children}
+      {logoutFailed && <p className="container" role="alert">{locale === "es" ? "No se pudo cerrar la sesión. Inténtalo de nuevo." : locale === "fr" ? "La déconnexion a échoué. Réessayez." : "Sign out failed. Please try again."}</p>}
       {open && (
         <dialog ref={dialog} className="auth-dialog" onClose={() => setOpen(false)} aria-labelledby="auth-title">
           <button className="auth-close" type="button" onClick={closeAuth} aria-label={copy.close}>×</button>

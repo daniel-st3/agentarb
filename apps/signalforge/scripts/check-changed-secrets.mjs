@@ -4,7 +4,8 @@ import { resolve, relative } from "node:path";
 const root = execFileSync("git", ["rev-parse", "--show-toplevel"], {
   encoding: "utf8",
 }).trim();
-const tracked = execFileSync("git", ["diff", "--name-only", "HEAD", "-z"], {
+const all = process.argv.includes("--all");
+const tracked = execFileSync("git", all ? ["ls-files", "-z"] : ["diff", "--name-only", "HEAD", "-z"], {
   cwd: root,
   encoding: "utf8",
 });
@@ -49,6 +50,6 @@ for (const name of new Set((tracked + added).split("\0").filter(Boolean))) {
     }
 }
 console.log(
-  `Targeted changed-file scan: ${checked} text files; ${findings} findings. No credential values inspected or reported.`,
+  `Targeted ${all ? "tracked-file" : "changed-file"} scan: ${checked} text files; ${findings} findings. No credential values reported.`,
 );
 process.exitCode = findings ? 1 : 0;

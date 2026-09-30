@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "@/i18n/navigation";
 import { createSupabaseServerClient, getAuthenticatedUser } from "@/lib/supabase/server";
-import { ForgeUnderwritingResponseSchema } from "@/domain/forge-underwriting";
+import { readForgeSnapshot } from "@/server/account/snapshot";
 import { safeLocale } from "@/i18n/routing";
-import { DeleteAnalysis } from "@/components/account/account-actions";
+import { DeleteAnalysis, DownloadSavedReceipt } from "@/components/account/account-actions";
 export const metadata = { robots: { index: false, follow: false } };
 
 const text = {
@@ -20,9 +20,8 @@ export default async function SavedRun({ params }: { params: Promise<{ locale: s
   const client = await createSupabaseServerClient();
   const { data } = client ? await client.from("forge_runs").select("*").eq("id", id).maybeSingle() : { data: null };
   if (!data) notFound();
-  const parsed = ForgeUnderwritingResponseSchema.safeParse(data.result_payload);
-  if (!parsed.success) notFound();
-  const result = parsed.data;
+  const result = readForgeSnapshot(data.result_payload, data.receipt_hash);
+  if (!result) notFound();
   return <article className="account-page saved-analysis container">
     <p className="eyebrow">{t.snapshot}</p><h1>{data.title}</h1><strong className="saved-decision">{result.decision.replaceAll("_", " ")}</strong>
     <section><h2>{t.objective}</h2><p>{result.planning.objectiveFrame.normalizedObjective}</p></section>
@@ -31,6 +30,6 @@ export default async function SavedRun({ params }: { params: Promise<{ locale: s
     <section><h2>{t.economics}</h2><dl><div><dt>{t.payout}</dt><dd>{money(result.scenario.payout.valueCents, locale)}</dd></div><div><dt>{t.cost}</dt><dd>{money(result.economics.expectedTotalCostCents, locale)}</dd></div><div><dt>{t.risk}</dt><dd>{money(result.economics.riskAdjustedExpectedValueCents, locale)}</dd></div><div><dt>{t.capital}</dt><dd>{money(result.financialExposure.refundableCapitalCents, locale)}</dd></div></dl></section>
     <section><h2>{t.limitations}</h2><ul>{result.limitations.map((item) => <li key={item}>{item.replaceAll("_", " ")}</li>)}</ul></section>
     <section><h2>{t.receipt}</h2><code>{result.receipt.receiptHash}</code><p>SHA-256/canonical-json-v2 · not a digital signature</p></section>
-    <div className="account-actions"><Link className="account-primary" href={`/forge?objective=${encodeURIComponent(data.objective)}`}>{t.again}</Link><DeleteAnalysis id={id} label={t.remove} prompt={t.prompt} detail={t.detail} /></div>
+    <div className="account-actions"><DownloadSavedReceipt receipt={result.receipt} /><Link className="account-primary" href={`/forge?objective=${encodeURIComponent(data.objective)}`}>{t.again}</Link><DeleteAnalysis id={id} label={t.remove} prompt={t.prompt} detail={t.detail} /></div>
   </article>;
 }

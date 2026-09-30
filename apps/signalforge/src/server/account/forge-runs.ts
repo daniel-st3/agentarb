@@ -5,6 +5,7 @@ import { hashReceipt } from "@/server/arbitrage/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/database";
 import { reportForgeRunPersistence } from "./persistence-diagnostics";
+import { assertForgeSaveMatches } from "./snapshot";
 
 export async function persistForgeRun(
   inputRaw: ForgeUnderwritingInput,
@@ -15,6 +16,7 @@ export async function persistForgeRun(
   const result = ForgeUnderwritingResponseSchema.parse(resultRaw);
   if (!input.clientRunId || input.clientRunId !== result.clientRunId) throw new Error("run_identity_mismatch");
   if (hashReceipt(result.receipt.core) !== result.receipt.receiptHash) throw new Error("receipt_fingerprint_mismatch");
+  assertForgeSaveMatches(input, result, result.receipt.receiptHash);
   const client = await createSupabaseServerClient();
   if (!client) {
     if (options.expectAuthenticated) reportForgeRunPersistence("forge_run_session_missing");

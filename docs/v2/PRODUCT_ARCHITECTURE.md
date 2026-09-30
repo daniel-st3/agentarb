@@ -2,6 +2,14 @@
 
 ## Current foundation
 
+**Status note (2026-09-30):** This document is a design roadmap, not a feature inventory.
+Forge task underwriting, optional Supabase accounts, private saved analysis/synthesis
+snapshots and the account ledger now exist. The only execution route is separately
+authorized public-source synthesis. REST/MCP are implemented; Agent Card discovery is
+metadata, not an A2A task runtime. The table below records the original V2 planning
+baseline; unimplemented comparison, strategy, watch and backtesting concepts remain
+proposals. Refer to the root README and current source for shipped behavior.
+
 The deployed app already separates objective interpretation, deterministic routing, observed catalog data, real-economics underwriting, and machine contracts. It has strict Zod schemas, exact integer money arithmetic, provenance categories, read-only Agent Bounties discovery, durable-cache/rate-limit adapters, REST/MCP/A2A surfaces, and explicit `execution_not_enabled` boundaries. The browser consumes bounded APIs; Groq remains an optional server-only decomposition aid.
 
 V2 should extend this foundation rather than create a parallel product model.
