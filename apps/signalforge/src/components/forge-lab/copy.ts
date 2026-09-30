@@ -4,7 +4,7 @@ const en = {
   eyebrow: "VALRUN / FORGE",
   title: "Underwrite your own task.",
   intro:
-    "Define the work and state the economics you know. Valrun underwrites first; optional public-source synthesis requires a separate Run task action.",
+    "Define the work and state the economics you know. Valrun underwrites first; public-source research requires separate authorization.",
   task: "TASK",
   objective: "Objective",
   help: "Field help",

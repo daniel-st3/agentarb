@@ -30,8 +30,8 @@ test("public-source execution requires a separate action and yields a downloadab
   await page.locator("#forge-objective-input").fill("Summarize this public report with citations.");
   await page.locator("#forge-source-urls").fill("https://www.example.org/report");
   expect(calls).toBe(0);
-  await expect(page.getByRole("button", { name: /Run task/i })).toBeEnabled();
-  await page.getByRole("button", { name: /Run task/i }).click();
+  await expect(page.getByRole("button", { name: /Run public-source research/i })).toBeEnabled();
+  await page.getByRole("button", { name: /Run public-source research/i }).click();
   await expect(page.getByText("The report documents a public API.")).toBeVisible();
   expect(calls).toBe(1);
   await expect(page.getByRole("link", { name: "[1]" })).toHaveAttribute("href", "https://www.example.org/report");

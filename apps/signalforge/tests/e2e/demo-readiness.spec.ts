@@ -35,8 +35,9 @@ test("social metadata is public brand content, private history remains noindex",
   await page.goto("/en");
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /Valrun/);
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
-  await expect(page.locator('.brand img')).toHaveAttribute("src", "/brand/valrun-logo.png");
-  expect(await page.locator('.brand img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth === 952)).toBe(true);
+  await expect(page.locator('.brand img')).toHaveAttribute("src", "/brand/valrun-app-icon.png");
+  await expect(page.locator('.brand')).toHaveText("Valrun");
+  expect(await page.locator('.brand img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth === 420)).toBe(true);
   await expect(page.locator('link[rel~="icon"][href*="favicon.ico"]')).toHaveCount(1);
   const favicon = await request.get("/favicon.ico");
   expect(favicon.ok()).toBe(true);

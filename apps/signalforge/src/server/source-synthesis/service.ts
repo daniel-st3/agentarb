@@ -19,6 +19,7 @@ import { admitModelCall } from "@/server/model-capacity";
 import { snapshotCache } from "@/server/intelligence/cache";
 import { fetchPublicSource, publicSourceUrl } from "./fetch-public";
 import { persistSourceSynthesis } from "./persistence";
+import { SynthesisFailure, synthesisErrorCode } from "@/domain/source-synthesis-error";
 
 const MODEL = "openai/gpt-oss-20b" as const;
 const MAX_INPUT_TOKENS = 30000;
@@ -35,8 +36,8 @@ function logSynthesisFailure(stage: "source_fetch" | "model_generation" | "recei
     "durable_store_required", "duplicate_execution", "source_input_too_large",
     "model_capacity_unavailable",
   ]);
-  const code = error instanceof Error && knownCodes.has(error.message) ? error.message : "upstream_or_validation_error";
-  console.error("source_synthesis_failure", { stage, code });
+  const code = error instanceof SynthesisFailure ? error.code : error instanceof Error && knownCodes.has(error.message) ? error.message : "upstream_or_validation_error";
+  console.error("source_synthesis_failure", { stage, code, ...(error instanceof SynthesisFailure && error.sourceIndex !== undefined ? { sourceIndex: error.sourceIndex } : {}) });
 }
 
 function priceCeiling() {
@@ -74,7 +75,11 @@ export async function synthesizePublicSources(raw: SourceSynthesisInput, signal:
   for (const [index, url] of sourceUrls.entries()) {
     let source;
     try { source = await fetchPublicSource(url, signal); }
-    catch (error) { logSynthesisFailure("source_fetch", error); throw error; }
+    catch (error) {
+      const failure = new SynthesisFailure(synthesisErrorCode(error), index + 1);
+      logSynthesisFailure("source_fetch", failure);
+      throw failure;
+    }
     sourceEvidence.push({ sourceId: index + 1, url: source.url, retrievedAt: source.retrievedAt, contentSha256: source.contentSha256, bytesRead: source.bytesRead });
     sourceText.push({ sourceId: index + 1, url: source.url, text: source.text });
   }
@@ -95,10 +100,10 @@ export async function synthesizePublicSources(raw: SourceSynthesisInput, signal:
     abortSignal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]),
     experimental_telemetry: { isEnabled: false },
   }); }
-  catch (error) { logSynthesisFailure("model_generation", error); throw error; }
+  catch { const failure = new SynthesisFailure("model_failed"); logSynthesisFailure("model_generation", failure); throw failure; }
   let result;
   try { result = SynthesisOutputSchema.parse(response.output); }
-  catch (error) { logSynthesisFailure("receipt_validation", error); throw error; }
+  catch { throw new SynthesisFailure("model_failed"); }
   for (const finding of result.findings) {
     if (finding.sourceIds.some((id) => id > sourceUrls.length)) throw new Error("invalid_citation");
   }
@@ -145,7 +150,8 @@ export async function handleSourceSynthesis(request: Request) {
       error instanceof ZodError || error instanceof SyntaxError ||
       error instanceof Error && ["source_url_invalid", "duplicate_source", "source_input_too_large"].includes(error.message)
         ? 400 : error instanceof Error && error.message === "duplicate_execution" ? 409 : 503;
-    return Response.json({ error: status === 413 ? "Request too large." : status === 400 ? "Invalid public source synthesis request." : status === 409 ? "This run was already submitted." : "Source synthesis is temporarily unavailable." }, {
+    const code = error instanceof SynthesisFailure ? error.code : status === 400 || status === 413 ? "request_invalid" : synthesisErrorCode(error);
+    return Response.json({ code, ...(error instanceof SynthesisFailure && error.sourceIndex !== undefined ? { sourceIndex: error.sourceIndex } : {}), error: status === 413 ? "Request too large." : status === 400 ? "Invalid public source synthesis request." : status === 409 ? "This run was already submitted." : "Source synthesis is temporarily unavailable." }, {
       status, headers: { ...headers, ...quotaHeaders(request) },
     });
   }

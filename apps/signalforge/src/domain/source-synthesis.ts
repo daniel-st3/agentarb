@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const PublicHttpsUrlSchema = z.url().max(2048).refine((value) => {
+export const PublicHttpsUrlSchema = z.url().max(2048).refine((value) => {
   try {
     const parsed = new URL(value);
     const host = parsed.hostname.toLowerCase().replace(/\.$/, "");

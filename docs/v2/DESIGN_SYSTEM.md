@@ -16,7 +16,7 @@ Avoid generic dashboard grids, centered chatbot composers, purple “AI” gradi
 
 ## Color and state
 
-Use neutral ink-charcoal ground, soft ivory text, cool mineral gray, a restrained vermilion active signal, mineral blue for verified/favorable states, and muted amber for uncertainty. Avoid purple and green brand accents. Color is semantic:
+Primary human surfaces are light-first: warm paper `#f7f4ed`, near-black ink `#242523`, readable mineral gray `#60615b`, and coral `#b6432b` for actions. Charcoal `#222725` with ivory text is reserved for code, machine contracts and receipt artifacts. Mineral blue denotes favorable states; muted amber denotes uncertainty. The isolated visual laboratory retains its own historical concept palettes. Color is semantic:
 
 | Role | Treatment |
 | --- | --- |
@@ -37,7 +37,9 @@ Financial values use tabular numerals, explicit currency, and conservative round
 
 ## Typography
 
-The display face may carry editorial authority; the UI face carries instructions; mono carries evidence, timestamps, identifiers, and economics. Do not vary families component by component. Variable axes may change subtly at a decision boundary, but never animate body copy or make certainty illegible.
+The existing serif carries the homepage and final verdict. Sans carries forms, navigation, explanations, ledger rows and tabular financial values. Mono is reserved for compact machine labels, hashes, source IDs and code. Workflow headings are compact sans, not oversized display type. Do not animate body copy or make certainty illegible.
+
+Forge prioritizes decision, scenario economics, evidence coverage and blockers before expandable supporting detail. Conditional profit must never imply complete route evidence. Localized decimal inputs preserve canonical decimal strings; presentation never recalculates authoritative economics. App chrome uses the supplied square symbol beside HTML Valrun text, not a raster wordmark panel.
 
 ### Commercial candidates — license required
 

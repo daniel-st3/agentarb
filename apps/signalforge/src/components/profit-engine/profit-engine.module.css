@@ -1,9 +1,9 @@
 .home {
-  --forge-bg: #101113;
-  --forge-ink: #f4f0e8;
-  --forge-muted: #abb1b5;
-  --forge-line: #41454a;
-  --forge-accent: #ff7456;
+  --forge-bg: var(--bg);
+  --forge-ink: var(--ink);
+  --forge-muted: var(--muted);
+  --forge-line: var(--line);
+  --forge-accent: var(--accent);
   min-height: 100svh;
   overflow: clip;
   color: var(--forge-ink);
@@ -76,7 +76,7 @@
 .quickEntry input::placeholder { color: var(--forge-muted); }
 .quickEntry input:focus { outline: none; }
 .quickEntry button { min-height: 64px; border: 0; padding: .75rem 0 .75rem 1rem; color: var(--forge-accent); background: transparent; cursor: pointer; font: .68rem var(--font-mono); letter-spacing: .05em; white-space: nowrap; }
-.quickEntry button:hover { color: #ffab96; }
+.quickEntry button:hover { color: var(--ink); }
 .quickEntry small { color: var(--forge-muted); font: .68rem/1.5 var(--font-mono); }
 .secondaryAction { display: inline-block; min-height: 44px; margin-block-start: .75rem; padding-block: .75rem; border-bottom: 1px solid var(--forge-line); font: .66rem var(--font-mono); letter-spacing: .08em; }
 .examples { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin-top: .7rem; }
@@ -146,9 +146,20 @@
 .entries nav strong { font-size: .82rem; letter-spacing: .05em; }
 .entries nav b { color: var(--forge-accent); font-weight: 400; }
 .trust { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 1.5rem; padding-block: 1.25rem 4rem; border-top: 1px solid var(--forge-line); color: var(--forge-muted); font: .62rem/1.5 var(--font-mono); letter-spacing: .08em; }
-.trust strong { color: #d8b47a; font-weight: 500; }
+.trust strong { color: var(--uncertain); font-weight: 500; }
 .trust a { color: var(--forge-ink); }
 .home :focus-visible { outline: 2px solid var(--forge-accent); outline-offset: 3px; }
+.quickEntry .entryField { border: 1px solid var(--line); background: var(--surface); padding: .35rem; }
+.quickEntry input { padding-inline: .75rem; font-size: 1rem; }
+.quickEntry button { padding: .75rem 1rem; background: var(--accent); color: #fffaf5; font: 600 .85rem var(--font-sans); letter-spacing: 0; }
+.quickEntry button:hover { color: #fff; background: #913720; }
+.agentContract { background: var(--machine-bg); color: var(--machine-ink); padding: 1.5rem; border: 0; }
+.agentContract li { border-color: #515651; }
+.agentContract li::marker { color: #ff987e; }
+.agentContract small { color: #c6cbc5; }
+.heroEvidence h2 { font: 500 clamp(1.3rem, 2.2vw, 2rem)/1.3 var(--font-sans); letter-spacing: -.03em; }
+.methodIntro h2, .entries h2 { font-size: clamp(2.4rem, 4vw, 4rem); max-width: 20ch; }
+.trust strong { color: var(--uncertain); }
 @media (hover: hover) and (pointer: fine) { .entries nav a:hover strong, .trust a:hover, .methodStep:hover strong { color: var(--forge-accent); } }
 
 @media (max-width: 1000px) {
@@ -177,7 +188,7 @@
   .statusRail .statusTitle, .statusRail .statusDetail { grid-column: 1 / -1; }
   .hero h1 { font-size: clamp(3rem, 13.2vw, 4.7rem); line-height: .94; }
   .entryField { grid-template-columns: 1fr; }
-  .quickEntry button { justify-self: start; min-height: 44px; padding-inline-start: 0; }
+  .quickEntry button { justify-self: stretch; min-height: 44px; padding-inline: 1rem; }
   .methodIntro h2 { font-size: clamp(2.7rem, 12vw, 4rem); }
   .entries h2 { font-size: clamp(3rem, 14vw, 4.6rem); }
 }
