@@ -25,7 +25,7 @@ export function AccountLedger({ locale, entries, analysesAvailable, executionsAv
     {!entries.length && !unavailable && <section className={styles.empty}><h2>{t.empty}</h2><p>{t.emptyDetail}</p><Link href={`/${locale}/forge`}>{t.newTask} →</Link></section>}
     <ol className={styles.rows}>{entries.map((entry) => {
       const decision = entry.decision in t.statuses ? t.statuses[entry.decision as keyof typeof t.statuses] : entry.kind === "synthesis" && entry.valid ? t.completed : t.unknown;
-      return <li key={entry.id} className={styles.row} data-ledger-kind={entry.kind}>
+      return <li key={entry.id} className={styles.row} data-ledger-kind={entry.kind} data-decision={entry.valid ? entry.decision : "unknown"}>
         <div><p className={styles.eyebrow}>{t[entry.kind]} · <time dateTime={entry.createdAt}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(entry.createdAt))} UTC</time></p>
           <h2>{entry.title}</h2><strong>{entry.valid ? decision : t.invalid}</strong>
           <p className={styles.note}>{entry.kind === "underwrite" ? t.assumptions : t.charge}</p>

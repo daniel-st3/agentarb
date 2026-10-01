@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useLocale } from "next-intl";
-import { AnimatePresence, m } from "motion/react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { ArrowUpRight, Download, Info } from "lucide-react";
 import type { ForgeUnderwritingInput, ForgeUnderwritingResponse } from "@/domain/forge-underwriting";
 import { ForgeProgressStageSchema, forgeProgressStages, type ForgeProgressStage } from "@/domain/forge-progress";
@@ -250,6 +250,7 @@ function LedgerRow({
 }
 
 function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective: string; copy: ForgeCopy; ceiling: string | null; locale: ForgeLocale }) {
+  const reducedMotion = useReducedMotion();
   const [urls, setUrls] = useState("");
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
@@ -319,7 +320,7 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
     <p id="source-disabled-reason" role="status">{disabledReason}</p>
     </form>
     {error && <p role="alert" className={styles.error}>{error}</p>}
-    {visibleOutput && <div className={styles.synthesisResult} aria-live="polite">
+    {visibleOutput && <m.div className={styles.synthesisResult} aria-live="polite" initial={reducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reducedMotion ? 0 : .16 }}>
       <h3>{copy.synthesisFindings}</h3>
       <p>{visibleOutput.receipt.core.result.summary}</p>
       <ol>{visibleOutput.receipt.core.result.findings.map((finding, index) => <li key={index}>
@@ -327,12 +328,14 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
         <span>{finding.sourceIds.map((sourceId) => <a key={sourceId} href={visibleOutput.receipt.core.sourceUrls[sourceId - 1]} target="_blank" rel="noreferrer">[{sourceId}]</a>)}</span>
       </li>)}</ol>
       {visibleOutput.receipt.core.result.limitations.length > 0 && <><h4>{copy.synthesisLimitations}</h4><ul>{visibleOutput.receipt.core.result.limitations.map((item) => <li key={item}>{item}</li>)}</ul></>}
+      <div className={styles.synthesisAudit}>
       <p>{copy.synthesisUsage}: {visibleOutput.receipt.core.usage.inputTokens ?? "UNKNOWN"} + {visibleOutput.receipt.core.usage.outputTokens ?? "UNKNOWN"} tokens · {visibleOutput.receipt.core.latencyMs} ms</p>
       <p>{copy.synthesisCost}: {visibleOutput.receipt.core.cost.calculatedFromUsageUsdMicros === null ? "UNKNOWN" : new Intl.NumberFormat(locale, { style: "currency", currency: "USD", minimumFractionDigits: 4, maximumFractionDigits: 6 }).format(Number(visibleOutput.receipt.core.cost.calculatedFromUsageUsdMicros) / 1_000_000)}</p>
       <p>{visibleOutput.persistence.status === "saved" ? copy.synthesisSaved : visibleOutput.persistence.status === "failed" ? copy.synthesisSaveFailed : copy.synthesisGuest}</p>
       <p className={styles.synthesisFingerprint}>{visibleOutput.receipt.receiptHash} · {copy.synthesisFingerprint}</p>
       <button type="button" onClick={downloadExecutionReceipt}><Download size={14} aria-hidden="true" /> {copy.synthesisReceipt}</button>
-    </div>}
+      </div>
+    </m.div>}
   </section>;
 }
 
@@ -637,13 +640,14 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
             ) : result ? (
               <AnimatePresence mode="wait">
                 <m.div
+                  className={styles.result}
                   key={result.receipt.receiptHash}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.18 }}
                 >
-                  <section className={`${styles.stage} ${styles.decision}`} id="forge-decision">
+                  <section className={`${styles.stage} ${styles.decision}`} id="forge-decision" data-decision={result.decision}>
                     <span className={styles.stageIndex}>05</span>
                     <div>
                       <span className={styles.tag}>{ux.summary} · {copy.derived}</span>

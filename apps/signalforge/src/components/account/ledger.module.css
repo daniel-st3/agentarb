@@ -1,20 +1,21 @@
-.ledger { max-width: 1440px; margin: auto; padding: clamp(1.2rem, 4vw, 4rem); color: var(--ink); }
+.ledger { max-width: 1440px; margin: auto; padding: clamp(1.2rem, 3vw, 3rem) clamp(1.2rem, 4vw, 4rem); color: var(--ink); }
 .header { display: flex; align-items: end; justify-content: space-between; gap: 2rem; padding-bottom: 2rem; }
 .header h1 { margin: .6rem 0; font: 400 clamp(3rem, 6vw, 5.5rem)/1 var(--font-display); }
 .header p:not(.eyebrow) { max-width: 40rem; color: var(--muted); line-height: 1.6; }
 .header nav { display: flex; gap: 1.2rem; flex-wrap: wrap; }
 .header a, .receipt a, .empty a { display: inline-flex; align-items: center; min-height: 44px; border-bottom: 1px solid var(--accent); color: var(--accent); font-size: .85rem; }
 .eyebrow { color: var(--muted); font: .68rem/1.6 var(--font-mono); letter-spacing: .05em; }
-.summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); margin: 0; padding-block: 1.5rem; border-block: 1px solid var(--line); }
-.summary div { display: block; padding-right: 1rem; }
+.summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); margin: 0; padding-block: 1rem; border-block: 1px solid var(--line); background: var(--surface); }
+.summary div { display: block; padding: 0 1rem; border: 0; }
+.summary div + div { border-left: 1px solid var(--line); }
 .summary dt, .values dt { color: var(--muted); font-size: .8rem; line-height: 1.5; }
-.summary dd { margin: .5rem 0 0; text-align: start; font: 2.8rem var(--font-mono); font-variant-numeric: tabular-nums; }
+.summary dd { margin: .4rem 0 0; text-align: start; font: 2rem var(--font-mono); font-variant-numeric: tabular-nums; }
 .scope, .note { color: var(--muted); font-size: .75rem; line-height: 1.6; }
 .rows { list-style: none; padding: 0; }
-.row { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) minmax(10rem,.55fr); gap: 2rem; padding-block: 2rem; border-bottom: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr) minmax(10rem,.5fr); gap: 1.5rem; padding: 1.25rem .5rem; border-bottom: 1px solid var(--line); }
 .row h2 { font: 400 clamp(1.4rem, 2.5vw, 2rem)/1.2 var(--font-display); margin: .5rem 0 1rem; overflow-wrap: anywhere; }
 .row strong { font: .75rem/1.5 var(--font-mono); text-transform: uppercase; }
-.values { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; margin: 0; }
+.values { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem 1rem; margin: 0; }
 .values > div { display: block; min-width: 0; }
 .values dd { margin: .3rem 0 0; text-align: start; font: .9rem/1.4 var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .receipt { display: flex; flex-direction: column; align-items: start; gap: .6rem; font-size: .7rem; }
@@ -30,5 +31,12 @@
 .values dd { font-family: var(--font-sans); font-weight: 600; }
 .header h1 { font-size: clamp(2.5rem, 5vw, 4rem); }
 .receipt code { color: var(--machine-ink); background: var(--machine-bg); padding: .5rem; }
+.row h2 { margin: .4rem 0 .5rem; }
+.row[data-decision="insufficient_data"] strong, .row[data-decision="unroutable"] strong { color: var(--uncertain); }
+.row[data-decision="conditionally_profitable"] strong { color: var(--verified); }
+.header nav a:first-child { padding-inline: 1rem; background: var(--accent); color: #fffaf5; }
+.row:focus-within { outline: 1px solid var(--accent); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .row:hover { background: var(--surface); } .row a:hover { text-decoration: underline; text-underline-offset: 4px; } }
+@media (prefers-reduced-motion: no-preference) { .row { transition: background-color .14s ease; } }
 @media (max-width: 1000px) { .row { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .receipt { grid-column: 1/-1; flex-direction: row; flex-wrap: wrap; align-items: center; } .receipt a { margin-left: auto; } }
 @media (max-width: 600px) { .header { display: block; } .header nav { margin-top: 1rem; } .row { grid-template-columns: 1fr; gap: 1rem; } .summary dt { font-size: .7rem; } .summary dd { font-size: 2rem; } .receipt a { margin-left: 0; } }

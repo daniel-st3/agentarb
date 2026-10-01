@@ -34,3 +34,36 @@ body::before { display: none; }
 .pricing-grid article > a, .pricing-grid article > strong { border-color: var(--accent); }
 @media (max-width: 600px) { .site-nav { position: relative; } .brand-artwork { font-size: 21px; } }
 @media (forced-colors: active) { :focus-visible { outline: 2px solid Highlight; } }
+
+/* Saved records are compact instruments, with the same readable operating rhythm. */
+.account-page { padding-block: clamp(2rem, 4vw, 4rem); }
+.saved-analysis > h1 { max-width: 30ch; font: 500 clamp(2rem, 3.5vw, 3.25rem)/1.1 var(--font-display); letter-spacing: -.025em; }
+.saved-analysis .saved-decision { display: inline-block; padding: .6rem .8rem; border-left: 2px solid var(--accent); background: var(--surface); font: 600 .85rem/1.4 var(--font-sans); }
+.saved-analysis > section { grid-template-columns: minmax(10rem, .3fr) minmax(0, 1fr); gap: 1rem 2rem; padding-block: 1.25rem; }
+.saved-analysis > section:first-of-type { margin-top: 2rem; }
+.saved-analysis > section > p, .saved-analysis > section > ul, .saved-analysis > section > ol { max-width: 70ch; }
+.saved-analysis h2 { font-size: 1rem; text-transform: none; letter-spacing: 0; }
+.saved-analysis section > dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem 2rem; }
+.saved-analysis section > dl div { grid-template-columns: 1fr; gap: .4rem; padding-block: .6rem; }
+.saved-analysis dd { text-align: start; margin: 0; font: 600 1.2rem/1.4 var(--font-sans); font-variant-numeric: tabular-nums; }
+.saved-analysis section:has(> code) { background: var(--machine-bg); color: var(--machine-ink); padding: 1.25rem; }
+.saved-analysis section:has(> code) p, .saved-analysis section:has(> code) code { color: var(--machine-ink) !important; }
+.saved-analysis section:has(> code) p { grid-column: 2; font-size: .75rem; }
+.site-footer-v1 { padding-block: 1.5rem 2rem; gap: 1rem 2rem; }
+/* Supporting product pages share the workstation's compact editorial rhythm. */
+.pricing-page { padding-block: clamp(2rem, 4vw, 4rem); }
+.pricing-page > header { padding-bottom: 2rem; gap: 1rem 3rem; }
+.pricing-page > header h1 { font-size: clamp(2.8rem, 5vw, 4.5rem); line-height: 1; max-width: 14ch; }
+.pricing-grid article { min-height: 21rem; padding: 1.5rem; }
+.pricing-grid article > p:not(.pricing-amount) { margin-block: 1.25rem; }
+.network-page { padding-block: clamp(2rem, 3vw, 3rem); }
+.network-page h1 { font-size: clamp(2.8rem, 4vw, 4rem); margin-block: 1rem; max-width: 24ch; }
+.network-page .network-intro { max-width: 65ch; font-size: 1rem; }
+.developers section > p, .developers section > ul { max-width: 75ch; }
+.developers pre { padding: 1.25rem; margin-block: .75rem; }
+.developers h2 { font: 600 1.3rem/1.4 var(--font-sans); margin-bottom: .75rem; }
+@media (max-width: 700px) {
+  .saved-analysis > section { grid-template-columns: 1fr; gap: .75rem; }
+  .saved-analysis section:has(> code) p { grid-column: 1; }
+  .saved-analysis section > dl { column-gap: 1rem; }
+}
