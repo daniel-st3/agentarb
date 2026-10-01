@@ -2,26 +2,13 @@ import { useCopy } from "@/i18n/copy";
 import Link from "@/i18n/navigation";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
+import { BrandArtwork } from "./brand-artwork";
 export function Brand() {
   const t = useCopy();
 
   return (
     <Link href="/" className="brand" aria-label={t("Valrun home")}>
-      <svg
-        width="25"
-        height="25"
-        viewBox="0 0 64 64"
-        fill="none"
-        aria-hidden="true"
-        className="brand-signal"
-      >
-        <path d="M10 18 29 46 53 15" stroke="currentColor" strokeWidth="8" strokeLinecap="square" strokeLinejoin="miter" />
-        <path d="M36 48h18" stroke="var(--accent)" strokeWidth="8" strokeLinecap="square" />
-      </svg>
-      <span>
-        Valrun
-        <span className="brand-dot">.</span>
-      </span>
+      <BrandArtwork />
     </Link>
   );
 }

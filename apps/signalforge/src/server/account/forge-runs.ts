@@ -5,6 +5,7 @@ import { hashReceipt } from "@/server/arbitrage/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/database";
 import { reportForgeRunPersistence } from "./persistence-diagnostics";
+import { assertForgeSaveMatches } from "./snapshot";
 
 export async function persistForgeRun(
   inputRaw: ForgeUnderwritingInput,
@@ -15,6 +16,7 @@ export async function persistForgeRun(
   const result = ForgeUnderwritingResponseSchema.parse(resultRaw);
   if (!input.clientRunId || input.clientRunId !== result.clientRunId) throw new Error("run_identity_mismatch");
   if (hashReceipt(result.receipt.core) !== result.receipt.receiptHash) throw new Error("receipt_fingerprint_mismatch");
+  assertForgeSaveMatches(input, result, result.receipt.receiptHash);
   const client = await createSupabaseServerClient();
   if (!client) {
     if (options.expectAuthenticated) reportForgeRunPersistence("forge_run_session_missing");
@@ -44,13 +46,13 @@ export async function persistForgeRun(
     economic_model_version: core.economicModelVersion,
     policy_version: core.policyVersion,
   };
-  const { data, error } = await client
+  const { data, error, status } = await client
     .from("forge_runs")
     .upsert(row, { onConflict: "user_id,idempotency_key", ignoreDuplicates: false })
     .select("id")
     .single();
   if (error || !data) {
-    reportForgeRunPersistence("forge_run_postgrest_rejected", { postgrestError: error });
+    reportForgeRunPersistence("forge_run_postgrest_rejected", { postgrestError: error, status });
     throw new Error("forge_run_save_failed");
   }
   reportForgeRunPersistence("forge_run_saved");

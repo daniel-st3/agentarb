@@ -1,17 +1,17 @@
 .home {
-  --forge-bg: #101113;
-  --forge-ink: #f4f0e8;
-  --forge-muted: #abb1b5;
-  --forge-line: #41454a;
-  --forge-accent: #ff7456;
+  --forge-bg: var(--bg);
+  --forge-ink: var(--ink);
+  --forge-muted: var(--muted);
+  --forge-line: var(--line);
+  --forge-accent: var(--accent);
   min-height: 100svh;
   overflow: clip;
   color: var(--forge-ink);
   background: var(--forge-bg);
 }
 
-.engine, .method, .entries, .trust {
-  width: min(100%, 1660px);
+.engine, .method, .entries, .trust, .agent {
+  width: min(100%, 1440px);
   margin-inline: auto;
   padding-inline: clamp(1rem, 4vw, 4rem);
 }
@@ -34,9 +34,9 @@
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr);
-  gap: clamp(2rem, 5vw, 6rem);
+  gap: clamp(2rem, 4vw, 4rem);
   align-items: stretch;
-  padding-block: clamp(3rem, 6vw, 6.5rem);
+  padding-block: clamp(2rem, 4vw, 4rem);
 }
 .heroMain { align-self: center; min-width: 0; }
 .eyebrow, .entries header p {
@@ -55,9 +55,9 @@
   transform-origin: left center;
 }
 .hero h1 {
-  max-width: 11ch;
+  max-width: 15ch;
   margin-block: 1rem 1.4rem;
-  font-size: clamp(3.3rem, 5.9vw, 6.5rem);
+  font-size: clamp(3.3rem, 5.3vw, 5.5rem);
   line-height: .94;
   letter-spacing: -.035em;
   text-wrap: balance;
@@ -76,9 +76,23 @@
 .quickEntry input::placeholder { color: var(--forge-muted); }
 .quickEntry input:focus { outline: none; }
 .quickEntry button { min-height: 64px; border: 0; padding: .75rem 0 .75rem 1rem; color: var(--forge-accent); background: transparent; cursor: pointer; font: .68rem var(--font-mono); letter-spacing: .05em; white-space: nowrap; }
-.quickEntry button:hover { color: #ffab96; }
+.quickEntry button:hover { color: var(--ink); }
 .quickEntry small { color: var(--forge-muted); font: .68rem/1.5 var(--font-mono); }
 .secondaryAction { display: inline-block; min-height: 44px; margin-block-start: .75rem; padding-block: .75rem; border-bottom: 1px solid var(--forge-line); font: .66rem var(--font-mono); letter-spacing: .08em; }
+.examples { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin-top: .7rem; }
+.examples button { min-height: 44px; padding: .4rem 0; background: none; border: 0; border-bottom: 1px solid var(--forge-line); color: var(--forge-muted); font: .73rem var(--font-sans); cursor: pointer; }
+.examples button:hover { color: var(--forge-ink); }
+.examples span { color: var(--forge-accent); }
+.agent { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 3rem; padding-block: 3rem; border-top: 1px solid var(--forge-line); }
+.agent h2 { font: 400 clamp(2rem,3.7vw,4rem)/1.06 var(--font-display); max-width: 22ch; margin: 1rem 0; }
+.agent p:not(.eyebrow) { max-width: 40rem; color: var(--forge-muted); line-height: 1.65; }
+.agent a { display: inline-flex; align-items: center; min-height: 44px; color: var(--forge-accent); font: .7rem var(--font-mono); }
+.agentContract { display: flex; flex-direction: column; gap: .8rem; border-left: 1px solid var(--forge-line); padding-left: 2rem; min-width: 0; }
+.agentContract ol { list-style: decimal-leading-zero; padding-left: 2rem; margin: 0 0 .5rem; }
+.agentContract li { padding: .7rem 0 .7rem .7rem; border-bottom: 1px solid var(--forge-line); font-size: .9rem; }
+.agentContract li::marker { color: var(--forge-accent); font: .7rem var(--font-mono); }
+.agentContract code, .agentContract small { font: .7rem/1.6 var(--font-mono); overflow-wrap: anywhere; }
+.agentContract small { color: var(--forge-muted); }
 
 .heroEvidence {
   display: flex;
@@ -92,6 +106,8 @@
 .evidenceQuestion { margin-block: 1.7rem 0; color: var(--forge-muted); font: 1rem/1.5 var(--font-sans); }
 .evidenceBody { margin-block: auto; padding-block: 1.5rem; }
 .heroEvidence:not([data-observation-id]) .evidenceBody { margin-block: 1rem; }
+.heroEvidence:not([data-observation-id]) { align-self: center; padding: 1.5rem; background: var(--surface); border-top: 2px solid var(--forge-line); border-left: 0; }
+.heroEvidence:not([data-observation-id]) .evidenceQuestion { margin-top: 1rem; }
 .evidenceSource { color: var(--forge-accent); font: .63rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .heroEvidence h2 { max-width: 19ch; margin-block: .6rem 1.8rem; font: 400 clamp(1.7rem, 2.7vw, 3.3rem)/1.08 var(--font-display); text-wrap: balance; overflow-wrap: anywhere; }
 .evidenceFacts { margin: 0; border-top: 1px solid var(--forge-line); }
@@ -114,7 +130,7 @@
 .methodTrace { position: absolute; top: 2.1rem; left: .45rem; width: 1rem; height: 13rem; fill: none; stroke: var(--forge-accent); stroke-width: 1.3; pointer-events: none; }
 .methodTrace path { stroke-dasharray: 194 194; stroke-dashoffset: 194; }
 .methodStep { display: grid; grid-template-columns: 2.5rem minmax(0, .8fr) minmax(0, 1.2fr) auto; gap: 1rem; align-items: start; width: 100%; min-height: 6rem; padding: 1.25rem 0 1.25rem 1.8rem; border: 0; border-bottom: 1px solid var(--forge-line); text-align: start; color: var(--forge-ink); background: transparent; cursor: pointer; }
-.methodStep[data-active="true"] { background: linear-gradient(90deg, rgb(255 116 86 / .1), transparent 55%); }
+.methodStep[data-active="true"] { background: #efe8de; box-shadow: inset 2px 0 var(--forge-accent); }
 .methodStep span { color: var(--forge-accent); font: .68rem var(--font-mono); font-variant-numeric: tabular-nums; }
 .methodStep strong { font: 600 .88rem/1.4 var(--font-sans); }
 .methodStep small { color: var(--forge-muted); font: .72rem/1.5 var(--font-sans); }
@@ -132,13 +148,29 @@
 .entries nav strong { font-size: .82rem; letter-spacing: .05em; }
 .entries nav b { color: var(--forge-accent); font-weight: 400; }
 .trust { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 1.5rem; padding-block: 1.25rem 4rem; border-top: 1px solid var(--forge-line); color: var(--forge-muted); font: .62rem/1.5 var(--font-mono); letter-spacing: .08em; }
-.trust strong { color: #d8b47a; font-weight: 500; }
+.trust strong { color: var(--uncertain); font-weight: 500; }
 .trust a { color: var(--forge-ink); }
 .home :focus-visible { outline: 2px solid var(--forge-accent); outline-offset: 3px; }
+.quickEntry .entryField { border: 1px solid var(--line); background: var(--surface); padding: .35rem; }
+.quickEntry input { padding-inline: .75rem; font-size: 1rem; }
+.quickEntry button { padding: .75rem 1rem; background: var(--accent); color: #fffaf5; font: 600 .85rem var(--font-sans); letter-spacing: 0; }
+.quickEntry button:hover { color: #fff; background: #913720; }
+.agentContract { background: var(--machine-bg); color: var(--machine-ink); padding: 1.5rem; border: 0; }
+.agentContract li { border-color: #515651; }
+.agentContract li::marker { color: #ff987e; }
+.agentContract small { color: #c6cbc5; }
+.heroEvidence h2 { font: 500 clamp(1.3rem, 2.2vw, 2rem)/1.3 var(--font-sans); letter-spacing: -.03em; }
+.methodIntro h2, .entries h2 { font-size: clamp(2.4rem, 4vw, 4rem); max-width: 20ch; }
+.trust strong { color: var(--uncertain); }
+.method, .entries { padding-block: clamp(2rem, 4vw, 4rem); gap: clamp(2rem, 4vw, 4rem); }
+.quickEntry { margin-top: 1.5rem; }
+.heroIntroduction { max-width: 58ch; }
 @media (hover: hover) and (pointer: fine) { .entries nav a:hover strong, .trust a:hover, .methodStep:hover strong { color: var(--forge-accent); } }
 
 @media (max-width: 1000px) {
   .hero { grid-template-columns: minmax(0, 1fr) minmax(0, .82fr); gap: 2rem; }
+  .entryField { grid-template-columns: 1fr; }
+  .quickEntry button { min-height: 44px; }
   .hero h1 { font-size: clamp(3rem, 6vw, 5rem); }
   .methodStep { grid-template-columns: 2rem minmax(0, 1fr) auto; gap: .4rem 1rem; }
   .methodStep small { grid-column: 2 / -1; }
@@ -146,8 +178,9 @@
 @media (max-width: 760px) {
   .statusRail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .statusRail .statusDetail { text-align: start; }
-  .hero, .method, .entries { grid-template-columns: 1fr; }
-  .hero { gap: 2.5rem; padding-block: 3rem; }
+  .hero, .method, .entries, .agent { grid-template-columns: 1fr; }
+  .agentContract { padding: 1.25rem; border-left: 0; }
+  .hero { gap: 2rem; padding-block: 2rem; }
   .heroEvidence { border-left: 0; border-top: 1px solid var(--forge-line); padding: 1.5rem 0 0; }
   .evidenceBody { padding-block: 1rem; }
   .method { gap: 2rem; }
@@ -162,7 +195,7 @@
   .statusRail .statusTitle, .statusRail .statusDetail { grid-column: 1 / -1; }
   .hero h1 { font-size: clamp(3rem, 13.2vw, 4.7rem); line-height: .94; }
   .entryField { grid-template-columns: 1fr; }
-  .quickEntry button { justify-self: start; min-height: 44px; padding-inline-start: 0; }
+  .quickEntry button { justify-self: stretch; min-height: 44px; padding-inline: 1rem; }
   .methodIntro h2 { font-size: clamp(2.7rem, 12vw, 4rem); }
   .entries h2 { font-size: clamp(3rem, 14vw, 4.6rem); }
 }

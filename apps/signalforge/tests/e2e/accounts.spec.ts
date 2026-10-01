@@ -19,6 +19,10 @@ test("optional sign-in experience is accessible and dismissible", async ({ page,
   await page.getByRole("navigation", { name: "Main navigation" }).getByRole("button", { name: "Sign in", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Keep your Valrun work." });
   await expect(dialog).toBeVisible();
+  const bounds = await dialog.boundingBox();
+  const viewport = page.viewportSize()!;
+  expect(bounds && Math.abs(bounds.x + bounds.width / 2 - viewport.width / 2) < 2).toBeTruthy();
+  expect(bounds && bounds.y >= 0 && bounds.y + bounds.height <= viewport.height).toBeTruthy();
   await expect(dialog).toContainText("fully usable without an account");
   await expect(dialog.getByRole("button", { name: "Continue without an account" })).toBeVisible();
   await page.keyboard.press("Escape");

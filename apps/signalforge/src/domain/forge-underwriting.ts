@@ -12,7 +12,9 @@ const MoneyTextSchema = z
   .string()
   .trim()
   .regex(/^(?:0|[1-9]\d{0,6})(?:\.\d{1,2})?$/, "Use a non-negative USD amount with at most two decimals.")
-  .refine((value) => decimalUsdToCents(value) <= 1_000_000, "USD amount is too large.");
+  // Zod runs later refinements even when the regex failed. Do not throw while
+  // trying the money branch of the optional-money union (notably the empty string).
+  .refine((value) => /^(?:0|[1-9]\d{0,6})(?:\.\d{1,2})?$/.test(value) && decimalUsdToCents(value) <= 1_000_000, "USD amount is too large.");
 
 const OptionalMoneyTextSchema = z.union([MoneyTextSchema, z.literal("")]);
 

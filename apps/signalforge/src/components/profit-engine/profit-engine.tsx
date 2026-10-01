@@ -103,6 +103,12 @@ export function ProfitEngine({ locale, initialDataset }: { locale: Locale; initi
               </div>
               <small>{copy.quickHint}</small>
             </form>
+            <div className={styles.examples} aria-label={copy.examplesLabel}>
+              {copy.examples.map((example) => <button type="button" key={example.label} onClick={() => {
+                setQuickObjective(example.objective);
+                document.getElementById("home-task-entry")?.focus();
+              }}>{example.label} <span aria-hidden="true">↗</span></button>)}
+            </div>
             <Link className={styles.secondaryAction} href="/forge">{copy.openForge} →</Link>
           </div>
 
@@ -152,6 +158,15 @@ export function ProfitEngine({ locale, initialDataset }: { locale: Locale; initi
         </div>
       </section>
 
+      <section className={styles.agent} aria-labelledby="agent-entry-title">
+        <div><p className={styles.eyebrow}>REST / MCP</p><h2 id="agent-entry-title">{copy.agentTitle}</h2><p>{copy.agentDetail}</p><Link href="/developers">{copy.agentAction} ↗</Link></div>
+        <div className={styles.agentContract}>
+          <ol>{copy.agentFlow.map((step) => <li key={step}>{step}</li>)}</ol>
+          <code>POST /api/v1/forge/underwrite</code>
+          <code>MCP · signalforge_underwrite_task</code>
+          <small>executionStatus: execution_not_enabled</small>
+        </div>
+      </section>
       <section className={styles.entries} aria-labelledby="product-entry-title">
         <header><p>{copy.productEntry}</p><h2 id="product-entry-title">{copy.entryTitle}</h2></header>
         <nav aria-label={copy.productEntry}>
@@ -162,7 +177,7 @@ export function ProfitEngine({ locale, initialDataset }: { locale: Locale; initi
         </nav>
       </section>
       <section className={styles.trust} aria-label={copy.boundariesLabel}>
-        <span>{copy.trust}</span><strong>{copy.boundary}</strong><Link href="/developers">REST / MCP / A2A ↗</Link>
+        <span>{copy.trust}</span><strong>{copy.boundary}</strong><Link href="/developers">REST / MCP / Agent Card ↗</Link>
       </section>
     </div>
   );

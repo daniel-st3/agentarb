@@ -47,7 +47,7 @@ it("rejects private DNS answers before connecting", async () => {
 });
 
 it.each([
-  [302, { "content-type": "text/plain", location: "https://127.0.0.1/" }, "source_http_unavailable"],
+  [302, { "content-type": "text/plain", location: "https://127.0.0.1/" }, "source_redirect_rejected"],
   [200, { "content-type": "application/pdf" }, "source_mime_invalid"],
   [200, { "content-type": "text/plain", "content-encoding": "gzip" }, "source_encoding_invalid"],
   [200, { "content-type": "text/plain", "content-length": "98305" }, "source_payload_too_large"],

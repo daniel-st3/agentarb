@@ -75,6 +75,8 @@ export async function fetchPublicSource(value: string, signal: AbortSignal) {
       },
     }, async (response) => {
       try {
+        if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400)
+          throw new Error("source_redirect_rejected");
         if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300)
           throw new Error("source_http_unavailable");
         const mime = String(response.headers["content-type"] ?? "").split(";", 1)[0].trim().toLowerCase();

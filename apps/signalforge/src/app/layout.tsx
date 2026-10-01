@@ -11,6 +11,8 @@ import "./interactions.css";
 import "./locales.css";
 import "./arbitrage.css";
 import "./live-market.css";
+import "./research-paper.css";
+export const metadata = { metadataBase: new URL("https://signalforge-rose-two.vercel.app") };
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",

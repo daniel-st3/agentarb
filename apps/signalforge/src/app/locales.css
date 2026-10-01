@@ -6,3 +6,12 @@ html:not([lang="en"]) .command-controls { gap: 14px; }
 html:not([lang="en"]) .command-submit { font-size: 14px; }
 @media(max-width: 900px) { .nav-inner { flex-wrap: wrap; gap: 12px; } .locale-selector { margin-left: auto; } .site-nav .network-indicator { display: none; } }
 @media(max-width: 600px) { .locale-selector { gap: 8px; } .site-nav .nav-inner > nav:not(.locale-selector) { order: 3; width: 100%; justify-content: space-between; } html:not([lang="en"]) .command-heading h1 { font-size: 40px; } }
+/* The compact header has two real rows: neither may spill over page content. */
+@media (max-width: 600px) {
+  .site-nav { height: auto; }
+  .nav-inner { height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding-block: 10px; }
+  .nav-inner > .brand { grid-column: 1; grid-row: 1; justify-self: start; }
+  .nav-inner > .locale-selector { grid-column: 2; grid-row: 1; }
+  .site-nav .nav-inner > nav:not(.locale-selector) { grid-column: 1 / -1; grid-row: 2; }
+  .site-nav .command-launcher, .site-nav .arb-mobile-nav summary { min-height: 44px; }
+}

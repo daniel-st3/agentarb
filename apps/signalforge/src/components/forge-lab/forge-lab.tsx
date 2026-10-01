@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useLocale } from "next-intl";
-import { AnimatePresence, m } from "motion/react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { ArrowUpRight, Download, Info } from "lucide-react";
 import type { ForgeUnderwritingInput, ForgeUnderwritingResponse } from "@/domain/forge-underwriting";
 import { ForgeProgressStageSchema, forgeProgressStages, type ForgeProgressStage } from "@/domain/forge-progress";
@@ -13,7 +13,10 @@ import { useAuth } from "@/components/account/auth-provider";
 import { accountCopy } from "@/components/account/copy";
 import { clearPendingForgeRun, getPendingForgeRun, setPendingForgeRun } from "@/components/account/pending-run";
 import { isConfirmedSavedRun, saveStateFromPersistence, type SaveState } from "@/components/account/save-status";
-import { SourceSynthesisResponseSchema, type SourceSynthesisResponse } from "@/domain/source-synthesis";
+import { PublicHttpsUrlSchema, SourceSynthesisResponseSchema, type SourceSynthesisResponse } from "@/domain/source-synthesis";
+
+import { experienceCopy } from "./experience-copy";
+import { DecimalInput } from "./decimal-input";
 
 type FormState = {
   objective: string;
@@ -247,9 +250,14 @@ function LedgerRow({
 }
 
 function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective: string; copy: ForgeCopy; ceiling: string | null; locale: ForgeLocale }) {
+  const reducedMotion = useReducedMotion();
   const [urls, setUrls] = useState("");
   const [running, setRunning] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
+  const ux = experienceCopy[locale];
+  const sources = urls.split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
+  const validSources = sources.length >= 1 && sources.length <= 10 && new Set(sources).size === sources.length && sources.every((url) => PublicHttpsUrlSchema.safeParse(url).success);
+  const disabledReason = !ceiling ? ux.disabled : objective.trim().length < 12 ? ux.objective : !validSources ? ux.count : "";
   const [output, setOutput] = useState<SourceSynthesisResponse | null>(null);
   const [completedObjective, setCompletedObjective] = useState("");
   const [completedUrls, setCompletedUrls] = useState("");
@@ -259,9 +267,9 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
   async function runTask(event: FormEvent) {
     event.preventDefault();
     const sources = urls.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
-    if (!ceiling || objective.trim().length < 12 || sources.length < 1 || sources.length > 10) { setError(true); return; }
+    if (disabledReason) { setError(disabledReason); return; }
     setRunning(true);
-    setError(false);
+    setError("");
     setOutput(null);
     try {
       const response = await fetch("/api/v1/forge/synthesize", {
@@ -269,11 +277,18 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ runId: crypto.randomUUID(), locale, objective, urls: sources, maxAuthorizedSpendUsdMicros: "10000", authorization: "run_task" }),
       });
-      if (!response.ok) throw new Error("synthesis_failed");
-      setOutput(SourceSynthesisResponseSchema.parse(await response.json()));
+      const body: unknown = await response.json();
+      if (!response.ok) {
+        const failure = body as { code?: string; sourceIndex?: number };
+        const allowed = ["invalid_source", "blocked_source", "fetch_failed", "redirect_rejected", "content_unusable", "provider_unavailable", "model_failed", "capacity_unavailable", "duplicate_execution", "request_invalid"];
+        const message = failure.code && allowed.includes(failure.code) ? ux[failure.code as keyof typeof ux] : ux.network;
+        setError((Number.isInteger(failure.sourceIndex) && failure.sourceIndex! >= 1 && failure.sourceIndex! <= sources.length ? `${ux.source} ${failure.sourceIndex}: ` : "") + message);
+        return;
+      }
+      setOutput(SourceSynthesisResponseSchema.parse(body));
       setCompletedObjective(objective);
       setCompletedUrls(urls);
-    } catch { setError(true); }
+    } catch { setError(ux.network); }
     finally { setRunning(false); }
   }
 
@@ -294,15 +309,18 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
     <p className={styles.synthesisRoute}>{copy.synthesisRoute}</p>
     <form onSubmit={runTask}>
       <div className={styles.field}>
-        <FieldHeading id="forge-source-urls" label={copy.synthesisSources} help={copy.synthesisSourcesHelp} helpLabel={copy.help} />
-        <textarea id="forge-source-urls" value={urls} onChange={(event) => { setUrls(event.target.value); setOutput(null); }} placeholder="https://www.example.org/report" rows={4} maxLength={12000} disabled={running} required />
+        <FieldHeading id="forge-source-urls" label={ux.sources} help={copy.synthesisSourcesHelp} helpLabel={copy.help} />
+        <textarea id="forge-source-urls" value={urls} onChange={(event) => { setUrls(event.target.value); setOutput(null); setError(""); }} aria-describedby="source-entry-help source-disabled-reason" placeholder="https://example.com" rows={4} maxLength={12000} disabled={running} required />
       </div>
+      <p id="source-entry-help">{ux.sourceHelp}</p>
+      {sources.length > 0 && <ol className={styles.sourceStatus}>{sources.map((url, index) => <li key={index} data-valid={PublicHttpsUrlSchema.safeParse(url).success}><strong>{ux.source} {index + 1}</strong><span>{url}</span><small>{PublicHttpsUrlSchema.safeParse(url).success ? ux.ready : ux.invalid}</small></li>)}</ol>}
       <p>{copy.synthesisEstimate} <strong>{priceText}</strong></p>
       <p>{copy.synthesisAuthorization}</p>
-      <button type="submit" disabled={running || !ceiling || objective.trim().length < 12}>{running ? copy.synthesisWorking : copy.synthesisRun} ↗</button>
+      <button type="submit" disabled={running || !!disabledReason} aria-describedby="source-disabled-reason">{running ? copy.synthesisWorking : ux.run} ↗</button>
+    <p id="source-disabled-reason" role="status">{disabledReason}</p>
     </form>
-    {error && <p role="alert" className={styles.error}>{copy.synthesisError}</p>}
-    {visibleOutput && <div className={styles.synthesisResult} aria-live="polite">
+    {error && <p role="alert" className={styles.error}>{error}</p>}
+    {visibleOutput && <m.div className={styles.synthesisResult} aria-live="polite" initial={reducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reducedMotion ? 0 : .16 }}>
       <h3>{copy.synthesisFindings}</h3>
       <p>{visibleOutput.receipt.core.result.summary}</p>
       <ol>{visibleOutput.receipt.core.result.findings.map((finding, index) => <li key={index}>
@@ -310,18 +328,21 @@ function SourceSynthesisPanel({ objective, copy, ceiling, locale }: { objective:
         <span>{finding.sourceIds.map((sourceId) => <a key={sourceId} href={visibleOutput.receipt.core.sourceUrls[sourceId - 1]} target="_blank" rel="noreferrer">[{sourceId}]</a>)}</span>
       </li>)}</ol>
       {visibleOutput.receipt.core.result.limitations.length > 0 && <><h4>{copy.synthesisLimitations}</h4><ul>{visibleOutput.receipt.core.result.limitations.map((item) => <li key={item}>{item}</li>)}</ul></>}
+      <div className={styles.synthesisAudit}>
       <p>{copy.synthesisUsage}: {visibleOutput.receipt.core.usage.inputTokens ?? "UNKNOWN"} + {visibleOutput.receipt.core.usage.outputTokens ?? "UNKNOWN"} tokens · {visibleOutput.receipt.core.latencyMs} ms</p>
       <p>{copy.synthesisCost}: {visibleOutput.receipt.core.cost.calculatedFromUsageUsdMicros === null ? "UNKNOWN" : new Intl.NumberFormat(locale, { style: "currency", currency: "USD", minimumFractionDigits: 4, maximumFractionDigits: 6 }).format(Number(visibleOutput.receipt.core.cost.calculatedFromUsageUsdMicros) / 1_000_000)}</p>
       <p>{visibleOutput.persistence.status === "saved" ? copy.synthesisSaved : visibleOutput.persistence.status === "failed" ? copy.synthesisSaveFailed : copy.synthesisGuest}</p>
       <p className={styles.synthesisFingerprint}>{visibleOutput.receipt.receiptHash} · {copy.synthesisFingerprint}</p>
       <button type="button" onClick={downloadExecutionReceipt}><Download size={14} aria-hidden="true" /> {copy.synthesisReceipt}</button>
-    </div>}
+      </div>
+    </m.div>}
   </section>;
 }
 
 export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicros = null }: { initialObjective?: string; sourceSynthesisCeilingUsdMicros?: string | null }) {
   const locale = useLocale() as ForgeLocale;
   const copy = forgeCopy[locale] ?? forgeCopy.en;
+  const ux = experienceCopy[locale] ?? experienceCopy.en;
   const account = accountCopy[locale] ?? accountCopy.en;
   const auth = useAuth();
   const [form, setForm] = useState(() => initialState(initialObjective));
@@ -423,7 +444,8 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
       form.objective.trim().length < 12 ||
       !form.budget.trim() ||
       !Number.isFinite(Number(form.budget)) ||
-      !Number.isFinite(probability) ||
+      Number(form.budget) < 0 || Number(form.budget) > 10 ||
+      !form.probability.trim() || !Number.isFinite(probability) ||
       probability < 0 ||
       probability > 100 ||
       !form.review.trim()
@@ -453,7 +475,7 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
         void confirmAuthenticatedSave(runRequest, body);
       }
       requestAnimationFrame(() =>
-        document.getElementById("forge-objective")?.scrollIntoView({ block: "start" }),
+        document.getElementById("forge-decision")?.scrollIntoView({ block: "start" }),
       );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : copy.requestError);
@@ -545,15 +567,14 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
               <div className={styles.pair}>
                 <div className={styles.field}>
                   <FieldHeading id="forge-budget" label={copy.budget} help={copy.budgetHelp} helpLabel={copy.help} />
-                  <input
+                  <DecimalInput
                     id="forge-budget"
-                    type="number"
                     min="0"
                     max="10"
                     step="0.01"
                     required
                     value={form.budget}
-                    onChange={(event) => field("budget", event.target.value)}
+                    onValue={(value) => field("budget", value)}
                   />
                 </div>
                 <div className={styles.field}>
@@ -576,37 +597,37 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
               <div className={styles.pair}>
                 <div className={styles.field}>
                   <FieldHeading id="forge-payout" label={copy.payout} help={copy.payoutHelp} helpLabel={copy.help} />
-                  <input id="forge-payout" type="number" min="0" step="0.01" value={form.payout} onChange={(event) => field("payout", event.target.value)} />
+                  <DecimalInput id="forge-payout"  min="0" step="0.01" value={form.payout} onValue={(value) => field("payout", value)} />
                 </div>
                 <div className={styles.field}>
                   <FieldHeading id="forge-fulfillment" label={copy.fulfillment} help={copy.fulfillmentHelp} helpLabel={copy.help} />
-                  <input id="forge-fulfillment" type="number" min="0" step="0.01" value={form.fulfillment} onChange={(event) => field("fulfillment", event.target.value)} />
+                  <DecimalInput id="forge-fulfillment"  min="0" step="0.01" value={form.fulfillment} onValue={(value) => field("fulfillment", value)} />
                 </div>
               </div>
               <div className={`${styles.pair} ${styles.probability}`}>
                 <div className={styles.field}>
                   <FieldHeading id="forge-probability" label={`${copy.probability} · ${copy.userAssumption}`} help={copy.probabilityHelp} helpLabel={copy.help} />
-                  <input id="forge-probability" type="number" min="0" max="100" step="1" required value={form.probability} onChange={(event) => field("probability", event.target.value)} />
+                  <DecimalInput id="forge-probability"  min="0" max="100" step="1" required value={form.probability} onValue={(value) => field("probability", value)} />
                 </div>
                 <output>{form.probability ? `${form.probability}%` : "—"}</output>
               </div>
               <div className={styles.field}>
                 <FieldHeading id="forge-review" label={`${copy.review} · ${copy.userAssumption}`} help={copy.reviewHelp} helpLabel={copy.help} />
-                <input id="forge-review" type="number" min="0" step="0.01" required value={form.review} onChange={(event) => field("review", event.target.value)} />
+                <DecimalInput id="forge-review"  min="0" step="0.01" required value={form.review} onValue={(value) => field("review", value)} />
               </div>
               <details>
                 <summary>{copy.advanced}</summary>
                 <div className={styles.advanced}>
-                  <div className={styles.field}><FieldHeading id="forge-verification" label={copy.verification} help={copy.verificationHelp} helpLabel={copy.help} /><input id="forge-verification" type="number" min="0" step="0.01" required value={form.verification} onChange={(event) => field("verification", event.target.value)} /></div>
-                  <div className={styles.field}><FieldHeading id="forge-platform" label={copy.platform} help={copy.platformHelp} helpLabel={copy.help} /><input id="forge-platform" type="number" min="0" step="0.01" required value={form.platform} onChange={(event) => field("platform", event.target.value)} /></div>
-                  <div className={styles.field}><FieldHeading id="forge-failure" label={copy.failure} help={copy.failureHelp} helpLabel={copy.help} /><input id="forge-failure" type="number" min="0" step="0.01" required value={form.failure} onChange={(event) => field("failure", event.target.value)} /></div>
-                  <div className={styles.field}><FieldHeading id="forge-refundable" label={copy.refundable} help={copy.refundableHelp} helpLabel={copy.help} /><input id="forge-refundable" type="number" min="0" step="0.01" value={form.refundable} onChange={(event) => field("refundable", event.target.value)} /></div>
-                  <div className={styles.field}><FieldHeading id="forge-margin" label={copy.margin} help={copy.marginHelp} helpLabel={copy.help} /><input id="forge-margin" type="number" min="0" max="100" step="1" required value={form.margin} onChange={(event) => field("margin", event.target.value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-verification" label={copy.verification} help={copy.verificationHelp} helpLabel={copy.help} /><DecimalInput id="forge-verification"  min="0" step="0.01" required value={form.verification} onValue={(value) => field("verification", value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-platform" label={copy.platform} help={copy.platformHelp} helpLabel={copy.help} /><DecimalInput id="forge-platform"  min="0" step="0.01" required value={form.platform} onValue={(value) => field("platform", value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-failure" label={copy.failure} help={copy.failureHelp} helpLabel={copy.help} /><DecimalInput id="forge-failure"  min="0" step="0.01" required value={form.failure} onValue={(value) => field("failure", value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-refundable" label={copy.refundable} help={copy.refundableHelp} helpLabel={copy.help} /><DecimalInput id="forge-refundable"  min="0" step="0.01" value={form.refundable} onValue={(value) => field("refundable", value)} /></div>
+                  <div className={styles.field}><FieldHeading id="forge-margin" label={copy.margin} help={copy.marginHelp} helpLabel={copy.help} /><DecimalInput id="forge-margin"  min="0" max="100" step="1" required value={form.margin} onValue={(value) => field("margin", value)} /></div>
                 </div>
               </details>
             </section>
             <button className={styles.submit} disabled={pending} type="submit">
-              {pending ? copy.working : result ? copy.recalculate : copy.submit}
+              {pending ? copy.working : result ? ux.update : copy.submit}
               <ArrowUpRight size={18} aria-hidden="true" />
             </button>
             <p className={styles.privacy}>{copy.privacy}</p>
@@ -619,19 +640,65 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
             ) : result ? (
               <AnimatePresence mode="wait">
                 <m.div
+                  className={styles.result}
                   key={result.receipt.receiptHash}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.18 }}
                 >
+                  <section className={`${styles.stage} ${styles.decision}`} id="forge-decision" data-decision={result.decision}>
+                    <span className={styles.stageIndex}>05</span>
+                    <div>
+                      <span className={styles.tag}>{ux.summary} · {copy.derived}</span>
+                      <h2 className={styles.verdict}>{verdict}</h2>
+                      <p>{ux.basis}</p>
+                      <dl className={styles.keyEconomics}>
+                        <div><dt>{ux.ev}</dt><dd>{money(result.economics.riskAdjustedExpectedValueCents, locale)}</dd></div>
+                        <div><dt>{ux.cost}</dt><dd>{money(result.economics.expectedTotalCostCents, locale)}</dd></div>
+                        <div><dt>{ux.payout}</dt><dd>{money(result.scenario.payout.valueCents, locale)}</dd></div>
+                      </dl>
+                      <div className={styles.coverageSummary}><strong>{ux.coverage}: {result.routeEvidence.status === "context_available" ? copy.statusAvailable : result.routeEvidence.status === "coverage_incomplete" ? copy.statusIncomplete : copy.statusDegraded}</strong>
+                        <p>{ux.missing}: {result.routeEvidence.capabilities.filter((item) => item.priority === "critical" && !item.coveredByObservedContext).length}</p>
+                      </div>
+                      {result.blockers.length > 0 && (
+                        <div className={styles.blockers}>
+                          <h3>{copy.blockers}</h3>
+                          <ul>{result.blockers.map((blocker) => <li key={blocker}>{blockerLabels[blocker]?.[locale] ?? blocker.replaceAll("_", " ")}</li>)}</ul>
+                        </div>
+                      )}
+                      <div className={styles.blockers}>
+                        <h3>{copy.limitations}</h3>
+                        <ul>{result.limitations.map((limitation) => <li key={limitation}>{blockerLabels[limitation]?.[locale] ?? limitation.replaceAll("_", " ")}</li>)}</ul>
+                      </div>
+                      <div className={styles.receipt}>
+                        <header><span className={styles.label}>{copy.receipt}</span><button type="button" onClick={downloadReceipt}><Download size={14} aria-hidden="true" /> {copy.download}</button></header>
+                        <code>{result.receipt.receiptHash}</code>
+                        <small>{copy.fingerprint} · {result.receipt.hashAlgorithm}</small>
+                      </div>
+                      <div className={styles.savePanel}>
+                        {auth.user ? (
+                          saveState === "idle" ? null : (
+                            <div><p role="status">{saveState === "saving" ? account.saving : saveState === "failed" ? account.saveFailed : account.saved}</p>
+                              {saveState === "failed" && <><p>{ux.saveHelp}</p><button type="button" onClick={() => { if (lastInput) void confirmAuthenticatedSave(lastInput, result); }}>{ux.retry}</button></>}
+                            </div>
+                          )
+                        ) : (
+                          <>
+                            <button type="button" onClick={saveGuestRun}>{account.save}</button>
+                            <p>{account.saveHelp}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+                  <details className={styles.supporting}><summary>{ux.details}</summary>
                   <nav className={styles.chapters} aria-label="Underwriting stages">
                     {[
                       ["forge-objective", copy.objectiveStage],
                       ["forge-capabilities", copy.capabilitiesStage],
                       ["forge-route", copy.routeStage],
                       ["forge-economics", copy.economicsStage],
-                      ["forge-decision", copy.decisionStage],
                     ].map(([id, label], index) => <a key={id} href={`#${id}`}>0{index + 1} {label}</a>)}
                   </nav>
 
@@ -702,46 +769,13 @@ export function ForgeLab({ initialObjective = "", sourceSynthesisCeilingUsdMicro
                         <LedgerRow label={copy.breakEven} value={result.economics.breakEvenPayoutCents} provenance={copy.derived} locale={locale} />
                         <LedgerRow label={copy.refundableCapital} value={result.financialExposure.refundableCapitalCents} provenance={result.scenario.refundableCapital.provenance} locale={locale} capital />
                         <LedgerRow label={copy.capital} value={result.financialExposure.capitalRequiredCents} provenance={copy.derived} locale={locale} capital />
-                        <div className={styles.ledgerRow}><span>{copy.expectedMargin} · {copy.derived}</span><div className={styles.rail} data-unknown={result.economics.expectedMarginBps === null} /><strong className={styles.amount}>{result.economics.expectedMarginBps === null ? "—" : `${(result.economics.expectedMarginBps / 100).toFixed(2)}%`}</strong></div>
+                        <div className={styles.ledgerRow}><span>{copy.expectedMargin} · {copy.derived}</span><div className={styles.rail} data-unknown={result.economics.expectedMarginBps === null} /><strong className={styles.amount}>{result.economics.expectedMarginBps === null ? "—" : new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 2 }).format(result.economics.expectedMarginBps / 10000)}</strong></div>
                       </div>
                     </div>
                   </section>
 
-                  <section className={`${styles.stage} ${styles.decision}`} id="forge-decision">
-                    <span className={styles.stageIndex}>05</span>
-                    <div>
-                      <span className={styles.tag}>{copy.derived}</span>
-                      <h2 className={styles.verdict}>{verdict}</h2>
-                      <p>{copy.boundary}</p>
-                      {result.blockers.length > 0 && (
-                        <div className={styles.blockers}>
-                          <h3>{copy.blockers}</h3>
-                          <ul>{result.blockers.map((blocker) => <li key={blocker}>{blockerLabels[blocker]?.[locale] ?? blocker.replaceAll("_", " ")}</li>)}</ul>
-                        </div>
-                      )}
-                      <div className={styles.blockers}>
-                        <h3>{copy.limitations}</h3>
-                        <ul>{result.limitations.map((limitation) => <li key={limitation}>{blockerLabels[limitation]?.[locale] ?? limitation.replaceAll("_", " ")}</li>)}</ul>
-                      </div>
-                      <div className={styles.receipt}>
-                        <header><span className={styles.label}>{copy.receipt}</span><button type="button" onClick={downloadReceipt}><Download size={14} aria-hidden="true" /> {copy.download}</button></header>
-                        <code>{result.receipt.receiptHash}</code>
-                        <small>{copy.fingerprint} · {result.receipt.hashAlgorithm}</small>
-                      </div>
-                      <div className={styles.savePanel}>
-                        {auth.user ? (
-                          saveState === "idle" ? null : (
-                            <p role="status">{saveState === "saving" ? account.saving : saveState === "failed" ? account.saveFailed : account.saved}</p>
-                          )
-                        ) : (
-                          <>
-                            <button type="button" onClick={saveGuestRun}>{account.save}</button>
-                            <p>{account.saveHelp}</p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </section>
+
+                  </details>
                 </m.div>
               </AnimatePresence>
             ) : null}

@@ -1,7 +1,6 @@
 import { pageMetadata } from "@/i18n/metadata";
 import { useCopy } from "@/i18n/copy";
 import Link from "@/i18n/navigation";
-import RawLink from "next/link";
 export const generateMetadata = ({
   params,
 }: {
@@ -26,8 +25,10 @@ export default function Page() {
       </p>
       <nav className="developer-entry" aria-label={t("Developer access")}>
         <Link href="/developers/try">{t("Try REST and MCP in the browser →")}</Link>
-        <RawLink href="/api/v1/openapi">{t("Open the live OpenAPI schema →")}</RawLink>
-        <RawLink href="/.well-known/agent-card.json">{t("Inspect the Agent Card →")}</RawLink>
+        {/* JSON route handlers require document navigation, not React Server Component requests. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/api/v1/openapi">{t("Open the live OpenAPI schema →")}</a>
+        <a href="/.well-known/agent-card.json">{t("Inspect the Agent Card →")}</a>
       </nav>
       <section>
         <h2>{t("Underwrite your own task")}</h2>

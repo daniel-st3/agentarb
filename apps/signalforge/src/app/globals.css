@@ -3,13 +3,17 @@
   --font-display: var(--font-newsreader), Georgia, serif;
   --font-sans: var(--font-geist), Arial, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-  --bg: #101113;
-  --ink: #f4f0e8;
-  --muted: #abb1b5;
-  --line: #41454a;
-  --accent: #ff7456;
-  --verified: #92bfd6;
-  --uncertain: #d8b47a;
+  color-scheme: light;
+  --bg: #f7f4ed;
+  --ink: #242523;
+  --muted: #60615b;
+  --line: #d0cec4;
+  --accent: #b6432b;
+  --verified: #325c70;
+  --uncertain: #78541e;
+  --surface: #fffcf6;
+  --machine-bg: #222725;
+  --machine-ink: #f4f0e8;
   --paper: #f4f0e8;
 }
 * {
@@ -171,6 +175,21 @@ code,
 }
 .brand-dot {
   color: var(--accent);
+}
+.brand-artwork {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+  background: transparent;
+  font: 600 23px/1 var(--font-sans);
+  letter-spacing: -.8px;
+}
+.brand-artwork img {
+  display: block;
+  width: 36px;
+  height: 36px;
+  max-width: 100%;
 }
 .brand svg {
   width: 22px;

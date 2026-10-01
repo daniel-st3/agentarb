@@ -46,6 +46,7 @@ test("reduced motion retains the complete causal underwriting structure", async 
   await page.getByLabel(/Success probability/).fill("70");
   await page.getByLabel(/Human-review cost/).fill("0.00");
   await page.getByRole("button", { name: "Underwrite task" }).click();
+  await page.getByText("Inspect objective, capabilities and economic inputs", { exact: true }).click();
   for (const id of ["forge-objective", "forge-capabilities", "forge-route", "forge-economics", "forge-decision"])
     await expect(page.locator(`#${id}`)).toBeVisible();
 });
