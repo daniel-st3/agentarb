@@ -94,8 +94,12 @@ canonical fingerprint, and prints the server's conditional decision and blockers
 It does not infer observed prices, recalculate profit, or execute the task.
 See the [client guide](apps/signalforge/examples/client-agent/README.md).
 
-## License status
+## License
 
-This repository is publicly readable, but currently contains no explicit software
-license. It is **public-source, not licensed open source**. No license is implied;
-the owner must deliberately select one before advertising it as open source.
+Valrun is open source under the [Apache License 2.0](LICENSE).
+
+Copyright 2026 Daniel Steven Rodriguez Sandoval.
+
+Third-party materials retain their own licenses. See the retained
+[catalog attribution and MIT notices](docs/catalog-notices.md). Dependencies are
+distributed under their respective licenses; the Valrun license does not relicense them.
